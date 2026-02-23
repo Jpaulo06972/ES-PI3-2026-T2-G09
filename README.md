@@ -1,7 +1,7 @@
-# [ES-PI3-2026-T2-G09]
+# ES-PI3-2026-T2-G09
 
 ### Integrantes
-* **[João Paulo Ferreira]** - [25000684] - [Clique aqui para acessar o perfil do aluno](https://github.com/Jpaulo06972)
+* **João Paulo Ferreira** - 25000684 - [Clique aqui para acessar o perfil do aluno](https://github.com/Jpaulo06972)
 * **[Nome Completo]** - [RA] - [Link para GitHub]
 * **[Nome Completo]** - [RA] - [Link para GitHub]
 * **[Nome Completo]** - [RA] - [Link para GitHub]
@@ -44,4 +44,4 @@ Para garantir a integridade do código, seguimos o fluxo de [Branching Strategy,
 ## ⚙️ Como Executar o Projeto
 1. Clone o repositório:
    ```bash
-   git clone [https://github.com/Jpaulo06972/ES-PI3-2026-T2-G09.git]
+   git clone https://github.com/Jpaulo06972/ES-PI3-2026-T2-G09.git
