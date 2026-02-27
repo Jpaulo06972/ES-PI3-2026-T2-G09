@@ -3,7 +3,7 @@
 ### Integrantes
 * **João Paulo Ferreira** - 25000684 - [Clique aqui para acessar o perfil do aluno](https://github.com/Jpaulo06972)
 * **Felipe Batista Bastos** - 25005337 - [Clique aqui para acessar o perfil do aluno](https://github.com/Febastos21)
-* **[Nome Completo]** - [RA] - [Link para GitHub]
+* **Felipe Cesar Ferreira Lirani** - 25007003 - [Clique aqui para acessar o perfil do aluno](https://github.com/felipelirani)
 * **Tomás de Paula Michelon Toniato** - 25004211 - [Clique aqui para acessar o perfil do aluno](https://github.com/lightblueyz)
 
 ---
