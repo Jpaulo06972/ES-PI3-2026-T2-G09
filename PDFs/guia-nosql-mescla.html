@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Guia NoSQL — MesclaInvest PI3</title>
+  <style>
+    :root {
+      --bg: #0b0d14;
+      --surface: #13151f;
+      --surface2: #1c1f2e;
+      --border: #262b42;
+      --accent: #6c63ff;
+      --green: #00d4aa;
+      --yellow: #ffd166;
+      --red: #ff6b6b;
+      --blue: #54c5f8;
+      --purple: #c084fc;
+      --text: #dde1f5;
+      --muted: #7a80a8;
+      --r: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #13151f, #0b0d14 60%, #130c25);
+      border-bottom: 1px solid var(--border);
+      padding: 52px 32px 44px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    header::before {
+      content: ''; position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 400px;
+      background: radial-gradient(ellipse, rgba(108,99,255,.14) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge { display: inline-block; background: rgba(108,99,255,.12); border: 1px solid rgba(108,99,255,.3); color: #a99eff; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 14px; border-radius: 20px; margin-bottom: 16px; }
+    header h1 { font-size: clamp(26px,5vw,46px); font-weight: 800; letter-spacing: -1.5px; background: linear-gradient(135deg, #a99eff, #6c63ff 50%, #00d4aa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px; }
+    header .sub { color: var(--muted); font-size: 15px; max-width: 560px; margin: 0 auto 20px; }
+    .header-tags { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .htag { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 12px; font-size: 12px; color: var(--muted); }
+
+    /* ── ÍNDICE ── */
+    .toc {
+      max-width: 900px; margin: 0 auto;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+      padding: 24px 28px; margin-top: -1px;
+    }
+    .toc-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+    .toc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+    .toc-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 7px; text-decoration: none; color: var(--text); font-size: 13px; transition: background .2s; border: 1px solid transparent; }
+    .toc-item:hover { background: rgba(108,99,255,.1); border-color: rgba(108,99,255,.25); }
+    .toc-item .n { font-size: 11px; font-weight: 700; color: var(--accent); min-width: 18px; }
+
+    /* ── LAYOUT ── */
+    main { max-width: 900px; margin: 0 auto; padding: 48px 24px 100px; }
+
+    /* ── SEÇÃO ── */
+    .chapter {
+      margin-bottom: 64px;
+      scroll-margin-top: 20px;
+    }
+    .chapter-head {
+      display: flex; align-items: flex-start; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .chapter-num {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; flex-shrink: 0;
+    }
+    .chapter-head h2 { font-size: 22px; font-weight: 800; letter-spacing: -.5px; margin-bottom: 4px; }
+    .chapter-head p { font-size: 14px; color: var(--muted); }
+
+    /* ── TEXTO ── */
+    .prose { font-size: 14.5px; color: var(--muted); margin-bottom: 16px; }
+    .prose strong { color: var(--text); }
+    h3 { font-size: 15px; font-weight: 700; color: var(--text); margin: 28px 0 10px; }
+    h4 { font-size: 13px; font-weight: 700; color: var(--text); margin: 20px 0 8px; }
+
+    /* ── CALLOUT ── */
+    .callout {
+      border-radius: var(--r); padding: 16px 18px;
+      margin: 16px 0; display: flex; gap: 12px; font-size: 13.5px;
+    }
+    .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .callout-body { flex: 1; color: var(--muted); }
+    .callout-body strong { color: var(--text); }
+    .callout.blue   { background: rgba(84,197,248,.06);  border: 1px solid rgba(84,197,248,.2); }
+    .callout.green  { background: rgba(0,212,170,.06);   border: 1px solid rgba(0,212,170,.2); }
+    .callout.yellow { background: rgba(255,209,102,.06); border: 1px solid rgba(255,209,102,.2); }
+    .callout.red    { background: rgba(255,107,107,.06); border: 1px solid rgba(255,107,107,.2); }
+    .callout.purple { background: rgba(108,99,255,.07);  border: 1px solid rgba(108,99,255,.2); }
+
+    /* ── COMPARAÇÃO ── */
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+    .compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+    .compare-head { padding: 12px 16px; font-size: 13px; font-weight: 700; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+    .compare-body { padding: 14px 16px; font-size: 13px; color: var(--muted); }
+    .compare-body li { padding: 5px 0; border-bottom: 1px solid rgba(38,43,66,.5); display: flex; gap: 8px; list-style: none; }
+    .compare-body li:last-child { border-bottom: none; }
+    .compare-body li::before { content: '›'; flex-shrink: 0; }
+
+    /* ── CÓDIGO ── */
+    .code-block {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); overflow: hidden; margin: 14px 0;
+    }
+    .code-label { background: var(--surface2); padding: 8px 14px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .code-label span { color: var(--accent); }
+    pre { padding: 16px 18px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.8; overflow-x: auto; }
+    .k  { color: var(--blue); }
+    .vs { color: #a8ff78; }
+    .vn { color: #ff9090; }
+    .vb { color: var(--yellow); }
+    .vr { color: var(--purple); }
+    .vt { color: #c084fc; }
+    .ve { color: #fb923c; }
+    .cm { color: var(--muted); font-style: italic; }
+    .hl { background: rgba(0,212,170,.08); border-left: 2px solid var(--green); padding-left: 8px; margin-left: -8px; display: block; }
+    .hl-new { background: rgba(108,99,255,.07); border-left: 2px solid var(--accent); padding-left: 8px; margin-left: -8px; display: block; }
+
+    /* ── TABELA ── */
+    .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: var(--r); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: var(--surface2); padding: 11px 16px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+    td { padding: 11px 16px; border-bottom: 1px solid rgba(38,43,66,.5); color: var(--muted); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(108,99,255,.03); }
+    td strong { color: var(--text); }
+
+    /* ── TAG ── */
+    .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    .tag-green  { background: rgba(0,212,170,.12);  color: var(--green);  border: 1px solid rgba(0,212,170,.25); }
+    .tag-purple { background: rgba(108,99,255,.12); color: #a99eff;       border: 1px solid rgba(108,99,255,.25); }
+    .tag-yellow { background: rgba(255,209,102,.1); color: var(--yellow); border: 1px solid rgba(255,209,102,.25); }
+    .tag-red    { background: rgba(255,107,107,.1); color: #ff9090;       border: 1px solid rgba(255,107,107,.25); }
+    .tag-blue   { background: rgba(84,197,248,.1);  color: var(--blue);   border: 1px solid rgba(84,197,248,.25); }
+    code { font-family: 'Courier New', monospace; font-size: 12px; background: var(--surface2); padding: 1px 7px; border-radius: 4px; color: var(--blue); }
+
+    /* ── CENÁRIO FLUXO ── */
+    .flow { border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin: 14px 0; }
+    .flow-head { background: var(--surface2); padding: 12px 18px; font-size: 13px; font-weight: 700; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .flow-body { padding: 18px; }
+    .flow-step { display: flex; gap: 14px; margin-bottom: 16px; }
+    .flow-step:last-child { margin-bottom: 0; }
+    .dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+    .flow-step-body h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .flow-step-body p  { font-size: 12px; color: var(--muted); }
+
+    /* ── DIVIDER ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+    /* ── RULE BOX ── */
+    .rule-box { background: rgba(255,209,102,.05); border: 1px solid rgba(255,209,102,.2); border-radius: var(--r); padding: 16px 18px; margin: 16px 0; font-size: 14px; font-weight: 700; color: var(--yellow); display: flex; gap: 10px; align-items: flex-start; }
+
+    @media (max-width: 640px) {
+      header { padding: 36px 16px 32px; }
+      main { padding: 28px 16px 60px; }
+      .compare { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header>
+  <div class="badge">PI3 · PUC-Campinas · 2026</div>
+  <h1>Guia NoSQL para o MesclaInvest</h1>
+  <p class="sub">Tudo que discutimos sobre Firebase Firestore, modelagem de dados e diferenças em relação ao MySQL — com exemplos reais do projeto</p>
+  <div class="header-tags">
+    <span class="htag">Firebase Firestore</span>
+    <span class="htag">NoSQL vs MySQL</span>
+    <span class="htag">Denormalização</span>
+    <span class="htag">Relações N:N</span>
+    <span class="htag">Modelagem de dados</span>
+    <span class="htag">Engenharia de Software</span>
+  </div>
+</header>
+
+<!-- ══════════ ÍNDICE ══════════ -->
+<div style="max-width:900px;margin:0 auto;padding:0 24px">
+  <div class="toc">
+    <div class="toc-title">Índice</div>
+    <div class="toc-grid">
+      <a href="#cap1" class="toc-item"><span class="n">01</span> MySQL vs Firestore</a>
+      <a href="#cap2" class="toc-item"><span class="n">02</span> Relações N:N no NoSQL</a>
+      <a href="#cap3" class="toc-item"><span class="n">03</span> O que é Denormalização</a>
+      <a href="#cap4" class="toc-item"><span class="n">04</span> Quando (não) denormalizar</a>
+      <a href="#cap5" class="toc-item"><span class="n">05</span> Modelo Conceitual</a>
+      <a href="#cap6" class="toc-item"><span class="n">06</span> Documentos Reais</a>
+      <a href="#cap7" class="toc-item"><span class="n">07</span> Cenários Práticos</a>
+      <a href="#cap8" class="toc-item"><span class="n">08</span> Regras de Ouro</a>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ══════════════════════════════
+       CAP 1 — MySQL vs Firestore
+  ══════════════════════════════ -->
+  <div class="chapter" id="cap1">
+    <div class="chapter-head">
+      <div class="chapter-num" style="background:rgba(108,99,255,.15);color:#a99eff">01</div>
+      <div>
+        <h2>MySQL vs Firestore</h2>
+        <p>Por que a modelagem é diferente e como isso muda sua forma de pensar</p>
+      </div>
+    </div>
+
+    <p class="prose">A maior diferença não é técnica — é <strong>mental</strong>. No MySQL você pensa na <strong>estrutura dos dados</strong>. No Firestore você pensa nas <strong>telas do app</strong>.</p>
+
+    <div class="compare">
+      <div class="compare-card">
+        <div class="compare-head" style="background:rgba(84,197,248,.06);color:var(--blue)">🐬 MySQL — Como você pensa</div>
+        <div class="compare-body">
+          <ul>
+            <li>Quais entidades existem?</li>
+            <li>Como evitar repetição de dados?</li>
+            <li>Qual é o relacionamento entre tabelas?</li>
+            <li>Como fazer o JOIN mais eficiente?</li>
+          </ul>
+        </div>
+      </div>
+      <div class="compare-card">
+        <div class="compare-head" style="background:rgba(255,209,102,.06);color:var(--yellow)">🔥 Firestore — Como você pensa</div>
+        <div class="compare-body">
+          <ul>
+            <li>Quais telas o app vai ter?</li>
+            <li>Quais dados cada tela precisa de uma vez?</li>
+            <li>Quantas leituras essa tela vai fazer?</li>
+            <li>O que vale duplicar para ler mais rápido?</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <h3>Exemplo: portfólio do investidor</h3>
+    <p class="prose">Imagine a tela que mostra todos os tokens que o João possui, com nome e preço atual de cada startup.</p>
+
+    <div class="code-block">
+      <div class="code-label"><span>MySQL</span> — 1 query com JOIN, banco garante tudo</div>
+      <pre><span class="cm">-- 3 tabelas separadas, dados nunca duplicados</span>
+SELECT u.name, s.name, s.current_price, h.quantity
+FROM   holdings h
+JOIN   users    u ON h.user_id    = u.id
+JOIN   startups s ON h.startup_id = s.id
+WHERE  u.id = 42;
+<span class="cm">-- resultado: tela montada com 1 query</span></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label"><span>Firestore sem denormalização</span> — N+1 leituras</div>
+      <pre><span class="cm">// 1ª leitura: holdings do usuário</span>
+const holdings = await db.collection('holdings')
+  .where('userId', '==', 'usr_joao').get();
+<span class="cm">// retornou 3 holdings com startupId: "abc", "xyz", "def"</span>
+
+<span class="cm">// 2ª, 3ª, 4ª leituras: uma por startup!</span>
+const startupA = await db.collection('startups').doc('abc').get();
+const startupB = await db.collection('startups').doc('xyz').get();
+const startupC = await db.collection('startups').doc('def').get();
+<span class="cm">// 4 leituras no total. Se tiver 10 startups → 11 leituras</span></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label"><span>Firestore com denormalização</span> — 1 leitura só</div>
+      <pre><span class="cm">// holdings já tem o nome da startup dentro</span>
+const holdings = await db.collection('holdings')
+  .where('userId', '==', 'usr_joao').get();
+<span class="cm">// retornou:</span>
+<span class="cm">// { startupName: "AgroSense", quantity: 50, currentPrice: 12.50 }</span>
+<span class="cm">// { startupName: "EduTech",   quantity: 20, currentPrice: 8.00  }</span>
+<span class="cm">// tela montada com 1 leitura</span></pre>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>MySQL</th><th>Firestore</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Ponto de partida</strong></td><td>Estrutura dos dados</td><td>Telas do app</td></tr>
+          <tr><td><strong>Duplicação</strong></td><td>Proibida (normalização)</td><td>Incentivada (denormalização)</td></tr>
+          <tr><td><strong>Joins</strong></td><td>Nativos e eficientes</td><td>Não existem — você faz no código</td></tr>
+          <tr><td><strong>Integridade</strong></td><td>Banco garante com FK</td><td>Você garante no backend</td></tr>
+          <tr><td><strong>Consultas</strong></td><td>Flexíveis (qualquer WHERE)</td><td>Limitadas — precisa de índice</td></tr>
+          <tr><td><strong>Cobrança</strong></td><td>Por tempo de uso</td><td>Por número de leituras/escritas</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- ══════════════════════════════
+       CAP 2 — N:N no NoSQL
+  ══════════════════════════════ -->
+  <div class="chapter" id="cap2">
+    <div class="chapter-head">
+      <div class="chapter-num" style="background:rgba(0,212,170,.12);color:var(--green)">02</div>
+      <div>
+        <h2>Relações N:N no NoSQL</h2>
+        <p>Elas existem — mas precisam ser resolvidas na modelagem</p>
+      </div>
+    </div>
+
+    <p class="prose">No MySQL, uma relação N:N é resolvida automaticamente com uma tabela pivot. No Firestore, <strong>não existe suporte nativo</strong> — você resolve na modelagem com 3 estratégias diferentes.</p>
+
+    <h3>Estratégia 1 — Array de IDs</h3>
+    <p class="prose">Guarda uma lista de referências dentro do documento. Simples, mas limitado.</p>
+
+    <div class="code-block">
+      <div class="code-label"><span>Firestore</span> — array de refs dentro do documento</div>
+      <pre><span class="cm">// startups/stk_agrosense</span>
+{
+  <span class="k">"name"</span>: <span class="vs">"AgroSense"</span>,
+  <span class="k">"investorIds"</span>: [<span class="vs">"usr_joao"</span>, <span class="vs">"usr_maria"</span>, <span class="vs">"usr_pedro"</span>]
+}
+
+<span class="cm">// ✅ fácil: "quem investe nessa startup?"</span>
+db.collection('startups').where('investorIds', 'array-contains', 'usr_joao')
+
+<span class="cm">// ❌ difícil: "em quais startups o João investe?" → não funciona direto</span>
+<span class="cm">// ⚠️  limite: array com muitos IDs fica pesado</span></pre>
+    </div>
+
+    <h3>Estratégia 2 — Coleção intermediária (junction collection)</h3>
+    <p class="prose">Equivalente à tabela pivot do SQL. É o padrão mais correto quando você precisa consultar pelos dois lados.</p>
+
+    <div class="code-block">
+      <div class="code-label"><span>Firestore</span> — coleção <code>holdings</code> como pivot entre users e startups</div>
+      <pre><span class="cm">// holdings/usr_joao_stk_agrosense</span>
+{
+  <span class="k">"userId"</span>:    <span class="vr">"usr_joao"</span>,
+  <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>,
+  <span class="k">"quantity"</span>:  <span class="vn">50</span>,
+  <span class="k">"avgCost"</span>:   <span class="vn">11.20</span>
+}
+
+<span class="cm">// ✅ "quais startups o João tem tokens?"</span>
+db.collection('holdings').where('userId', '==', 'usr_joao')
+
+<span class="cm">// ✅ "quem investe na AgroSense?"</span>
+db.collection('holdings').where('startupId', '==', 'stk_agrosense')</pre>
+    </div>
+
+    <div class="callout green">
+      <span class="callout-icon">✅</span>
+      <div class="callout-body">No MesclaInvest, a coleção <strong>holdings</strong> resolve o N:N entre usuários e startups, e a coleção <strong>transactions</strong> resolve o N:N entre ordens de compra e ordens de venda.</div>
+    </div>
+
+    <h3>Estratégia 3 — Denormalização</h3>
+    <p class="prose">Duplicar os dados de ambos os lados para evitar qualquer leitura extra. Detalhado no capítulo 3.</p>
+
+    <h3>Onde há N:N no MesclaInvest?</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Relação</th><th>Solução</th><th>Coleção</th></tr></thead>
+        <tbody>
+          <tr><td><strong>users ↔ startups</strong></td><td>Coleção intermediária</td><td><code>holdings</code></td></tr>
+          <tr><td><strong>ordem compra ↔ ordem venda</strong></td><td>Coleção intermediária</td><td><code>transactions</code></td></tr>
+          <tr><td><strong>users ↔ perguntas ↔ startups</strong></td><td>Campos userId + startupId</td><td><code>questions</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- ══════════════════════════════
+       CAP 3 — Denormalização
+  ══════════════════════════════ -->
+  <div class="chapter" id="cap3">
+    <div class="chapter-head">
+      <div class="chapter-num" style="background:rgba(255,209,102,.12);color:var(--yellow)">03</div>
+      <div>
+        <h2>O que é Denormalização</h2>
+        <p>Copiar dados propositalmente para ganhar velocidade de leitura</p>
+      </div>
+    </div>
+
+    <p class="prose"><strong>Normalização</strong> (MySQL) = nunca repetir dado. Cada informação existe em um único lugar e você une tudo com JOIN na hora da consulta.</p>
+    <p class="prose"><strong>Denormalização</strong> (Firestore) = copiar dados propositalmente dentro do documento que vai precisar deles, mesmo criando repetição.</p>
+
+    <h3>Visualizando a diferença</h3>
+
+    <div class="code-block">
+      <div class="code-label"><span>Normalizado</span> — "AgroSense" existe em apenas 1 lugar</div>
+      <pre>startups/stk_agrosense → { <span class="k">"name"</span>: <span class="vs">"AgroSense"</span> }
+
+orders/ord_001  → { <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>, <span class="k">"quantity"</span>: <span class="vn">10</span> }
+orders/ord_002  → { <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>, <span class="k">"quantity"</span>: <span class="vn">5</span>  }
+holdings/j_stk  → { <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>, <span class="k">"quantity"</span>: <span class="vn">50</span> }
+<span class="cm">// nome da startup não aparece em nenhum outro documento</span></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label"><span>Denormalizado</span> — "AgroSense" duplicado onde será exibido</div>
+      <pre>startups/stk_agrosense → { <span class="k">"name"</span>: <span class="vs">"AgroSense"</span> }
+
+orders/ord_001  → { <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>, <span class="hl"><span class="k">"startupName"</span>: <span class="vs">"AgroSense"</span></span>  }
+orders/ord_002  → { <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>, <span class="hl"><span class="k">"startupName"</span>: <span class="vs">"AgroSense"</span></span>  }
+holdings/j_stk  → { <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>, <span class="hl"><span class="k">"startupName"</span>: <span class="vs">"AgroSense"</span></span>  }
+<span class="cm">// nome duplicado — parece errado, mas é proposital</span></pre>
+    </div>
+
+    <h3>Por que vale a pena?</h3>
+    <p class="prose">No Firestore você <strong>paga por leitura</strong>. Cada <code>doc.get()</code> é cobrado. Denormalizar transforma várias leituras em uma só.</p>
+
+    <div class="code-block">
+      <div class="code-label"><span>Tela do Balcão</span> — sem e com denormalização</div>
+      <pre><span class="cm">// ❌ SEM denormalização — 1 read por ordem + 1 read por startup</span>
+const orders = await db.collection('orders')
+  .where('status', '==', 'open').get();       <span class="cm">// read 1</span>
+
+for (const order of orders.docs) {
+  const startup = await db.collection('startups')
+    .doc(order.data().startupId).get();       <span class="cm">// read 2, 3, 4... N</span>
+}
+<span class="cm">// 10 ordens abertas = 11 leituras</span>
+
+
+<span class="cm">// ✅ COM denormalização — tudo em 1 read</span>
+const orders = await db.collection('orders')
+  .where('status', '==', 'open').get();       <span class="cm">// read 1</span>
+
+orders.docs.forEach(order => {
+  const { startupName, startupLogo, quantity, pricePerToken } = order.data();
+  <span class="cm">// tudo que precisamos já está aqui dentro</span>
+});</pre>
+    </div>
+
+    <h3>O custo: você precisa manter os dados sincronizados</h3>
+    <p class="prose">Se o nome da startup mudar, você precisa atualizar em todos os lugares onde copiou:</p>
+
+    <div class="code-block">
+      <div class="code-label"><span>Node.js backend</span> — atualizando nome da startup em cascata</div>
+      <pre>async function renameStartup(startupId, newName) {
+
+  <span class="cm">// 1. atualiza o documento principal</span>
+  await db.collection('startups')
+    .doc(startupId).update({ name: newName });
+
+  <span class="cm">// 2. atualiza todas as ordens que têm a cópia do nome</span>
+  const orders = await db.collection('orders')
+    .where('startupId', '==', startupId).get();
+
+  <span class="cm">// 3. batch: atualiza tudo de uma vez (máx. 500 por batch)</span>
+  const batch = db.batch();
+  orders.forEach(doc =>
+    batch.update(doc.ref, { startupName: newName })
+  );
+  await batch.commit();
+}</pre>
+    </div>
+
+    <div class="callout red">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body"><strong>Atenção:</strong> se você denormalizar um dado que muda frequentemente (como o preço do token), vai ter que rodar esse tipo de atualização em cascata a cada mudança. Em geral, <strong>não vale denormalizar dados voláteis</strong>.</div>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- ══════════════════════════════
+       CAP 4 — Quando denormalizar
+  ══════════════════════════════ -->
+  <div class="chapter" id="cap4">
+    <div class="chapter-head">
+      <div class="chapter-num" style="background:rgba(255,107,107,.12);color:var(--red)">04</div>
+      <div>
+        <h2>Quando (não) denormalizar</h2>
+        <p>A decisão prática aplicada ao MesclaInvest</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Situação</th><th>Decisão</th><th>Motivo</th></tr></thead>
+        <tbody>
+          <tr><td>Dado muda <strong>raramente</strong> (nome, logo)</td><td><span class="tag tag-green">COPIE</span></td><td>Custo de atualização baixo, ganho de leitura alto</td></tr>
+          <tr><td>Dado muda <strong>constantemente</strong> (preço do token)</td><td><span class="tag tag-red">NÃO COPIE</span></td><td>Teria que atualizar em cascata a cada transação</td></tr>
+          <tr><td>Dado aparece em <strong>toda listagem</strong></td><td><span class="tag tag-green">COPIE</span></td><td>Evita leituras extras em cada item da lista</td></tr>
+          <tr><td>Dado só aparece na <strong>tela de detalhe</strong></td><td><span class="tag tag-red">NÃO COPIE</span></td><td>1 leitura extra para detalhe é aceitável</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Decisões tomadas no MesclaInvest</h3>
+
+    <div class="code-block">
+      <div class="code-label"><span>orders</span> — o que copiar e o que não copiar</div>
+      <pre>{
+  <span class="k">"startupId"</span>:    <span class="vr">"stk_agrosense"</span>,
+
+  <span class="cm">// ✅ COPIADOS — mudam raramente, aparecem na listagem do balcão</span>
+  <span class="hl"><span class="k">"startupName"</span>:  <span class="vs">"AgroSense"</span>,</span>
+  <span class="hl"><span class="k">"startupLogo"</span>:  <span class="vs">"https://..."</span>,</span>
+
+  <span class="cm">// ❌ NÃO COPIADO — preço muda a cada transação</span>
+  <span class="cm">// "currentPrice" não fica aqui → busca em startups/{id} quando precisar</span>
+
+  <span class="k">"pricePerToken"</span>: <span class="vn">12.50</span>, <span class="cm">// preço que o usuário PEDIU na oferta (fixo)</span>
+  <span class="k">"quantity"</span>:      <span class="vn">10</span>,
+  <span class="k">"status"</span>:        <span class="ve">"open"</span>
+}</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label"><span>holdings</span> — portfólio do investidor</div>
+      <pre>{
+  <span class="k">"userId"</span>:     <span class="vr">"usr_joao"</span>,
+  <span class="k">"startupId"</span>:  <span class="vr">"stk_agrosense"</span>,
+  <span class="k">"quantity"</span>:   <span class="vn">50</span>,
+  <span class="k">"averageCost"</span>:<span class="vn">11.20</span>,
+
+  <span class="cm">// currentPrice NÃO fica aqui</span>
+  <span class="cm">// a tela de portfólio faz 1 leitura adicional em startups/{id}</span>
+  <span class="cm">// para pegar o preço atual — aceitável, é só 1 doc por startup</span>
+}</pre>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- ══════════════════════════════
+       CAP 5 — Modelo Conceitual
+  ══════════════════════════════ -->
+  <div class="chapter" id="cap5">
+    <div class="chapter-head">
+      <div class="chapter-num" style="background:rgba(84,197,248,.12);color:var(--blue)">05</div>
+      <div>
+        <h2>Modelo Conceitual</h2>
+        <p>As entidades do sistema e seus relacionamentos</p>
+      </div>
+    </div>
+
+    <p class="prose">O modelo conceitual define <strong>o que existe</strong> no sistema sem se preocupar com tecnologia. São as entidades, atributos e relacionamentos em alto nível.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Entidade</th><th>Responsabilidade</th><th>Tipo</th></tr></thead>
+        <tbody>
+          <tr><td><code>USUARIO</code></td><td>Perfil, autenticação e carteira de saldo fictício</td><td><span class="tag tag-purple">Principal</span></td></tr>
+          <tr><td><code>STARTUP</code></td><td>Dados institucionais, tokens emitidos e preço atual</td><td><span class="tag tag-purple">Principal</span></td></tr>
+          <tr><td><code>PARCEIRO</code></td><td>Sócios, mentores e conselheiros de cada startup</td><td><span class="tag tag-blue">Dependente</span></td></tr>
+          <tr><td><code>HOLDING</code></td><td>Posição de tokens de um usuário em uma startup (pivot N:N)</td><td><span class="tag tag-yellow">Pivot</span></td></tr>
+          <tr><td><code>ORDEM</code></td><td>Oferta de compra ou venda no balcão</td><td><span class="tag tag-purple">Principal</span></td></tr>
+          <tr><td><code>TRANSACAO</code></td><td>Negociação executada entre dois usuários (pivot ordens)</td><td><span class="tag tag-yellow">Pivot</span></td></tr>
+          <tr><td><code>MOV. CARTEIRA</code></td><td>Extrato de crédito/débito da carteira fictícia</td><td><span class="tag tag-blue">Dependente</span></td></tr>
+          <tr><td><code>PERGUNTA</code></td><td>Q&A entre investidores e empreendedores</td><td><span class="tag tag-blue">Dependente</span></td></tr>
+          <tr><td><code>HIST. PRECO</code></td><td>Snapshots de preço para alimentar os gráficos do dashboard</td><td><span class="tag tag-blue">Dependente</span></td></tr>
+          <tr><td><code>ATUALIZACAO</code></td><td>Notícias e eventos publicados pelas startups</td><td><span class="tag tag-blue">Dependente</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Relacionamentos</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>De</th><th>Para</th><th>Tipo</th><th>Como é resolvido</th></tr></thead>
+        <tbody>
+          <tr><td><code>USUARIO</code></td><td><code>STARTUP</code></td><td><span class="tag tag-yellow">N:N</span></td><td>Coleção intermediária <code>holdings</code></td></tr>
+          <tr><td><code>ORDEM compra</code></td><td><code>ORDEM venda</code></td><td><span class="tag tag-yellow">N:N</span></td><td>Coleção intermediária <code>transactions</code></td></tr>
+          <tr><td><code>USUARIO</code></td><td><code>ORDEM</code></td><td><span class="tag tag-purple">1:N</span></td><td>Campo <code>userId</code> na ordem</td></tr>
+          <tr><td><code>STARTUP</code></td><td><code>PARCEIRO</code></td><td><span class="tag tag-purple">1:N</span></td><td>Subcoleção dentro do doc da startup</td></tr>
+          <tr><td><code>USUARIO</code></td><td><code>MOV. CARTEIRA</code></td><td><span class="tag tag-purple">1:N</span></td><td>Campo <code>userId</code> na movimentação</td></tr>
+          <tr><td><code>STARTUP</code></td><td><code>HIST. PRECO</code></td><td><span class="tag tag-purple">1:N</span></td><td>Campo <code>startupId</code> no snapshot</td></tr>
+          <tr><td><code>STARTUP</code></td><td><code>PERGUNTA</code></td><td><span class="tag tag-purple">1:N</span></td><td>Campos <code>userId</code> e <code>startupId</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- ══════════════════════════════
+       CAP 6 — Documentos Reais
+  ══════════════════════════════ -->
+  <div class="chapter" id="cap6">
+    <div class="chapter-head">
+      <div class="chapter-num" style="background:rgba(0,212,170,.12);color:var(--green)">06</div>
+      <div>
+        <h2>Documentos Reais no Firestore</h2>
+        <p>Como os dados ficam armazenados de fato — com valores de exemplo</p>
+      </div>
+    </div>
+
+    <p class="prose">No Firestore não existem tabelas com linhas. Existe uma árvore de <strong>coleções → documentos → campos</strong>. Cada documento é um objeto JSON armazenado com um ID único.</p>
+
+    <h3>users / usr_joao_001</h3>
+    <div class="code-block">
+      <div class="code-label"><span>Firestore</span> · users / usr_joao_001</div>
+      <pre>{
+  <span class="k">"id"</span>:            <span class="vs">"usr_joao_001"</span>,  <span class="cm">// mesmo UID do Firebase Auth</span>
+  <span class="k">"name"</span>:          <span class="vs">"João da Silva"</span>,
+  <span class="k">"email"</span>:         <span class="vs">"joao@email.com"</span>,
+  <span class="k">"cpf"</span>:           <span class="vs">"12345678900"</span>,
+  <span class="k">"phone"</span>:         <span class="vs">"19991234567"</span>,
+  <span class="k">"walletBalance"</span>: <span class="vn">1375.00</span>,
+  <span class="k">"mfaEnabled"</span>:   <span class="vb">false</span>,
+  <span class="k">"createdAt"</span>:    <span class="vt">Timestamp(2026-03-01T09:00)</span>,
+  <span class="k">"updatedAt"</span>:    <span class="vt">Timestamp(2026-03-15T10:01)</span>
+}</pre>
+    </div>
+
+    <h3>startups / stk_agrosense</h3>
+    <div class="code-block">
+      <div class="code-label"><span>Firestore</span> · startups / stk_agrosense</div>
+      <pre>{
+  <span class="k">"id"</span>:               <span class="vs">"stk_agrosense"</span>,
+  <span class="k">"name"</span>:             <span class="vs">"AgroSense"</span>,
+  <span class="k">"description"</span>:     <span class="vs">"IoT para monitoramento de plantações"</span>,
+  <span class="k">"executiveSummary"</span>: <span class="vs">"A AgroSense conecta sensores..."</span>,
+  <span class="k">"stage"</span>:            <span class="ve">"em_operacao"</span>,
+  <span class="k">"totalTokens"</span>:     <span class="vn">100000</span>,
+  <span class="k">"availableTokens"</span>: <span class="vn">74500</span>,
+  <span class="k">"currentPrice"</span>:    <span class="vn">12.50</span>,
+  <span class="k">"capitalRaised"</span>:   <span class="vn">318750.00</span>,
+  <span class="k">"logoUrl"</span>:         <span class="vs">"https://storage/.../logo.png"</span>,
+  <span class="k">"videoUrls"</span>:       [<span class="vs">"https://youtube.com/..."</span>],
+  <span class="k">"tags"</span>:            [<span class="vs">"agro"</span>, <span class="vs">"iot"</span>, <span class="vs">"saas"</span>]
+}
+
+<span class="cm">// Subcoleção: startups/stk_agrosense/partners/prt_001</span>
+{
+  <span class="k">"name"</span>:          <span class="vs">"Carlos Menezes"</span>,
+  <span class="k">"role"</span>:          <span class="ve">"founder"</span>,
+  <span class="k">"equityPercent"</span>: <span class="vn">60</span>,
+  <span class="k">"bio"</span>:           <span class="vs">"Engenheiro agrônomo com 10 anos..."</span>
+}</pre>
+    </div>
+
+    <h3>holdings / usr_joao_001_stk_agrosense</h3>
+    <div class="code-block">
+      <div class="code-label"><span>Firestore</span> · holdings / usr_joao_001_stk_agrosense</div>
+      <pre>{
+  <span class="k">"id"</span>:          <span class="vs">"usr_joao_001_stk_agrosense"</span>,  <span class="cm">// ID composto</span>
+  <span class="k">"userId"</span>:      <span class="vr">"usr_joao_001"</span>,
+  <span class="k">"startupId"</span>:   <span class="vr">"stk_agrosense"</span>,
+  <span class="k">"quantity"</span>:    <span class="vn">50</span>,
+  <span class="k">"averageCost"</span>: <span class="vn">11.20</span>,  <span class="cm">// preço médio de aquisição</span>
+  <span class="k">"updatedAt"</span>:   <span class="vt">Timestamp(2026-03-15T10:01)</span>
+}</pre>
+    </div>
+
+    <h3>orders + transactions</h3>
+    <div class="code-block">
+      <div class="code-label"><span>Firestore</span> · orders / ord_buy_001</div>
+      <pre>{
+  <span class="k">"userId"</span>:          <span class="vr">"usr_joao_001"</span>,
+  <span class="k">"startupId"</span>:       <span class="vr">"stk_agrosense"</span>,
+  <span class="k">"startupName"</span>:     <span class="vs">"AgroSense"</span>,     <span class="cm">// denormalizado</span>
+  <span class="k">"type"</span>:            <span class="ve">"buy"</span>,
+  <span class="k">"quantity"</span>:        <span class="vn">10</span>,
+  <span class="k">"quantityFilled"</span>:  <span class="vn">10</span>,
+  <span class="k">"pricePerToken"</span>:   <span class="vn">12.50</span>,
+  <span class="k">"status"</span>:          <span class="ve">"filled"</span>
+}</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label"><span>Firestore</span> · transactions / txn_001</div>
+      <pre>{
+  <span class="k">"buyOrderId"</span>:    <span class="vr">"ord_buy_001"</span>,
+  <span class="k">"sellOrderId"</span>:   <span class="vr">"ord_sell_001"</span>,
+  <span class="k">"buyerId"</span>:       <span class="vr">"usr_joao_001"</span>,
+  <span class="k">"sellerId"</span>:      <span class="vr">"usr_maria_002"</span>,
+  <span class="k">"startupId"</span>:     <span class="vr">"stk_agrosense"</span>,
+  <span class="k">"quantity"</span>:      <span class="vn">10</span>,
+  <span class="k">"pricePerToken"</span>: <span class="vn">12.50</span>,
+  <span class="k">"totalValue"</span>:    <span class="vn">125.00</span>,   <span class="cm">// 10 × 12.50</span>
+  <span class="k">"executedAt"</span>:    <span class="vt">Timestamp(2026-03-15T10:01)</span>
+}</pre>
+    </div>
+
+    <h3>price_history — alimenta o dashboard</h3>
+    <div class="code-block">
+      <div class="code-label"><span>Firestore</span> · price_history — evolução do token AgroSense</div>
+      <pre><span class="cm">// ph_001 → Fevereiro começo</span>
+{ <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>, <span class="k">"price"</span>: <span class="vn">10.00</span>, <span class="k">"recordedAt"</span>: <span class="vt">2026-02-01</span> }
+
+<span class="cm">// ph_002 → Fevereiro meio</span>
+{ <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>, <span class="k">"price"</span>: <span class="vn">10.80</span>, <span class="k">"recordedAt"</span>: <span class="vt">2026-02-15</span> }
+
+<span class="cm">// ph_003 → Março começo</span>
+{ <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>, <span class="k">"price"</span>: <span class="vn">11.50</span>, <span class="k">"recordedAt"</span>: <span class="vt">2026-03-01</span> }
+
+<span class="cm">// ph_004 → Hoje (após transação)</span>
+{ <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>, <span class="k">"price"</span>: <span class="vn">12.50</span>, <span class="k">"recordedAt"</span>: <span class="vt">2026-03-15</span> }
+
+<span class="cm">// query para o gráfico mensal:</span>
+<span class="cm">// WHERE startupId == "stk_agrosense" AND recordedAt >= [30 dias atrás]</span>
+<span class="cm">// ORDER BY recordedAt ASC → plotar linha de valorização</span></pre>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- ══════════════════════════════
+       CAP 7 — Cenários
+  ══════════════════════════════ -->
+  <div class="chapter" id="cap7">
+    <div class="chapter-head">
+      <div class="chapter-num" style="background:rgba(255,107,107,.12);color:var(--red)">07</div>
+      <div>
+        <h2>Cenários Práticos</h2>
+        <p>O que acontece no banco quando cada ação ocorre no app</p>
+      </div>
+    </div>
+
+    <!-- Cenário A -->
+    <div class="flow">
+      <div class="flow-head" style="color:#a99eff">
+        <span>📝</span> Cenário 1 — João se cadastra no app
+      </div>
+      <div class="flow-body">
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(108,99,255,.2);color:#a99eff">1</div>
+          <div class="flow-step-body">
+            <h4>Firebase Auth cria o UID</h4>
+            <p>Gera <code>usr_joao_001</code> — será o ID do documento no Firestore.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(0,212,170,.2);color:var(--green)">2</div>
+          <div class="flow-step-body">
+            <h4>Backend cria: <code>users/usr_joao_001</code></h4>
+            <p>Com <code>walletBalance: 0</code> e <code>mfaEnabled: false</code>. Pronto.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cenário B -->
+    <div class="flow">
+      <div class="flow-head" style="color:var(--yellow)">
+        <span>💳</span> Cenário 2 — João adiciona R$ 1.500,00 de saldo fictício
+      </div>
+      <div class="flow-body">
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(0,212,170,.2);color:var(--green)">1</div>
+          <div class="flow-step-body">
+            <h4>Cria: <code>wallet_txs / wtx_cred_001</code></h4>
+            <p><code>type: "credit"</code>, <code>amount: 1500</code>, <code>balanceAfter: 1500</code></p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(108,99,255,.2);color:#a99eff">2</div>
+          <div class="flow-step-body">
+            <h4>Atualiza: <code>users/usr_joao_001</code></h4>
+            <p><code>walletBalance: 0 → 1500</code></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cenário C -->
+    <div class="flow">
+      <div class="flow-head" style="color:var(--green)">
+        <span>💱</span> Cenário 3 — João compra 10 tokens da AgroSense de Maria (R$ 125,00)
+      </div>
+      <div class="flow-body">
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(0,212,170,.2);color:var(--green)">1</div>
+          <div class="flow-step-body">
+            <h4>Cria: <code>orders/ord_buy_001</code></h4>
+            <p><code>type: "buy"</code>, <code>quantity: 10</code>, <code>price: 12.50</code>, <code>status: "open"</code></p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(255,209,102,.2);color:var(--yellow)">2</div>
+          <div class="flow-step-body">
+            <h4>Backend casa com <code>orders/ord_sell_001</code> da Maria</h4>
+            <p>Encontra oferta de venda compatível no balcão.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(192,132,252,.2);color:var(--purple)">3</div>
+          <div class="flow-step-body">
+            <h4>Cria: <code>transactions/txn_001</code></h4>
+            <p><code>buyerId: joao</code>, <code>sellerId: maria</code>, <code>quantity: 10</code>, <code>totalValue: 125</code></p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(108,99,255,.2);color:#a99eff">4</div>
+          <div class="flow-step-body">
+            <h4>Atualiza ambas as ordens</h4>
+            <p><code>quantityFilled: 0 → 10</code> e <code>status: "open" → "filled"</code> nas duas ordens.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(0,212,170,.2);color:var(--green)">5</div>
+          <div class="flow-step-body">
+            <h4>Cria/atualiza holdings dos dois</h4>
+            <p>João: <code>quantity: 0 → 10</code>. Maria: <code>quantity: 50 → 40</code>.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(255,209,102,.2);color:var(--yellow)">6</div>
+          <div class="flow-step-body">
+            <h4>Cria 2 movimentações de carteira</h4>
+            <p>João: <code>debit R$125 → saldo R$1.375</code>. Maria: <code>credit R$125 → saldo R$625</code>.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(192,132,252,.2);color:var(--purple)">7</div>
+          <div class="flow-step-body">
+            <h4>Registra snapshot em <code>price_history</code></h4>
+            <p><code>price: 12.50</code>, <code>volume: 10</code>, <code>recordedAt: agora</code> — alimenta o gráfico.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout yellow">
+      <span class="callout-icon">💡</span>
+      <div class="callout-body">Note que <strong>uma única ação do usuário</strong> (apertar "Comprar") dispara <strong>7 operações encadeadas</strong> no banco. Tudo isso precisa ser feito no backend com um <code>batch</code> para garantir que ou tudo acontece ou nada acontece — evitando estados inconsistentes.</div>
+    </div>
+
+    <!-- Cenário D -->
+    <div class="flow">
+      <div class="flow-head" style="color:var(--purple)">
+        <span>📈</span> Cenário 4 — João abre o dashboard (período: último mês)
+      </div>
+      <div class="flow-body">
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(84,197,248,.2);color:var(--blue)">1</div>
+          <div class="flow-step-body">
+            <h4>Lê: <code>holdings WHERE userId == joao</code></h4>
+            <p>1 leitura → descobre que ele tem tokens de AgroSense e EduTech.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="dot" style="background:rgba(192,132,252,.2);color:var(--purple)">2</div>
+          <div class="flow-step-body">
+            <h4>Lê: <code>price_history WHERE startupId == agrosense AND recordedAt >= 30 dias</code></h4>
+            <p>1 leitura por startup → retorna lista ordenada por data → gráfico de linha pronto.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- ══════════════════════════════
+       CAP 8 — Regras de Ouro
+  ══════════════════════════════ -->
+  <div class="chapter" id="cap8">
+    <div class="chapter-head">
+      <div class="chapter-num" style="background:rgba(255,209,102,.12);color:var(--yellow)">08</div>
+      <div>
+        <h2>Regras de Ouro do Firestore</h2>
+        <p>Os princípios que guiam toda decisão de modelagem</p>
+      </div>
+    </div>
+
+    <div class="rule-box">
+      <span>🥇</span>
+      <span>Modele os dados do jeito que o app vai consumir, não do jeito que faz sentido lógico.</span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Regra</th><th>Exemplo no MesclaInvest</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><strong>1 tela = 1 leitura</strong> (meta ideal)</td><td>Holdings com nome da startup já dentro</td></tr>
+          <tr><td>2</td><td><strong>N:N → coleção intermediária</strong></td><td><code>holdings</code> e <code>transactions</code></td></tr>
+          <tr><td>3</td><td><strong>Dado estável → denormalizar</strong></td><td>Nome e logo da startup em <code>orders</code></td></tr>
+          <tr><td>4</td><td><strong>Dado volátil → não duplicar</strong></td><td><code>currentPrice</code> só em <code>startups</code></td></tr>
+          <tr><td>5</td><td><strong>ID composto = 1 doc por par único</strong></td><td><code>holdings/{userId}_{startupId}</code></td></tr>
+          <tr><td>6</td><td><strong>Operações encadeadas → usar batch</strong></td><td>Compra de tokens (7 operações)</td></tr>
+          <tr><td>7</td><td><strong>Banco não garante integridade → backend garante</strong></td><td>Validar saldo antes de debitar</td></tr>
+          <tr><td>8</td><td><strong>Registros imutáveis não são alterados</strong></td><td><code>transactions</code> e <code>wallet_txs</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Diferença final de mentalidade</h3>
+
+    <div class="compare">
+      <div class="compare-card">
+        <div class="compare-head" style="background:rgba(84,197,248,.06);color:var(--blue)">🐬 MySQL — pergunta antes</div>
+        <div class="compare-body">
+          <ul>
+            <li>Que dados existem?</li>
+            <li>Como evitar duplicação?</li>
+            <li>Qual é a forma normal mais alta?</li>
+          </ul>
+        </div>
+      </div>
+      <div class="compare-card">
+        <div class="compare-head" style="background:rgba(255,209,102,.06);color:var(--yellow)">🔥 Firestore — pergunta antes</div>
+        <div class="compare-body">
+          <ul>
+            <li>Quais telas o app vai ter?</li>
+            <li>Quantas leituras cada tela faz?</li>
+            <li>O que preciso duplicar para ler menos?</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout purple" style="margin-top:24px">
+      <span class="callout-icon">🎓</span>
+      <div class="callout-body">
+        <strong>Para o PI3:</strong> o foco não é usar blockchain de verdade, mas sim dominar essa forma de modelagem NoSQL, construir APIs sólidas no Node.js e integrar tudo num app Flutter funcional. A modelagem certa desde o começo evita refatorações dolorosas no meio do semestre.
+      </div>
+    </div>
+
+  </div>
+
+</main>
+</body>
+</html>

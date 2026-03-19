@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MesclaInvest — Documento de Visão</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3354;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --accent3: #ff6b6b;
+      --accent4: #ffd166;
+      --text: #e8eaf6;
+      --text-muted: #8b90b8;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, #1a1d27 0%, #0f1117 60%, #1a1030 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 32px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(108,99,255,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.4);
+      color: #a99eff;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    header h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #a99eff 0%, #6c63ff 50%, #00d4aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .header-meta {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .header-meta span {
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .header-meta span::before {
+      content: '•';
+      color: var(--accent);
+    }
+
+    /* LAYOUT */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* SECTION TITLE */
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: rgba(108,99,255,0.35); }
+    .card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card p, .card li { font-size: 14px; color: var(--text-muted); }
+    .card ul { list-style: none; padding: 0; }
+    .card ul li {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .card ul li:last-child { border-bottom: none; }
+    .card ul li::before { content: '→'; color: var(--accent2); font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ICON CIRCLE */
+    .icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    /* GRID */
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+
+    /* STACK TABLE */
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    .stack-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .stack-card:hover {
+      border-color: rgba(108,99,255,0.5);
+      transform: translateY(-2px);
+    }
+    .stack-card .layer {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .stack-card .tech {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .stack-card .sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .stack-card .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+    }
+
+    /* FEATURE CARDS */
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: all 0.2s;
+    }
+    .feature-card:hover {
+      border-color: rgba(108,99,255,0.35);
+      transform: translateY(-2px);
+    }
+    .feature-card .num {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .feature-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feature-card ul {
+      list-style: none;
+      padding: 0;
+    }
+    .feature-card ul li {
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(46,51,84,0.5);
+      display: flex;
+      gap: 8px;
+    }
+    .feature-card ul li:last-child { border-bottom: none; }
+    .feature-card ul li::before { content: '›'; color: var(--accent2); flex-shrink: 0; }
+
+    /* RULES TABLE */
+    .rules-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .rules-table th {
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .rules-table td {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .rules-table tr:last-child td { border-bottom: none; }
+    .rules-table tr:hover td { background: rgba(108,99,255,0.04); }
+    .rule-desc { color: var(--text); font-weight: 500; }
+    .rule-detail { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+    .penalty {
+      display: inline-block;
+      background: rgba(255,107,107,0.12);
+      border: 1px solid rgba(255,107,107,0.3);
+      color: #ff9090;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+    .penalty-warn {
+      background: rgba(255,209,102,0.1);
+      border-color: rgba(255,209,102,0.3);
+      color: #ffd166;
+    }
+
+    /* OUT OF SCOPE */
+    .out-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; }
+    .out-list li {
+      background: rgba(255,107,107,0.05);
+      border: 1px solid rgba(255,107,107,0.15);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .out-list li::before { content: '✕'; color: #ff6b6b; flex-shrink: 0; font-weight: 700; }
+
+    /* TIMELINE */
+    .timeline { position: relative; padding-left: 24px; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px; top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--accent), var(--accent2));
+      border-radius: 2px;
+    }
+    .step {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .step::before {
+      content: '';
+      position: absolute;
+      left: -20px; top: 4px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.2);
+    }
+    .step:nth-child(even)::before { background: var(--accent2); box-shadow: 0 0 0 3px rgba(0,212,170,0.2); }
+    .step-num {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 3px;
+    }
+    .step:nth-child(even) .step-num { color: var(--accent2); }
+    .step-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .step-desc { font-size: 13px; color: var(--text-muted); }
+
+    /* TAGS */
+    .tag {
+      display: inline-block;
+      background: rgba(108,99,255,0.12);
+      border: 1px solid rgba(108,99,255,0.25);
+      color: #a99eff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 5px;
+      margin: 2px;
+      letter-spacing: 0.5px;
+    }
+    .tag.green { background: rgba(0,212,170,0.1); border-color: rgba(0,212,170,0.25); color: #00d4aa; }
+    .tag.yellow { background: rgba(255,209,102,0.1); border-color: rgba(255,209,102,0.25); color: #ffd166; }
+    .tag.red { background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.25); color: #ff9090; }
+
+    /* INFO BOX */
+    .info-box {
+      background: rgba(108,99,255,0.07);
+      border: 1px solid rgba(108,99,255,0.25);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .info-box .info-icon { font-size: 18px; flex-shrink: 0; }
+
+    section { margin-bottom: 52px; }
+
+    /* RESPONSIVE */
+    @media (max-width: 600px) {
+      header { padding: 32px 16px 28px; }
+      main { padding: 24px 16px 60px; }
+      .grid-2, .grid-3, .stack-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">Projeto Integrador 3 · PUC-Campinas · 2026</div>
+  <h1>MesclaInvest</h1>
+  <p>Plataforma mobile simulada de investimento em startups do ecossistema Mescla da PUC-Campinas</p>
+  <div class="header-meta">
+    <span>Engenharia de Software</span>
+    <span>Prof. Me. Mateus Pereira Dias</span>
+    <span>Março de 2026</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- O QUE É -->
+  <section>
+    <div class="section-title">Visão Geral</div>
+    <div class="info-box">
+      <span class="info-icon">💡</span>
+      <span>
+        O <strong>MesclaInvest</strong> é um aplicativo mobile acadêmico que simula uma plataforma de investimento em startups vinculadas ao ecossistema <strong>Mescla da PUC-Campinas</strong>. Funciona como uma corretora de investimentos, porém utilizando <strong>tokens digitais simulados</strong> — sem blockchain real — que representam participações fictícias em startups. Todas as operações financeiras são integralmente simuladas no banco de dados.
+      </span>
+    </div>
+    <div class="grid-3">
+      <div class="card" style="border-top: 2px solid var(--accent);">
+        <h3><span class="icon" style="background:rgba(108,99,255,0.15)">📱</span> Tipo</h3>
+        <p>Aplicativo mobile (Flutter)</p>
+      </div>
+      <div class="card" style="border-top: 2px solid var(--accent2);">
+        <h3><span class="icon" style="background:rgba(0,212,170,0.15)">🎯</span> Contexto</h3>
+        <p>Disciplina Projeto Integrador 3 — 2026</p>
+      </div>
+      <div class="card" style="border-top: 2px solid var(--accent4);">
+        <h3><span class="icon" style="background:rgba(255,209,102,0.15)">🏛️</span> Entrega</h3>
+        <p>Protótipo funcional com escopo delimitado</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STACK -->
+  <section>
+    <div class="section-title">Stack Obrigatória</div>
+    <div class="stack-grid">
+      <div class="stack-card">
+        <div class="dot" style="background: #68a063;"></div>
+        <div class="layer">Backend</div>
+        <div class="tech">Node.js</div>
+        <div class="sub">TypeScript / JavaScript · Última versão LTS</div>
+      </div>
+      <div class="stack-card">
+        <div class="dot" style="background: #54c5f8;"></div>
+        <div class="layer">Mobile</div>
+        <div class="tech">Flutter</div>
+        <div class="sub">Linguagem Dart · Obrigatório</div>
+      </div>
+      <div class="stack-card">
+        <div class="dot" style="background: #ffca28;"></div>
+        <div class="layer">Banco de Dados</div>
+        <div class="tech">Firebase Firestore</div>
+        <div class="sub">Modelo não relacional · Obrigatório</div>
+      </div>
+      <div class="stack-card">
+        <div class="dot" style="background: #f05033;"></div>
+        <div class="layer">Versionamento</div>
+        <div class="tech">Git + GitHub</div>
+        <div class="sub">Somente GitHub · Sem GitLab/Bitbucket</div>
+      </div>
+      <div class="stack-card">
+        <div class="dot" style="background: #007acc;"></div>
+        <div class="layer">IDE</div>
+        <div class="tech">VS Code</div>
+        <div class="sub">ou Android Studio</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUNCIONALIDADES -->
+  <section>
+    <div class="section-title">Funcionalidades a Implementar</div>
+    <div class="grid-2">
+
+      <div class="feature-card">
+        <div class="num">5.1 · Autenticação</div>
+        <h3>🔐 Autenticação e Cadastro</h3>
+        <ul>
+          <li>Cadastro com nome, e-mail, CPF, telefone e senha</li>
+          <li>Login e logout</li>
+          <li>"Esqueci minha senha" — envio de instruções por e-mail</li>
+          <li>MFA / 2FA opcional, mas deve ser funcional</li>
+          <li>Sem acesso anônimo (todas as telas exigem login)</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <div class="num">5.2 · Catálogo</div>
+        <h3>🏢 Catálogo de Startups</h3>
+        <ul>
+          <li>Listagem com filtro por estágio: Nova / Em operação / Em expansão</li>
+          <li>Descrição e sumário executivo</li>
+          <li>Estrutura societária e % dos sócios</li>
+          <li>Volume de capital aportado (simulado)</li>
+          <li>Quantidade total de tokens emitidos</li>
+          <li>Mentores, conselheiros e parceiros externos</li>
+          <li>Vídeos demonstrativos e perguntas públicas</li>
+          <li>Investidores: acesso a perguntas privadas e negociação</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <div class="num">5.3 · Balcão</div>
+        <h3>💱 Compra e Venda de Tokens</h3>
+        <ul>
+          <li>Carteira digital com saldo fictício em reais</li>
+          <li>Simulação de crédito interno para carregar saldo</li>
+          <li>Registro de ofertas de compra e venda</li>
+          <li>Negociação na página da startup e no balcão dedicado</li>
+          <li>Regras de negócio implementadas exclusivamente no backend</li>
+          <li>Dados persistidos no Firebase Firestore</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <div class="num">5.4 · Dashboard</div>
+        <h3>📊 Valorização dos Tokens</h3>
+        <ul>
+          <li>Gráfico de variação do valor dos tokens</li>
+          <li>Períodos: Diário / Semanal / Mensal / 6 meses / YTD</li>
+          <li>Cada equipe define a lógica de cálculo (item avaliativo diferenciado)</li>
+          <li>Valores baseados nas transações do sistema simulado</li>
+          <li>Aplicação de conceitos matemáticos e estatísticos</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FORA DO ESCOPO -->
+  <section>
+    <div class="section-title">Fora do Escopo</div>
+    <ul class="out-list">
+      <li>Blockchain real (pública ou privada)</li>
+      <li>Smart contracts / Solidity / ERC-20</li>
+      <li>Integração com meios de pagamento reais</li>
+      <li>Cartões de crédito ou instituições financeiras</li>
+      <li>Versão web completa da aplicação</li>
+      <li>Deploy em produção ou captação real de recursos</li>
+      <li>KYC formal (Know Your Customer)</li>
+      <li>Outras tecnologias mobile além de Flutter</li>
+    </ul>
+  </section>
+
+  <!-- REGRAS -->
+  <section>
+    <div class="section-title">Regras e Penalidades</div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table class="rules-table">
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>Regra</th>
+            <th>Penalidade</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag">7.1</span></td>
+            <td>
+              <div class="rule-desc">Nome do repositório no padrão exato</div>
+              <div class="rule-detail">Formato: <code style="background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:12px;">ES-PI3-ANO-TURMA-NUMERO-GRUPO</code> — ex: <code style="background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:12px;">ES-PI3-2026-T2-G03</code></div>
+            </td>
+            <td><span class="penalty">-1,0 pt por membro</span></td>
+          </tr>
+          <tr>
+            <td><span class="tag">7.2</span></td>
+            <td>
+              <div class="rule-desc">Todos os membros adicionados ao repositório desde o início</div>
+              <div class="rule-detail">Branches por funcionalidade; commits progressivos e reais</div>
+            </td>
+            <td><span class="penalty">Reprovação do membro</span></td>
+          </tr>
+          <tr>
+            <td><span class="tag">7.3</span></td>
+            <td>
+              <div class="rule-desc">Tag de entrega final: <code style="background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:12px;">1.0.0-final</code></div>
+              <div class="rule-detail">Criar a tag no repositório antes da entrega</div>
+            </td>
+            <td><span class="penalty">-1,0 pt por membro</span></td>
+          </tr>
+          <tr>
+            <td><span class="tag">7.4</span></td>
+            <td>
+              <div class="rule-desc">README.md na raiz do projeto</div>
+              <div class="rule-detail">Deve conter: descrição, integrantes, tecnologias e instruções de execução</div>
+            </td>
+            <td><span class="penalty">-1,0 pt por membro</span></td>
+          </tr>
+          <tr>
+            <td><span class="tag">7.5</span></td>
+            <td>
+              <div class="rule-desc">Cabeçalho de autoria em cada arquivo (nome + RA)</div>
+              <div class="rule-detail">Um único autor por arquivo; autoria deve bater com o histórico de commits</div>
+            </td>
+            <td><span class="penalty-warn penalty">Arquivo desconsiderado</span></td>
+          </tr>
+          <tr>
+            <td><span class="tag">7.6</span></td>
+            <td>
+              <div class="rule-desc">Tarefas no GitHub Projects com estimativa e esforço real</div>
+              <div class="rule-detail">Uso meramente formal pode implicar desclassificação antes da banca</div>
+            </td>
+            <td><span class="penalty">Desclassificação</span></td>
+          </tr>
+          <tr>
+            <td><span class="tag">7.7</span></td>
+            <td>
+              <div class="rule-desc">Participação nas reuniões de orientação</div>
+              <div class="rule-detail">Cada membro deve apresentar evolução concreta das suas atividades</div>
+            </td>
+            <td><span class="penalty-warn penalty">Desconto individual</span></td>
+          </tr>
+          <tr>
+            <td><span class="tag">7.8</span></td>
+            <td>
+              <div class="rule-desc">Convidar apenas membros e professor orientador</div>
+              <div class="rule-detail">Convites externos somente se formalmente orientados</div>
+            </td>
+            <td><span class="penalty-warn penalty">Avaliação prejudicada</span></td>
+          </tr>
+          <tr>
+            <td><span class="tag">7.9</span></td>
+            <td>
+              <div class="rule-desc">Apresentação perante banca avaliadora</div>
+              <div class="rule-detail">20 min máx. (setup incluso) · 3 min para resolver falhas técnicas · Sistema 100% funcional</div>
+            </td>
+            <td><span class="penalty">Desclassificação</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- O QUE FAZER PRIMEIRO -->
+  <section>
+    <div class="section-title">Por Onde Começar</div>
+    <div class="grid-2">
+      <div class="timeline">
+        <div class="step">
+          <div class="step-num">Passo 1</div>
+          <div class="step-title">Criar repositório no GitHub</div>
+          <div class="step-desc">Nome exato: <strong>ES-PI3-2026-TURMA-GRUPO</strong>. Adicionar todos os membros e o professor.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">Passo 2</div>
+          <div class="step-title">Configurar GitHub Projects</div>
+          <div class="step-desc">Criar board de tarefas com estimativas desde o primeiro dia.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">Passo 3</div>
+          <div class="step-title">Estruturar o repositório</div>
+          <div class="step-desc">Pastas <code>/backend</code> (Node.js) e <code>/mobile</code> (Flutter) + README.md na raiz.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">Passo 4</div>
+          <div class="step-title">Configurar Firebase</div>
+          <div class="step-desc">Criar projeto no Firebase e configurar Firestore para backend e mobile.</div>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="step">
+          <div class="step-num">Passo 5</div>
+          <div class="step-title">Implementar Autenticação</div>
+          <div class="step-desc">Cadastro, login, recuperação de senha e MFA. Base para todo o restante.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">Passo 6</div>
+          <div class="step-title">Catálogo de Startups</div>
+          <div class="step-desc">API no backend + tela de listagem e detalhe no Flutter.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">Passo 7</div>
+          <div class="step-title">Balcão de Tokens</div>
+          <div class="step-desc">Carteira, oferta de compra/venda e transações simuladas.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">Passo 8</div>
+          <div class="step-title">Dashboard + Entrega</div>
+          <div class="step-desc">Gráficos de valorização. Criar tag <strong>1.0.0-final</strong> antes da banca.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

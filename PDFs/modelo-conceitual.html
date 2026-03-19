@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MesclaInvest — Modelo Conceitual e Lógico</title>
+  <style>
+    :root {
+      --bg: #0b0d14;
+      --surface: #13151f;
+      --surface2: #1c1f2e;
+      --surface3: #252840;
+      --border: #262b42;
+      --accent: #6c63ff;
+      --green: #00d4aa;
+      --yellow: #ffd166;
+      --red: #ff6b6b;
+      --blue: #54c5f8;
+      --purple: #c084fc;
+      --text: #dde1f5;
+      --muted: #7a80a8;
+      --r: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+    header {
+      background: linear-gradient(135deg, #13151f, #0b0d14 60%, #130c25);
+      border-bottom: 1px solid var(--border);
+      padding: 44px 32px 36px;
+      text-align: center;
+    }
+    .badge { display: inline-block; background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.3); color: #a99eff; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 14px; border-radius: 20px; margin-bottom: 14px; }
+    header h1 { font-size: clamp(22px,4vw,38px); font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, #a99eff, #6c63ff 50%, #00d4aa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; }
+    header p { color: var(--muted); font-size: 14px; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    .sec-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin: 48px 0 20px; display: flex; align-items: center; gap: 10px; }
+    .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ── CONCEITUAL ── */
+    .entity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+    .entity {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      transition: border-color .2s, transform .2s;
+    }
+    .entity:hover { border-color: rgba(108,99,255,.4); transform: translateY(-2px); }
+    .entity-head {
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .entity-body { padding: 12px 16px; }
+    .attr { font-size: 12px; color: var(--muted); padding: 3px 0; display: flex; gap: 6px; align-items: center; }
+    .attr-key { color: var(--yellow); font-weight: 700; }
+    .attr::before { content: '·'; color: var(--accent); }
+
+    .rel-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 20px 24px;
+    }
+    .rel-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(38,43,66,.5); font-size: 13px; flex-wrap: wrap; }
+    .rel-item:last-child { border-bottom: none; }
+    .rel-e { font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700; background: var(--surface2); padding: 2px 10px; border-radius: 5px; white-space: nowrap; }
+    .rel-card { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+    .c-1n  { background: rgba(108,99,255,.15); color: #a99eff; border: 1px solid rgba(108,99,255,.3); }
+    .c-nn  { background: rgba(255,209,102,.12); color: var(--yellow); border: 1px solid rgba(255,209,102,.3); }
+    .c-11  { background: rgba(0,212,170,.1);   color: var(--green);  border: 1px solid rgba(0,212,170,.25); }
+    .rel-line { color: var(--muted); font-size: 18px; }
+    .rel-desc { color: var(--muted); font-size: 12px; flex: 1; }
+
+    /* ── DOCUMENTO JSON ── */
+    .doc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    .doc-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+      font-size: 12.5px;
+    }
+    .doc-card:hover { border-color: rgba(108,99,255,.35); }
+    .doc-head {
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .doc-path { font-family: 'Courier New', monospace; font-size: 11px; color: var(--muted); font-weight: 400; letter-spacing: 0; text-transform: none; }
+    .doc-body { padding: 16px; line-height: 1.8; }
+    .k  { color: var(--blue); }
+    .vs { color: #a8ff78; }   /* string */
+    .vn { color: #ff9090; }   /* number */
+    .vb { color: var(--yellow); } /* boolean */
+    .vr { color: var(--purple); } /* ref */
+    .vt { color: #c084fc; }   /* timestamp */
+    .ve { color: #fb923c; }   /* enum */
+    .cm { color: var(--muted); font-style: italic; }
+    .ind { padding-left: 20px; }
+    .ind2 { padding-left: 40px; }
+
+    /* ── CENÁRIO / FLUXO ── */
+    .scenario {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .scenario-head {
+      background: var(--surface2);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .scenario-head .num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .scenario-head h3 { font-size: 14px; font-weight: 700; }
+    .scenario-head p  { font-size: 12px; color: var(--muted); }
+    .scenario-body { padding: 20px; }
+
+    .flow { display: flex; flex-direction: column; gap: 0; }
+    .flow-step {
+      display: flex;
+      gap: 16px;
+      position: relative;
+      padding-bottom: 20px;
+    }
+    .flow-step:last-child { padding-bottom: 0; }
+    .flow-step::before {
+      content: '';
+      position: absolute;
+      left: 15px; top: 32px; bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    .flow-step:last-child::before { display: none; }
+    .step-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .step-content { flex: 1; padding-top: 4px; }
+    .step-content h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .step-content p  { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+
+    .mini-doc {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: 'Courier New', monospace;
+      font-size: 11.5px;
+      line-height: 1.8;
+      margin-top: 6px;
+    }
+    .mini-doc .col-name { color: var(--green); font-weight: 700; font-size: 11px; letter-spacing: .5px; margin-bottom: 4px; text-transform: uppercase; }
+    .changed { background: rgba(0,212,170,.08); border-left: 2px solid var(--green); padding-left: 8px; margin: 2px -8px 2px 0; border-radius: 0 4px 4px 0; }
+    .new-doc { background: rgba(108,99,255,.06); border-left: 2px solid var(--accent); padding-left: 8px; margin: 2px -8px 2px 0; border-radius: 0 4px 4px 0; }
+
+    /* TAGS */
+    .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: .5px; }
+    .tag-green  { background: rgba(0,212,170,.12);  color: var(--green);  border: 1px solid rgba(0,212,170,.25); }
+    .tag-purple { background: rgba(108,99,255,.12); color: #a99eff;       border: 1px solid rgba(108,99,255,.25); }
+    .tag-yellow { background: rgba(255,209,102,.1); color: var(--yellow); border: 1px solid rgba(255,209,102,.25); }
+    .tag-red    { background: rgba(255,107,107,.1); color: #ff9090;       border: 1px solid rgba(255,107,107,.25); }
+    .tag-blue   { background: rgba(84,197,248,.1);  color: var(--blue);   border: 1px solid rgba(84,197,248,.25); }
+
+    .info { background: rgba(108,99,255,.07); border: 1px solid rgba(108,99,255,.2); border-radius: var(--r); padding: 14px 18px; font-size: 13px; color: var(--muted); display: flex; gap: 10px; margin-bottom: 16px; }
+
+    @media (max-width:640px) {
+      main { padding: 20px 14px 60px; }
+      .doc-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">MesclaInvest · PI3 · 2026</div>
+  <h1>Modelo Conceitual e Lógico</h1>
+  <p>Entidades, relações e documentos reais do Firebase Firestore</p>
+</header>
+
+<main>
+
+  <!-- ══════════════════════════════════════════
+       1. MODELO CONCEITUAL
+  ══════════════════════════════════════════ -->
+  <div class="sec-title">1. Modelo Conceitual — Entidades</div>
+  <div class="info">
+    <span>💡</span>
+    <span>O modelo conceitual define <strong>o que existe</strong> no sistema — as entidades e seus atributos principais, sem se preocupar com tecnologia ou estrutura de armazenamento.</span>
+  </div>
+
+  <div class="entity-grid">
+
+    <div class="entity">
+      <div class="entity-head" style="background:rgba(108,99,255,.08); color:#a99eff;">
+        👤 <span>USUARIO</span>
+      </div>
+      <div class="entity-body">
+        <div class="attr attr-key">id (PK)</div>
+        <div class="attr">nome</div>
+        <div class="attr">email</div>
+        <div class="attr">cpf</div>
+        <div class="attr">telefone</div>
+        <div class="attr">senha (hash)</div>
+        <div class="attr">saldoCarteira</div>
+        <div class="attr">mfaAtivado</div>
+        <div class="attr">criadoEm</div>
+      </div>
+    </div>
+
+    <div class="entity">
+      <div class="entity-head" style="background:rgba(0,212,170,.08); color:#00d4aa;">
+        🏢 <span>STARTUP</span>
+      </div>
+      <div class="entity-body">
+        <div class="attr attr-key">id (PK)</div>
+        <div class="attr">nome</div>
+        <div class="attr">descricao</div>
+        <div class="attr">sumarioExecutivo</div>
+        <div class="attr">estagio</div>
+        <div class="attr">totalTokens</div>
+        <div class="attr">tokensDisponiveis</div>
+        <div class="attr">precoAtual</div>
+        <div class="attr">capitalCaptado</div>
+      </div>
+    </div>
+
+    <div class="entity">
+      <div class="entity-head" style="background:rgba(84,197,248,.08); color:#54c5f8;">
+        🤝 <span>PARCEIRO</span>
+      </div>
+      <div class="entity-body">
+        <div class="attr attr-key">id (PK)</div>
+        <div class="attr">nome</div>
+        <div class="attr">funcao</div>
+        <div class="attr">percentualSocietario</div>
+        <div class="attr">bio</div>
+        <div class="attr">fotoUrl</div>
+        <div class="attr attr-key">startupId (FK)</div>
+      </div>
+    </div>
+
+    <div class="entity">
+      <div class="entity-head" style="background:rgba(255,209,102,.08); color:#ffd166;">
+        💬 <span>PERGUNTA</span>
+      </div>
+      <div class="entity-body">
+        <div class="attr attr-key">id (PK)</div>
+        <div class="attr">textoPergunta</div>
+        <div class="attr">textoResposta</div>
+        <div class="attr">visibilidade</div>
+        <div class="attr">criadaEm</div>
+        <div class="attr">respondidaEm</div>
+        <div class="attr attr-key">usuarioId (FK)</div>
+        <div class="attr attr-key">startupId (FK)</div>
+      </div>
+    </div>
+
+    <div class="entity">
+      <div class="entity-head" style="background:rgba(255,107,107,.08); color:#ff9090;">
+        📋 <span>ORDEM</span>
+      </div>
+      <div class="entity-body">
+        <div class="attr attr-key">id (PK)</div>
+        <div class="attr">tipo (compra/venda)</div>
+        <div class="attr">quantidade</div>
+        <div class="attr">qtdExecutada</div>
+        <div class="attr">precoPorToken</div>
+        <div class="attr">status</div>
+        <div class="attr">criadaEm</div>
+        <div class="attr attr-key">usuarioId (FK)</div>
+        <div class="attr attr-key">startupId (FK)</div>
+      </div>
+    </div>
+
+    <div class="entity">
+      <div class="entity-head" style="background:rgba(0,212,170,.08); color:#00d4aa;">
+        🔄 <span>TRANSACAO</span>
+      </div>
+      <div class="entity-body">
+        <div class="attr attr-key">id (PK)</div>
+        <div class="attr">quantidade</div>
+        <div class="attr">precoPorToken</div>
+        <div class="attr">valorTotal</div>
+        <div class="attr">executadaEm</div>
+        <div class="attr attr-key">ordemCompraId (FK)</div>
+        <div class="attr attr-key">ordemVendaId (FK)</div>
+        <div class="attr attr-key">compradorId (FK)</div>
+        <div class="attr attr-key">vendedorId (FK)</div>
+        <div class="attr attr-key">startupId (FK)</div>
+      </div>
+    </div>
+
+    <div class="entity">
+      <div class="entity-head" style="background:rgba(192,132,252,.08); color:#c084fc;">
+        💼 <span>HOLDING</span>
+      </div>
+      <div class="entity-body">
+        <div class="attr attr-key">id (PK)</div>
+        <div class="attr">quantidade</div>
+        <div class="attr">custoMedio</div>
+        <div class="attr">atualizadoEm</div>
+        <div class="attr attr-key">usuarioId (FK)</div>
+        <div class="attr attr-key">startupId (FK)</div>
+      </div>
+    </div>
+
+    <div class="entity">
+      <div class="entity-head" style="background:rgba(255,209,102,.08); color:#ffd166;">
+        💳 <span>MOV. CARTEIRA</span>
+      </div>
+      <div class="entity-body">
+        <div class="attr attr-key">id (PK)</div>
+        <div class="attr">tipo (cred/deb)</div>
+        <div class="attr">valor</div>
+        <div class="attr">saldoApos</div>
+        <div class="attr">descricao</div>
+        <div class="attr">criadaEm</div>
+        <div class="attr attr-key">usuarioId (FK)</div>
+      </div>
+    </div>
+
+    <div class="entity">
+      <div class="entity-head" style="background:rgba(84,197,248,.08); color:#54c5f8;">
+        📈 <span>HIST. PRECO</span>
+      </div>
+      <div class="entity-body">
+        <div class="attr attr-key">id (PK)</div>
+        <div class="attr">preco</div>
+        <div class="attr">volume</div>
+        <div class="attr">registradoEm</div>
+        <div class="attr attr-key">startupId (FK)</div>
+      </div>
+    </div>
+
+    <div class="entity">
+      <div class="entity-head" style="background:rgba(108,99,255,.08); color:#a99eff;">
+        📢 <span>ATUALIZACAO</span>
+      </div>
+      <div class="entity-body">
+        <div class="attr attr-key">id (PK)</div>
+        <div class="attr">titulo</div>
+        <div class="attr">conteudo</div>
+        <div class="attr">publica</div>
+        <div class="attr">criadaEm</div>
+        <div class="attr attr-key">startupId (FK)</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RELAÇÕES -->
+  <div class="sec-title" style="margin-top:32px">Relações do Modelo Conceitual</div>
+  <div class="rel-box">
+    <div class="rel-item">
+      <span class="rel-e" style="color:#a99eff">USUARIO</span>
+      <span class="rel-card c-nn">N:N</span>
+      <span class="rel-line">⟷</span>
+      <span class="rel-e" style="color:#00d4aa">STARTUP</span>
+      <span class="rel-desc">Um usuário pode investir em várias startups e uma startup pode ter vários investidores → resolvido pela entidade <strong>HOLDING</strong></span>
+    </div>
+    <div class="rel-item">
+      <span class="rel-e" style="color:#a99eff">USUARIO</span>
+      <span class="rel-card c-1n">1:N</span>
+      <span class="rel-line">→</span>
+      <span class="rel-e" style="color:#ff9090">ORDEM</span>
+      <span class="rel-desc">Um usuário pode criar várias ordens de compra ou venda</span>
+    </div>
+    <div class="rel-item">
+      <span class="rel-e" style="color:#00d4aa">STARTUP</span>
+      <span class="rel-card c-1n">1:N</span>
+      <span class="rel-line">→</span>
+      <span class="rel-e" style="color:#ff9090">ORDEM</span>
+      <span class="rel-desc">Uma startup pode ter muitas ordens abertas no balcão</span>
+    </div>
+    <div class="rel-item">
+      <span class="rel-e" style="color:#ff9090">ORDEM</span>
+      <span class="rel-card c-nn">N:N</span>
+      <span class="rel-line">⟷</span>
+      <span class="rel-e" style="color:#ff9090">ORDEM</span>
+      <span class="rel-desc">Uma ordem de compra pode ser casada com múltiplas ordens de venda → resolvido pela entidade <strong>TRANSACAO</strong></span>
+    </div>
+    <div class="rel-item">
+      <span class="rel-e" style="color:#00d4aa">STARTUP</span>
+      <span class="rel-card c-1n">1:N</span>
+      <span class="rel-line">→</span>
+      <span class="rel-e" style="color:#54c5f8">PARCEIRO</span>
+      <span class="rel-desc">Uma startup possui vários sócios, mentores e conselheiros</span>
+    </div>
+    <div class="rel-item">
+      <span class="rel-e" style="color:#a99eff">USUARIO</span>
+      <span class="rel-card c-1n">1:N</span>
+      <span class="rel-line">→</span>
+      <span class="rel-e" style="color:#ffd166">PERGUNTA</span>
+      <span class="rel-desc">Um usuário pode enviar várias perguntas a startups diferentes</span>
+    </div>
+    <div class="rel-item">
+      <span class="rel-e" style="color:#00d4aa">STARTUP</span>
+      <span class="rel-card c-1n">1:N</span>
+      <span class="rel-line">→</span>
+      <span class="rel-e" style="color:#ffd166">PERGUNTA</span>
+      <span class="rel-desc">Uma startup pode receber perguntas de vários usuários</span>
+    </div>
+    <div class="rel-item">
+      <span class="rel-e" style="color:#a99eff">USUARIO</span>
+      <span class="rel-card c-1n">1:N</span>
+      <span class="rel-line">→</span>
+      <span class="rel-e" style="color:#ffd166">MOV. CARTEIRA</span>
+      <span class="rel-desc">Cada movimentação de saldo pertence a um único usuário</span>
+    </div>
+    <div class="rel-item">
+      <span class="rel-e" style="color:#00d4aa">STARTUP</span>
+      <span class="rel-card c-1n">1:N</span>
+      <span class="rel-line">→</span>
+      <span class="rel-e" style="color:#54c5f8">HIST. PRECO</span>
+      <span class="rel-desc">Uma startup acumula um histórico de preços ao longo do tempo</span>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       2. MODELO LÓGICO — DOCUMENTOS REAIS
+  ══════════════════════════════════════════ -->
+  <div class="sec-title">2. Modelo Lógico — Documentos Reais no Firestore</div>
+  <div class="info">
+    <span>💡</span>
+    <span>O modelo lógico mostra <strong>como os dados ficam armazenados de fato</strong> no Firestore — com campos reais, tipos e valores de exemplo do MesclaInvest.</span>
+  </div>
+
+  <div class="doc-grid">
+
+    <!-- users -->
+    <div class="doc-card">
+      <div class="doc-head" style="background:rgba(108,99,255,.08); color:#a99eff;">
+        👤 users
+        <span class="doc-path">users / usr_joao_001</span>
+      </div>
+      <div class="doc-body">
+        <span class="k">"id"</span>: <span class="vs">"usr_joao_001"</span>,<br>
+        <span class="k">"name"</span>: <span class="vs">"João da Silva"</span>,<br>
+        <span class="k">"email"</span>: <span class="vs">"joao@email.com"</span>,<br>
+        <span class="k">"cpf"</span>: <span class="vs">"12345678900"</span>,<br>
+        <span class="k">"phone"</span>: <span class="vs">"19991234567"</span>,<br>
+        <span class="k">"walletBalance"</span>: <span class="vn">1500.00</span>,<br>
+        <span class="k">"mfaEnabled"</span>: <span class="vb">false</span>,<br>
+        <span class="k">"mfaSecret"</span>: <span class="vb">null</span>,<br>
+        <span class="k">"avatarUrl"</span>: <span class="vs">"https://storage/.../joao.jpg"</span>,<br>
+        <span class="k">"createdAt"</span>: <span class="vt">Timestamp(2026-03-01)</span>,<br>
+        <span class="k">"updatedAt"</span>: <span class="vt">Timestamp(2026-03-15)</span>
+      </div>
+    </div>
+
+    <!-- startups -->
+    <div class="doc-card">
+      <div class="doc-head" style="background:rgba(0,212,170,.08); color:#00d4aa;">
+        🏢 startups
+        <span class="doc-path">startups / stk_agrosense</span>
+      </div>
+      <div class="doc-body">
+        <span class="k">"id"</span>: <span class="vs">"stk_agrosense"</span>,<br>
+        <span class="k">"name"</span>: <span class="vs">"AgroSense"</span>,<br>
+        <span class="k">"description"</span>: <span class="vs">"IoT para monitoramento de plantações"</span>,<br>
+        <span class="k">"executiveSummary"</span>: <span class="vs">"A AgroSense conecta..."</span>,<br>
+        <span class="k">"stage"</span>: <span class="ve">"em_operacao"</span>,<br>
+        <span class="k">"totalTokens"</span>: <span class="vn">100000</span>,<br>
+        <span class="k">"availableTokens"</span>: <span class="vn">74500</span>,<br>
+        <span class="k">"currentPrice"</span>: <span class="vn">12.50</span>,<br>
+        <span class="k">"capitalRaised"</span>: <span class="vn">318750.00</span>,<br>
+        <span class="k">"logoUrl"</span>: <span class="vs">"https://storage/.../logo.png"</span>,<br>
+        <span class="k">"videoUrls"</span>: [<span class="vs">"https://youtube.com/..."</span>],<br>
+        <span class="k">"tags"</span>: [<span class="vs">"agro"</span>, <span class="vs">"iot"</span>, <span class="vs">"saas"</span>],<br>
+        <span class="k">"createdAt"</span>: <span class="vt">Timestamp(2026-02-01)</span>,<br>
+        <span class="k">"updatedAt"</span>: <span class="vt">Timestamp(2026-03-10)</span><br>
+        <br>
+        <span class="cm">// Subcoleção: startups/stk_agrosense/partners</span>
+      </div>
+    </div>
+
+    <!-- partners (subcollection) -->
+    <div class="doc-card">
+      <div class="doc-head" style="background:rgba(84,197,248,.08); color:#54c5f8;">
+        🤝 partners <span style="font-size:10px;opacity:.6">(subcoleção)</span>
+        <span class="doc-path">startups/stk_agrosense/partners/prt_001</span>
+      </div>
+      <div class="doc-body">
+        <span class="k">"id"</span>: <span class="vs">"prt_001"</span>,<br>
+        <span class="k">"name"</span>: <span class="vs">"Carlos Menezes"</span>,<br>
+        <span class="k">"role"</span>: <span class="ve">"founder"</span>,<br>
+        <span class="k">"equityPercent"</span>: <span class="vn">60</span>,<br>
+        <span class="k">"bio"</span>: <span class="vs">"Engenheiro agrônomo com 10 anos..."</span>,<br>
+        <span class="k">"photoUrl"</span>: <span class="vs">"https://storage/.../carlos.jpg"</span><br>
+        <br>
+        <span class="cm">// outro parceiro na mesma subcoleção:</span><br>
+        <span class="cm">// partners/prt_002 → role: "mentor", equity: 0</span>
+      </div>
+    </div>
+
+    <!-- holdings -->
+    <div class="doc-card">
+      <div class="doc-head" style="background:rgba(192,132,252,.08); color:#c084fc;">
+        💼 holdings
+        <span class="doc-path">holdings / usr_joao_001_stk_agrosense</span>
+      </div>
+      <div class="doc-body">
+        <span class="cm">// ID composto garante 1 doc por usuário/startup</span><br>
+        <span class="k">"id"</span>: <span class="vs">"usr_joao_001_stk_agrosense"</span>,<br>
+        <span class="k">"userId"</span>: <span class="vr">"usr_joao_001"</span>,<br>
+        <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>,<br>
+        <span class="k">"quantity"</span>: <span class="vn">50</span>,<br>
+        <span class="k">"averageCost"</span>: <span class="vn">11.20</span>,<br>
+        <span class="cm">// 50 tokens × R$11,20 = R$560,00 investidos</span><br>
+        <span class="k">"updatedAt"</span>: <span class="vt">Timestamp(2026-03-12)</span>
+      </div>
+    </div>
+
+    <!-- orders compra -->
+    <div class="doc-card">
+      <div class="doc-head" style="background:rgba(0,212,170,.08); color:#00d4aa;">
+        📋 orders <span style="font-size:10px;opacity:.7">(compra)</span>
+        <span class="doc-path">orders / ord_buy_001</span>
+      </div>
+      <div class="doc-body">
+        <span class="k">"id"</span>: <span class="vs">"ord_buy_001"</span>,<br>
+        <span class="k">"userId"</span>: <span class="vr">"usr_joao_001"</span>,<br>
+        <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>,<br>
+        <span class="k">"startupName"</span>: <span class="vs">"AgroSense"</span>, <span class="cm">// denorm.</span><br>
+        <span class="k">"type"</span>: <span class="ve">"buy"</span>,<br>
+        <span class="k">"quantity"</span>: <span class="vn">10</span>,<br>
+        <span class="k">"quantityFilled"</span>: <span class="vn">0</span>,<br>
+        <span class="k">"pricePerToken"</span>: <span class="vn">12.50</span>,<br>
+        <span class="k">"status"</span>: <span class="ve">"open"</span>,<br>
+        <span class="k">"createdAt"</span>: <span class="vt">Timestamp(2026-03-15T10:00)</span>,<br>
+        <span class="k">"updatedAt"</span>: <span class="vt">Timestamp(2026-03-15T10:00)</span>
+      </div>
+    </div>
+
+    <!-- orders venda -->
+    <div class="doc-card">
+      <div class="doc-head" style="background:rgba(255,107,107,.08); color:#ff9090;">
+        📋 orders <span style="font-size:10px;opacity:.7">(venda)</span>
+        <span class="doc-path">orders / ord_sell_001</span>
+      </div>
+      <div class="doc-body">
+        <span class="k">"id"</span>: <span class="vs">"ord_sell_001"</span>,<br>
+        <span class="k">"userId"</span>: <span class="vr">"usr_maria_002"</span>,<br>
+        <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>,<br>
+        <span class="k">"startupName"</span>: <span class="vs">"AgroSense"</span>, <span class="cm">// denorm.</span><br>
+        <span class="k">"type"</span>: <span class="ve">"sell"</span>,<br>
+        <span class="k">"quantity"</span>: <span class="vn">10</span>,<br>
+        <span class="k">"quantityFilled"</span>: <span class="vn">10</span>,<br>
+        <span class="k">"pricePerToken"</span>: <span class="vn">12.50</span>,<br>
+        <span class="k">"status"</span>: <span class="ve">"filled"</span>,<br>
+        <span class="k">"createdAt"</span>: <span class="vt">Timestamp(2026-03-15T09:30)</span>,<br>
+        <span class="k">"updatedAt"</span>: <span class="vt">Timestamp(2026-03-15T10:01)</span>
+      </div>
+    </div>
+
+    <!-- transaction -->
+    <div class="doc-card">
+      <div class="doc-head" style="background:rgba(0,212,170,.08); color:#00d4aa;">
+        🔄 transactions
+        <span class="doc-path">transactions / txn_001</span>
+      </div>
+      <div class="doc-body">
+        <span class="k">"id"</span>: <span class="vs">"txn_001"</span>,<br>
+        <span class="k">"buyOrderId"</span>: <span class="vr">"ord_buy_001"</span>,<br>
+        <span class="k">"sellOrderId"</span>: <span class="vr">"ord_sell_001"</span>,<br>
+        <span class="k">"buyerId"</span>: <span class="vr">"usr_joao_001"</span>,<br>
+        <span class="k">"sellerId"</span>: <span class="vr">"usr_maria_002"</span>,<br>
+        <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>,<br>
+        <span class="k">"quantity"</span>: <span class="vn">10</span>,<br>
+        <span class="k">"pricePerToken"</span>: <span class="vn">12.50</span>,<br>
+        <span class="k">"totalValue"</span>: <span class="vn">125.00</span>,<br>
+        <span class="cm">// 10 tokens × R$12,50 = R$125,00</span><br>
+        <span class="k">"executedAt"</span>: <span class="vt">Timestamp(2026-03-15T10:01)</span>
+      </div>
+    </div>
+
+    <!-- wallet_txs -->
+    <div class="doc-card">
+      <div class="doc-head" style="background:rgba(255,209,102,.08); color:#ffd166;">
+        💳 wallet_txs <span style="font-size:10px;opacity:.7">(débito comprador)</span>
+        <span class="doc-path">wallet_txs / wtx_joao_001</span>
+      </div>
+      <div class="doc-body">
+        <span class="k">"id"</span>: <span class="vs">"wtx_joao_001"</span>,<br>
+        <span class="k">"userId"</span>: <span class="vr">"usr_joao_001"</span>,<br>
+        <span class="k">"type"</span>: <span class="ve">"debit"</span>,<br>
+        <span class="k">"amount"</span>: <span class="vn">125.00</span>,<br>
+        <span class="k">"balanceAfter"</span>: <span class="vn">1375.00</span>,<br>
+        <span class="cm">// era R$1.500 → pagou R$125 → ficou R$1.375</span><br>
+        <span class="k">"description"</span>: <span class="vs">"Compra de 10 tokens AgroSense"</span>,<br>
+        <span class="k">"relatedTransactionId"</span>: <span class="vr">"txn_001"</span>,<br>
+        <span class="k">"createdAt"</span>: <span class="vt">Timestamp(2026-03-15T10:01)</span>
+      </div>
+    </div>
+
+    <!-- questions -->
+    <div class="doc-card">
+      <div class="doc-head" style="background:rgba(255,209,102,.08); color:#ffd166;">
+        💬 questions
+        <span class="doc-path">questions / qst_001</span>
+      </div>
+      <div class="doc-body">
+        <span class="k">"id"</span>: <span class="vs">"qst_001"</span>,<br>
+        <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>,<br>
+        <span class="k">"userId"</span>: <span class="vr">"usr_joao_001"</span>,<br>
+        <span class="k">"question"</span>: <span class="vs">"Qual a previsão de break-even?"</span>,<br>
+        <span class="k">"answer"</span>: <span class="vs">"Projetamos atingir em 18 meses..."</span>,<br>
+        <span class="k">"visibility"</span>: <span class="ve">"public"</span>,<br>
+        <span class="k">"createdAt"</span>: <span class="vt">Timestamp(2026-03-10)</span>,<br>
+        <span class="k">"answeredAt"</span>: <span class="vt">Timestamp(2026-03-11)</span>
+      </div>
+    </div>
+
+    <!-- price_history -->
+    <div class="doc-card">
+      <div class="doc-head" style="background:rgba(192,132,252,.08); color:#c084fc;">
+        📈 price_history
+        <span class="doc-path">price_history / ph_agrosense_001</span>
+      </div>
+      <div class="doc-body">
+        <span class="k">"id"</span>: <span class="vs">"ph_agrosense_001"</span>,<br>
+        <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span>,<br>
+        <span class="k">"price"</span>: <span class="vn">10.00</span>,<br>
+        <span class="k">"volume"</span>: <span class="vn">500</span>,<br>
+        <span class="k">"recordedAt"</span>: <span class="vt">Timestamp(2026-02-01)</span><br>
+        <br>
+        <span class="cm">// próximos registros ao longo do tempo:</span><br>
+        <span class="cm">// ph_002 → price: 10.80, recordedAt: 2026-02-15</span><br>
+        <span class="cm">// ph_003 → price: 11.50, recordedAt: 2026-03-01</span><br>
+        <span class="cm">// ph_004 → price: 12.50, recordedAt: 2026-03-15</span>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       3. CENÁRIOS PRÁTICOS
+  ══════════════════════════════════════════ -->
+  <div class="sec-title">3. Cenários Práticos — O Que Acontece no Banco</div>
+  <div class="info">
+    <span>🎬</span>
+    <span>Estes cenários mostram <strong>exatamente quais documentos são criados ou alterados</strong> no Firestore quando uma ação acontece no app.</span>
+  </div>
+
+  <!-- Cenário 1: Cadastro -->
+  <div class="scenario">
+    <div class="scenario-head">
+      <div class="num" style="background:rgba(108,99,255,.2);color:#a99eff">1</div>
+      <div>
+        <h3>João se cadastra no app</h3>
+        <p>Usuário preenche nome, e-mail, CPF, telefone e senha</p>
+      </div>
+      <span class="tag tag-purple">WRITE</span>
+    </div>
+    <div class="scenario-body">
+      <div class="flow">
+        <div class="flow-step">
+          <div class="step-dot" style="background:rgba(108,99,255,.2);color:#a99eff">1</div>
+          <div class="step-content">
+            <h4>Firebase Auth cria o usuário</h4>
+            <p>Gera o UID que será usado como ID do documento no Firestore.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-dot" style="background:rgba(0,212,170,.2);color:#00d4aa">2</div>
+          <div class="step-content">
+            <h4>Backend cria documento em <code>users</code></h4>
+            <div class="mini-doc">
+              <div class="col-name">✚ criado: users / usr_joao_001</div>
+              <div class="new-doc">
+                <span class="k">"name"</span>: <span class="vs">"João da Silva"</span><br>
+                <span class="k">"email"</span>: <span class="vs">"joao@email.com"</span><br>
+                <span class="k">"cpf"</span>: <span class="vs">"12345678900"</span><br>
+                <span class="k">"walletBalance"</span>: <span class="vn">0.00</span> <span class="cm">// começa zerado</span><br>
+                <span class="k">"mfaEnabled"</span>: <span class="vb">false</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cenário 2: Adicionar saldo -->
+  <div class="scenario">
+    <div class="scenario-head">
+      <div class="num" style="background:rgba(0,212,170,.2);color:#00d4aa">2</div>
+      <div>
+        <h3>João adiciona R$ 1.500,00 de saldo fictício</h3>
+        <p>Simulação de crédito interno — sem pagamento real</p>
+      </div>
+      <span class="tag tag-green">WRITE</span>
+    </div>
+    <div class="scenario-body">
+      <div class="flow">
+        <div class="flow-step">
+          <div class="step-dot" style="background:rgba(255,209,102,.2);color:#ffd166">1</div>
+          <div class="step-content">
+            <h4>Cria movimentação de crédito em <code>wallet_txs</code></h4>
+            <div class="mini-doc">
+              <div class="col-name">✚ criado: wallet_txs / wtx_cred_001</div>
+              <div class="new-doc">
+                <span class="k">"userId"</span>: <span class="vr">"usr_joao_001"</span><br>
+                <span class="k">"type"</span>: <span class="ve">"credit"</span><br>
+                <span class="k">"amount"</span>: <span class="vn">1500.00</span><br>
+                <span class="k">"balanceAfter"</span>: <span class="vn">1500.00</span><br>
+                <span class="k">"description"</span>: <span class="vs">"Recarga de saldo simulado"</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-dot" style="background:rgba(108,99,255,.2);color:#a99eff">2</div>
+          <div class="step-content">
+            <h4>Atualiza saldo em <code>users</code></h4>
+            <div class="mini-doc">
+              <div class="col-name">✎ atualizado: users / usr_joao_001</div>
+              <div class="changed">
+                <span class="k">"walletBalance"</span>: <span class="vn">0.00</span> → <span class="vn">1500.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cenário 3: Compra -->
+  <div class="scenario">
+    <div class="scenario-head">
+      <div class="num" style="background:rgba(255,209,102,.2);color:#ffd166">3</div>
+      <div>
+        <h3>João compra 10 tokens da AgroSense de Maria</h3>
+        <p>Ordem de compra casa com ordem de venda aberta → transação executada</p>
+      </div>
+      <span class="tag tag-yellow">5 OPERAÇÕES</span>
+    </div>
+    <div class="scenario-body">
+      <div class="flow">
+        <div class="flow-step">
+          <div class="step-dot" style="background:rgba(0,212,170,.2);color:#00d4aa">1</div>
+          <div class="step-content">
+            <h4>João cria ordem de compra</h4>
+            <div class="mini-doc">
+              <div class="col-name">✚ criado: orders / ord_buy_001</div>
+              <div class="new-doc">
+                <span class="k">"userId"</span>: <span class="vr">"usr_joao_001"</span><br>
+                <span class="k">"type"</span>: <span class="ve">"buy"</span><br>
+                <span class="k">"quantity"</span>: <span class="vn">10</span> · <span class="k">"pricePerToken"</span>: <span class="vn">12.50</span><br>
+                <span class="k">"status"</span>: <span class="ve">"open"</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-dot" style="background:rgba(0,212,170,.2);color:#00d4aa">2</div>
+          <div class="step-content">
+            <h4>Backend casa com ordem de venda da Maria e cria transação</h4>
+            <div class="mini-doc">
+              <div class="col-name">✚ criado: transactions / txn_001</div>
+              <div class="new-doc">
+                <span class="k">"buyerId"</span>: <span class="vr">"usr_joao_001"</span> · <span class="k">"sellerId"</span>: <span class="vr">"usr_maria_002"</span><br>
+                <span class="k">"quantity"</span>: <span class="vn">10</span> · <span class="k">"pricePerToken"</span>: <span class="vn">12.50</span> · <span class="k">"totalValue"</span>: <span class="vn">125.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-dot" style="background:rgba(108,99,255,.2);color:#a99eff">3</div>
+          <div class="step-content">
+            <h4>Atualiza ordens e holdings</h4>
+            <div class="mini-doc">
+              <div class="col-name">✎ atualizado: orders / ord_buy_001</div>
+              <div class="changed"><span class="k">"quantityFilled"</span>: <span class="vn">0</span> → <span class="vn">10</span> · <span class="k">"status"</span>: <span class="ve">"open"</span> → <span class="ve">"filled"</span></div>
+              <br>
+              <div class="col-name">✎ atualizado: orders / ord_sell_001</div>
+              <div class="changed"><span class="k">"quantityFilled"</span>: <span class="vn">0</span> → <span class="vn">10</span> · <span class="k">"status"</span>: <span class="ve">"open"</span> → <span class="ve">"filled"</span></div>
+              <br>
+              <div class="col-name">✚ criado/atualizado: holdings / usr_joao_001_stk_agrosense</div>
+              <div class="changed"><span class="k">"quantity"</span>: <span class="vn">0</span> → <span class="vn">10</span> · <span class="k">"averageCost"</span>: <span class="vn">12.50</span></div>
+              <br>
+              <div class="col-name">✎ atualizado: holdings / usr_maria_002_stk_agrosense</div>
+              <div class="changed"><span class="k">"quantity"</span>: <span class="vn">50</span> → <span class="vn">40</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-dot" style="background:rgba(255,209,102,.2);color:#ffd166">4</div>
+          <div class="step-content">
+            <h4>Débita carteira do João e credita a da Maria</h4>
+            <div class="mini-doc">
+              <div class="col-name">✚ criado: wallet_txs / wtx_joao_deb</div>
+              <div class="new-doc"><span class="k">"type"</span>: <span class="ve">"debit"</span> · <span class="k">"amount"</span>: <span class="vn">125.00</span> · <span class="k">"balanceAfter"</span>: <span class="vn">1375.00</span></div>
+              <br>
+              <div class="col-name">✚ criado: wallet_txs / wtx_maria_cred</div>
+              <div class="new-doc"><span class="k">"type"</span>: <span class="ve">"refund"</span> · <span class="k">"amount"</span>: <span class="vn">125.00</span> · <span class="k">"balanceAfter"</span>: <span class="vn">625.00</span></div>
+              <br>
+              <div class="col-name">✎ atualizado: users / usr_joao_001</div>
+              <div class="changed"><span class="k">"walletBalance"</span>: <span class="vn">1500.00</span> → <span class="vn">1375.00</span></div>
+              <br>
+              <div class="col-name">✎ atualizado: users / usr_maria_002</div>
+              <div class="changed"><span class="k">"walletBalance"</span>: <span class="vn">500.00</span> → <span class="vn">625.00</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-dot" style="background:rgba(192,132,252,.2);color:#c084fc">5</div>
+          <div class="step-content">
+            <h4>Registra snapshot de preço para o dashboard</h4>
+            <div class="mini-doc">
+              <div class="col-name">✚ criado: price_history / ph_agrosense_005</div>
+              <div class="new-doc">
+                <span class="k">"startupId"</span>: <span class="vr">"stk_agrosense"</span><br>
+                <span class="k">"price"</span>: <span class="vn">12.50</span> · <span class="k">"volume"</span>: <span class="vn">10</span><br>
+                <span class="k">"recordedAt"</span>: <span class="vt">Timestamp(2026-03-15T10:01)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cenário 4: Dashboard -->
+  <div class="scenario">
+    <div class="scenario-head">
+      <div class="num" style="background:rgba(192,132,252,.2);color:#c084fc">4</div>
+      <div>
+        <h3>João abre o dashboard de valorização</h3>
+        <p>App busca histórico de preços para montar o gráfico</p>
+      </div>
+      <span class="tag tag-blue">2 READS</span>
+    </div>
+    <div class="scenario-body">
+      <div class="flow">
+        <div class="flow-step">
+          <div class="step-dot" style="background:rgba(84,197,248,.2);color:#54c5f8">1</div>
+          <div class="step-content">
+            <h4>Busca holdings do João</h4>
+            <p>1 leitura — sabe em quais startups ele investiu</p>
+            <div class="mini-doc">
+              <span class="cm">// query: WHERE userId == "usr_joao_001"</span><br>
+              <span class="cm">// retorna: [ usr_joao_001_stk_agrosense, ... ]</span>
+            </div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-dot" style="background:rgba(192,132,252,.2);color:#c084fc">2</div>
+          <div class="step-content">
+            <h4>Busca histórico de preços da AgroSense (período selecionado)</h4>
+            <p>1 leitura com filtro de data — alimenta o gráfico</p>
+            <div class="mini-doc">
+              <span class="cm">// query: WHERE startupId == "stk_agrosense"</span><br>
+              <span class="cm">//         AND recordedAt >= [30 dias atrás]</span><br>
+              <span class="cm">// retorna lista ordenada por data → gráfico de linha</span><br><br>
+              <span class="k">recordedAt</span>  <span class="k">price</span><br>
+              <span class="vt">2026-02-15</span>  <span class="vn">10.80</span><br>
+              <span class="vt">2026-03-01</span>  <span class="vn">11.50</span><br>
+              <span class="vt">2026-03-08</span>  <span class="vn">12.00</span><br>
+              <span class="vt">2026-03-15</span>  <span class="vn">12.50</span> <span class="cm">← hoje</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>
