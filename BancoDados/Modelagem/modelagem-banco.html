@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MesclaInvest — Modelagem do Banco</title>
+  <style>
+    :root {
+      --bg: #0b0d14;
+      --surface: #13151f;
+      --surface2: #1c1f2e;
+      --surface3: #22263a;
+      --border: #262b42;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --accent3: #ff6b6b;
+      --accent4: #ffd166;
+      --accent5: #54c5f8;
+      --text: #dde1f5;
+      --text-muted: #7a80a8;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, #13151f 0%, #0b0d14 60%, #130c25 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 44px 32px 36px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -100px; left: 50%; transform: translateX(-50%);
+      width: 700px; height: 350px;
+      background: radial-gradient(ellipse, rgba(108,99,255,0.14) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(108,99,255,0.12);
+      border: 1px solid rgba(108,99,255,0.35);
+      color: #a99eff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+    }
+    header h1 {
+      font-size: clamp(24px, 4vw, 40px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #a99eff 0%, #6c63ff 50%, #00d4aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+    header p { color: var(--text-muted); font-size: 14px; max-width: 540px; margin: 0 auto; }
+
+    /* LAYOUT */
+    main { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+      margin-top: 48px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* COLLECTION CARD */
+    .collection {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .collection:hover { border-color: rgba(108,99,255,0.35); }
+
+    .col-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+    .col-icon {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .col-name {
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      color: var(--text);
+      flex: 1;
+    }
+    .col-desc { font-size: 12px; color: var(--text-muted); }
+    .col-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 5px;
+      white-space: nowrap;
+    }
+    .badge-root { background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3); color: #a99eff; }
+    .badge-sub  { background: rgba(0,212,170,0.1);  border: 1px solid rgba(0,212,170,0.25); color: #00d4aa; }
+
+    /* FIELDS TABLE */
+    .fields-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .fields-table thead tr {
+      background: var(--surface2);
+    }
+    .fields-table th {
+      padding: 9px 16px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .fields-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(38,43,66,0.6);
+      vertical-align: middle;
+    }
+    .fields-table tr:last-child td { border-bottom: none; }
+    .fields-table tr:hover td { background: rgba(108,99,255,0.03); }
+
+    .field-name {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent5);
+    }
+    .field-key { color: var(--accent4); }
+    .field-type {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--accent2);
+      background: rgba(0,212,170,0.08);
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .field-type.ref  { color: #a99eff; background: rgba(108,99,255,0.1); }
+    .field-type.bool { color: #ffd166; background: rgba(255,209,102,0.1); }
+    .field-type.num  { color: #ff9090; background: rgba(255,107,107,0.1); }
+    .field-type.arr  { color: #54c5f8; background: rgba(84,197,248,0.1); }
+    .field-type.ts   { color: #c084fc; background: rgba(192,132,252,0.1); }
+    .field-type.enum { color: #fb923c; background: rgba(251,146,60,0.1); }
+    .field-desc { font-size: 12px; color: var(--text-muted); }
+    .field-req { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; }
+    .req-yes { color: #ff9090; }
+    .req-no  { color: var(--text-muted); opacity: 0.5; }
+
+    /* SUBCOLLECTION INDICATOR */
+    .subcol-row td { background: rgba(0,212,170,0.03); }
+    .subcol-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent2);
+      background: rgba(0,212,170,0.1);
+      border: 1px solid rgba(0,212,170,0.2);
+      padding: 2px 8px;
+      border-radius: 5px;
+      letter-spacing: 0.5px;
+    }
+
+    /* RELATIONS DIAGRAM */
+    .relations {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .rel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .rel-node {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      text-align: center;
+      position: relative;
+    }
+    .rel-node .node-name {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .rel-node .node-count { font-size: 11px; color: var(--text-muted); }
+
+    .rel-list { list-style: none; }
+    .rel-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .rel-list li:last-child { border-bottom: none; }
+    .rel-from, .rel-to {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .rel-from { color: var(--accent5); }
+    .rel-to   { color: var(--accent2); }
+    .rel-arrow { color: var(--text-muted); flex-shrink: 0; }
+    .rel-type {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 1px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .rt-1n  { background: rgba(108,99,255,0.15); color: #a99eff; }
+    .rt-n1  { background: rgba(0,212,170,0.1);   color: #00d4aa; }
+    .rt-nn  { background: rgba(255,209,102,0.1);  color: #ffd166; }
+    .rel-desc { font-size: 12px; color: var(--text-muted); flex: 1; }
+
+    /* ENUM CARD */
+    .enum-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .enum-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .enum-card .enum-name {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent5);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .enum-val {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .enum-val .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .enum-val code {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--accent4);
+      background: rgba(255,209,102,0.08);
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    /* INFO BOX */
+    .info-box {
+      background: rgba(108,99,255,0.07);
+      border: 1px solid rgba(108,99,255,0.2);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 10px;
+    }
+
+    /* OVERVIEW GRID */
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    .ov-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+    .ov-card .ov-emoji { font-size: 22px; margin-bottom: 6px; }
+    .ov-card .ov-name {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+    .ov-card .ov-type { font-size: 11px; color: var(--text-muted); }
+
+    @media (max-width: 640px) {
+      header { padding: 28px 16px 24px; }
+      main { padding: 24px 14px 60px; }
+      .fields-table th:nth-child(4),
+      .fields-table td:nth-child(4) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">Firebase Firestore · NoSQL · MesclaInvest</div>
+  <h1>Modelagem do Banco de Dados</h1>
+  <p>Estrutura de coleções e documentos do Firebase Firestore para o projeto MesclaInvest</p>
+</header>
+
+<main>
+
+  <!-- OVERVIEW -->
+  <div class="section-title">Visão Geral das Coleções</div>
+  <div class="overview-grid">
+    <div class="ov-card"><div class="ov-emoji">👤</div><div class="ov-name">users</div><div class="ov-type">Raiz</div></div>
+    <div class="ov-card"><div class="ov-emoji">🏢</div><div class="ov-name">startups</div><div class="ov-type">Raiz</div></div>
+    <div class="ov-card"><div class="ov-emoji">💬</div><div class="ov-name">questions</div><div class="ov-type">Raiz</div></div>
+    <div class="ov-card"><div class="ov-emoji">📋</div><div class="ov-name">orders</div><div class="ov-type">Raiz</div></div>
+    <div class="ov-card"><div class="ov-emoji">🔄</div><div class="ov-name">transactions</div><div class="ov-type">Raiz</div></div>
+    <div class="ov-card"><div class="ov-emoji">📈</div><div class="ov-name">price_history</div><div class="ov-type">Raiz</div></div>
+    <div class="ov-card"><div class="ov-emoji">💼</div><div class="ov-name">holdings</div><div class="ov-type">Raiz</div></div>
+    <div class="ov-card"><div class="ov-emoji">💳</div><div class="ov-name">wallet_txs</div><div class="ov-type">Raiz</div></div>
+    <div class="ov-card"><div class="ov-emoji">📢</div><div class="ov-name">updates</div><div class="ov-type">Raiz</div></div>
+  </div>
+
+  <!-- ENUMS -->
+  <div class="section-title">Enumerações (Valores Fixos)</div>
+  <div class="enum-grid">
+    <div class="enum-card">
+      <div class="enum-name">startup.stage</div>
+      <div class="enum-val"><span class="dot" style="background:#a99eff"></span><code>nova</code> Ideia recém publicada</div>
+      <div class="enum-val"><span class="dot" style="background:#00d4aa"></span><code>em_operacao</code> Já em funcionamento</div>
+      <div class="enum-val"><span class="dot" style="background:#ffd166"></span><code>em_expansao</code> Em crescimento</div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">order.type</div>
+      <div class="enum-val"><span class="dot" style="background:#00d4aa"></span><code>buy</code> Oferta de compra</div>
+      <div class="enum-val"><span class="dot" style="background:#ff9090"></span><code>sell</code> Oferta de venda</div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">order.status</div>
+      <div class="enum-val"><span class="dot" style="background:#ffd166"></span><code>open</code> Aguardando execução</div>
+      <div class="enum-val"><span class="dot" style="background:#00d4aa"></span><code>filled</code> Totalmente executada</div>
+      <div class="enum-val"><span class="dot" style="background:#54c5f8"></span><code>partial</code> Parcialmente executada</div>
+      <div class="enum-val"><span class="dot" style="background:#ff9090"></span><code>cancelled</code> Cancelada</div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">partner.role</div>
+      <div class="enum-val"><span class="dot" style="background:#a99eff"></span><code>founder</code> Fundador / Sócio</div>
+      <div class="enum-val"><span class="dot" style="background:#ffd166"></span><code>mentor</code> Mentor</div>
+      <div class="enum-val"><span class="dot" style="background:#54c5f8"></span><code>advisor</code> Conselheiro</div>
+      <div class="enum-val"><span class="dot" style="background:#00d4aa"></span><code>partner</code> Parceiro externo</div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">wallet_tx.type</div>
+      <div class="enum-val"><span class="dot" style="background:#00d4aa"></span><code>credit</code> Crédito de saldo</div>
+      <div class="enum-val"><span class="dot" style="background:#ff9090"></span><code>debit</code> Débito (compra)</div>
+      <div class="enum-val"><span class="dot" style="background:#ffd166"></span><code>refund</code> Estorno (venda)</div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">question.visibility</div>
+      <div class="enum-val"><span class="dot" style="background:#00d4aa"></span><code>public</code> Visível a todos</div>
+      <div class="enum-val"><span class="dot" style="background:#ff9090"></span><code>private</code> Só para investidores</div>
+    </div>
+  </div>
+
+  <!-- COLLECTIONS -->
+  <div class="section-title">Coleções Detalhadas</div>
+
+  <!-- users -->
+  <div class="collection">
+    <div class="col-header">
+      <div class="col-icon" style="background:rgba(108,99,255,0.15)">👤</div>
+      <div>
+        <div class="col-name">users</div>
+        <div class="col-desc">Perfil e carteira de cada usuário cadastrado na plataforma</div>
+      </div>
+      <span class="col-badge badge-root">Raiz</span>
+    </div>
+    <table class="fields-table">
+      <thead>
+        <tr>
+          <th>Campo</th><th>Tipo</th><th>Descrição</th><th>Req?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="field-name field-key">id</span></td><td><span class="field-type">string</span></td><td class="field-desc">UID gerado pelo Firebase Auth (mesmo ID do Auth)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">name</span></td><td><span class="field-type">string</span></td><td class="field-desc">Nome completo do usuário</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">email</span></td><td><span class="field-type">string</span></td><td class="field-desc">E-mail — único no sistema</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">cpf</span></td><td><span class="field-type">string</span></td><td class="field-desc">CPF formatado (somente dígitos) — único no sistema</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">phone</span></td><td><span class="field-type">string</span></td><td class="field-desc">Telefone celular (somente dígitos com DDD)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">walletBalance</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Saldo fictício em reais disponível na carteira</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">mfaEnabled</span></td><td><span class="field-type bool">boolean</span></td><td class="field-desc">Indica se o usuário ativou autenticação multifator (2FA)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">mfaSecret</span></td><td><span class="field-type">string</span></td><td class="field-desc">Segredo TOTP para validação do 2FA (quando habilitado)</td><td><span class="field-req req-no">Não</span></td></tr>
+        <tr><td><span class="field-name">avatarUrl</span></td><td><span class="field-type">string</span></td><td class="field-desc">URL da foto de perfil (Firebase Storage)</td><td><span class="field-req req-no">Não</span></td></tr>
+        <tr><td><span class="field-name">createdAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Data e hora do cadastro</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">updatedAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Última atualização do perfil</td><td><span class="field-req req-yes">Sim</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- startups -->
+  <div class="collection">
+    <div class="col-header">
+      <div class="col-icon" style="background:rgba(0,212,170,0.12)">🏢</div>
+      <div>
+        <div class="col-name">startups</div>
+        <div class="col-desc">Cadastro das startups do ecossistema Mescla — gerenciado via backend/admin</div>
+      </div>
+      <span class="col-badge badge-root">Raiz</span>
+    </div>
+    <table class="fields-table">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th><th>Req?</th></tr></thead>
+      <tbody>
+        <tr><td><span class="field-name field-key">id</span></td><td><span class="field-type">string</span></td><td class="field-desc">ID auto-gerado pelo Firestore</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">name</span></td><td><span class="field-type">string</span></td><td class="field-desc">Nome da startup</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">description</span></td><td><span class="field-type">string</span></td><td class="field-desc">Descrição curta exibida na listagem</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">executiveSummary</span></td><td><span class="field-type">string</span></td><td class="field-desc">Sumário executivo completo (pode conter markdown)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">stage</span></td><td><span class="field-type enum">enum</span></td><td class="field-desc"><code style="font-size:11px">nova</code> | <code style="font-size:11px">em_operacao</code> | <code style="font-size:11px">em_expansao</code></td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">totalTokens</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Quantidade total de tokens emitidos para esta startup</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">availableTokens</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Tokens ainda disponíveis (não adquiridos por investidores)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">currentPrice</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Preço atual por token em reais (simulado)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">capitalRaised</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Volume total de capital captado simulado (em reais)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">logoUrl</span></td><td><span class="field-type">string</span></td><td class="field-desc">URL do logotipo (Firebase Storage)</td><td><span class="field-req req-no">Não</span></td></tr>
+        <tr><td><span class="field-name">videoUrls</span></td><td><span class="field-type arr">array&lt;string&gt;</span></td><td class="field-desc">Lista de URLs de vídeos demonstrativos</td><td><span class="field-req req-no">Não</span></td></tr>
+        <tr><td><span class="field-name">tags</span></td><td><span class="field-type arr">array&lt;string&gt;</span></td><td class="field-desc">Palavras-chave para categorização e busca</td><td><span class="field-req req-no">Não</span></td></tr>
+        <tr><td><span class="field-name">createdAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Data de publicação no catálogo</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">updatedAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Última atualização dos dados da startup</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <!-- SUBCOLLECTION -->
+        <tr class="subcol-row">
+          <td colspan="4" style="padding:10px 16px;">
+            <span class="subcol-indicator">↳ Subcoleção: <strong>partners</strong></span>
+            <span style="font-size:12px;color:var(--text-muted);margin-left:10px;">Sócios, mentores e participantes da startup</span>
+          </td>
+        </tr>
+        <tr><td><span class="field-name field-key" style="padding-left:16px">id</span></td><td><span class="field-type">string</span></td><td class="field-desc">ID auto-gerado</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name" style="padding-left:16px">name</span></td><td><span class="field-type">string</span></td><td class="field-desc">Nome completo do membro</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name" style="padding-left:16px">role</span></td><td><span class="field-type enum">enum</span></td><td class="field-desc"><code style="font-size:11px">founder</code> | <code style="font-size:11px">mentor</code> | <code style="font-size:11px">advisor</code> | <code style="font-size:11px">partner</code></td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name" style="padding-left:16px">equityPercent</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Percentual de participação societária (0-100)</td><td><span class="field-req req-no">Não</span></td></tr>
+        <tr><td><span class="field-name" style="padding-left:16px">bio</span></td><td><span class="field-type">string</span></td><td class="field-desc">Biografia ou descrição do membro</td><td><span class="field-req req-no">Não</span></td></tr>
+        <tr><td><span class="field-name" style="padding-left:16px">photoUrl</span></td><td><span class="field-type">string</span></td><td class="field-desc">URL da foto do membro</td><td><span class="field-req req-no">Não</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- questions -->
+  <div class="collection">
+    <div class="col-header">
+      <div class="col-icon" style="background:rgba(255,209,102,0.12)">💬</div>
+      <div>
+        <div class="col-name">questions</div>
+        <div class="col-desc">Perguntas enviadas por investidores aos empreendedores</div>
+      </div>
+      <span class="col-badge badge-root">Raiz</span>
+    </div>
+    <table class="fields-table">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th><th>Req?</th></tr></thead>
+      <tbody>
+        <tr><td><span class="field-name field-key">id</span></td><td><span class="field-type">string</span></td><td class="field-desc">ID auto-gerado</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">startupId</span></td><td><span class="field-type ref">ref → startups</span></td><td class="field-desc">Startup destinatária da pergunta</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">userId</span></td><td><span class="field-type ref">ref → users</span></td><td class="field-desc">Usuário que enviou a pergunta</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">question</span></td><td><span class="field-type">string</span></td><td class="field-desc">Texto da pergunta enviada</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">answer</span></td><td><span class="field-type">string</span></td><td class="field-desc">Resposta do empreendedor (preenchida via backend)</td><td><span class="field-req req-no">Não</span></td></tr>
+        <tr><td><span class="field-name">visibility</span></td><td><span class="field-type enum">enum</span></td><td class="field-desc"><code style="font-size:11px">public</code> (todos) | <code style="font-size:11px">private</code> (só investidores)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">answeredAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Data em que a resposta foi publicada</td><td><span class="field-req req-no">Não</span></td></tr>
+        <tr><td><span class="field-name">createdAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Data de envio da pergunta</td><td><span class="field-req req-yes">Sim</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- holdings -->
+  <div class="collection">
+    <div class="col-header">
+      <div class="col-icon" style="background:rgba(84,197,248,0.12)">💼</div>
+      <div>
+        <div class="col-name">holdings</div>
+        <div class="col-desc">Posição atual de tokens de cada usuário por startup (portfólio)</div>
+      </div>
+      <span class="col-badge badge-root">Raiz</span>
+    </div>
+    <table class="fields-table">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th><th>Req?</th></tr></thead>
+      <tbody>
+        <tr><td><span class="field-name field-key">id</span></td><td><span class="field-type">string</span></td><td class="field-desc">ID composto: <code style="font-size:11px">{userId}_{startupId}</code></td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">userId</span></td><td><span class="field-type ref">ref → users</span></td><td class="field-desc">Dono dos tokens</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">startupId</span></td><td><span class="field-type ref">ref → startups</span></td><td class="field-desc">Startup à qual os tokens pertencem</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">quantity</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Quantidade de tokens em posse</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">averageCost</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Preço médio de aquisição por token (em reais)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">updatedAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Última atualização da posição</td><td><span class="field-req req-yes">Sim</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- orders -->
+  <div class="collection">
+    <div class="col-header">
+      <div class="col-icon" style="background:rgba(255,107,107,0.12)">📋</div>
+      <div>
+        <div class="col-name">orders</div>
+        <div class="col-desc">Ofertas de compra e venda abertas no balcão de negociação</div>
+      </div>
+      <span class="col-badge badge-root">Raiz</span>
+    </div>
+    <table class="fields-table">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th><th>Req?</th></tr></thead>
+      <tbody>
+        <tr><td><span class="field-name field-key">id</span></td><td><span class="field-type">string</span></td><td class="field-desc">ID auto-gerado</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">userId</span></td><td><span class="field-type ref">ref → users</span></td><td class="field-desc">Usuário que criou a oferta</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">startupId</span></td><td><span class="field-type ref">ref → startups</span></td><td class="field-desc">Startup cujos tokens são negociados</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">type</span></td><td><span class="field-type enum">enum</span></td><td class="field-desc"><code style="font-size:11px">buy</code> | <code style="font-size:11px">sell</code></td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">quantity</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Quantidade de tokens da oferta</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">quantityFilled</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Quantidade já executada (para execução parcial)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">pricePerToken</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Preço unitário por token em reais</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">status</span></td><td><span class="field-type enum">enum</span></td><td class="field-desc"><code style="font-size:11px">open</code> | <code style="font-size:11px">filled</code> | <code style="font-size:11px">partial</code> | <code style="font-size:11px">cancelled</code></td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">createdAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Data de criação da oferta</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">updatedAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Última atualização do status</td><td><span class="field-req req-yes">Sim</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- transactions -->
+  <div class="collection">
+    <div class="col-header">
+      <div class="col-icon" style="background:rgba(0,212,170,0.12)">🔄</div>
+      <div>
+        <div class="col-name">transactions</div>
+        <div class="col-desc">Registro imutável de todas as negociações efetivadas entre usuários</div>
+      </div>
+      <span class="col-badge badge-root">Raiz</span>
+    </div>
+    <table class="fields-table">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th><th>Req?</th></tr></thead>
+      <tbody>
+        <tr><td><span class="field-name field-key">id</span></td><td><span class="field-type">string</span></td><td class="field-desc">ID auto-gerado</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">buyOrderId</span></td><td><span class="field-type ref">ref → orders</span></td><td class="field-desc">Ordem de compra que originou a transação</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">sellOrderId</span></td><td><span class="field-type ref">ref → orders</span></td><td class="field-desc">Ordem de venda que originou a transação</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">buyerId</span></td><td><span class="field-type ref">ref → users</span></td><td class="field-desc">Usuário comprador</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">sellerId</span></td><td><span class="field-type ref">ref → users</span></td><td class="field-desc">Usuário vendedor</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">startupId</span></td><td><span class="field-type ref">ref → startups</span></td><td class="field-desc">Startup cujos tokens foram negociados</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">quantity</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Quantidade de tokens transferidos</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">pricePerToken</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Preço unitário efetivado na transação</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">totalValue</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Valor total da transação (quantity × pricePerToken)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">executedAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Data e hora da execução</td><td><span class="field-req req-yes">Sim</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- price_history -->
+  <div class="collection">
+    <div class="col-header">
+      <div class="col-icon" style="background:rgba(192,132,252,0.12)">📈</div>
+      <div>
+        <div class="col-name">price_history</div>
+        <div class="col-desc">Histórico de preços para alimentar o dashboard de valorização dos tokens</div>
+      </div>
+      <span class="col-badge badge-root">Raiz</span>
+    </div>
+    <table class="fields-table">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th><th>Req?</th></tr></thead>
+      <tbody>
+        <tr><td><span class="field-name field-key">id</span></td><td><span class="field-type">string</span></td><td class="field-desc">ID auto-gerado</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">startupId</span></td><td><span class="field-type ref">ref → startups</span></td><td class="field-desc">Startup referenciada</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">price</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Preço do token no instante registrado</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">volume</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Volume de tokens negociados no período (para gráfico de volume)</td><td><span class="field-req req-no">Não</span></td></tr>
+        <tr><td><span class="field-name">recordedAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Momento exato do registro (usado para filtrar por período)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- wallet_txs -->
+  <div class="collection">
+    <div class="col-header">
+      <div class="col-icon" style="background:rgba(255,209,102,0.12)">💳</div>
+      <div>
+        <div class="col-name">wallet_txs</div>
+        <div class="col-desc">Extrato da carteira — entradas, saídas e estornos de saldo fictício</div>
+      </div>
+      <span class="col-badge badge-root">Raiz</span>
+    </div>
+    <table class="fields-table">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th><th>Req?</th></tr></thead>
+      <tbody>
+        <tr><td><span class="field-name field-key">id</span></td><td><span class="field-type">string</span></td><td class="field-desc">ID auto-gerado</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">userId</span></td><td><span class="field-type ref">ref → users</span></td><td class="field-desc">Dono da carteira</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">type</span></td><td><span class="field-type enum">enum</span></td><td class="field-desc"><code style="font-size:11px">credit</code> | <code style="font-size:11px">debit</code> | <code style="font-size:11px">refund</code></td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">amount</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Valor movimentado em reais (sempre positivo)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">balanceAfter</span></td><td><span class="field-type num">number</span></td><td class="field-desc">Saldo da carteira após a operação</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">description</span></td><td><span class="field-type">string</span></td><td class="field-desc">Descrição legível (ex: "Compra de 10 tokens da StartupX")</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">relatedTransactionId</span></td><td><span class="field-type ref">ref → transactions</span></td><td class="field-desc">Transação de mercado vinculada (quando aplicável)</td><td><span class="field-req req-no">Não</span></td></tr>
+        <tr><td><span class="field-name">createdAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Data e hora da movimentação</td><td><span class="field-req req-yes">Sim</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- updates -->
+  <div class="collection">
+    <div class="col-header">
+      <div class="col-icon" style="background:rgba(84,197,248,0.12)">📢</div>
+      <div>
+        <div class="col-name">updates</div>
+        <div class="col-desc">Atualizações e eventos publicados pelas startups para seus investidores</div>
+      </div>
+      <span class="col-badge badge-root">Raiz</span>
+    </div>
+    <table class="fields-table">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th><th>Req?</th></tr></thead>
+      <tbody>
+        <tr><td><span class="field-name field-key">id</span></td><td><span class="field-type">string</span></td><td class="field-desc">ID auto-gerado</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">startupId</span></td><td><span class="field-type ref">ref → startups</span></td><td class="field-desc">Startup que publicou a atualização</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">title</span></td><td><span class="field-type">string</span></td><td class="field-desc">Título da atualização ou evento</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">content</span></td><td><span class="field-type">string</span></td><td class="field-desc">Conteúdo completo (pode conter markdown)</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">isPublic</span></td><td><span class="field-type bool">boolean</span></td><td class="field-desc">Se verdadeiro, visível a todos; caso contrário, só a investidores</td><td><span class="field-req req-yes">Sim</span></td></tr>
+        <tr><td><span class="field-name">createdAt</span></td><td><span class="field-type ts">timestamp</span></td><td class="field-desc">Data de publicação</td><td><span class="field-req req-yes">Sim</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RELAÇÕES -->
+  <div class="section-title">Relações entre Coleções</div>
+  <div class="relations">
+    <ul class="rel-list">
+      <tr>
+      <li><span class="rel-from">users</span><span class="rel-arrow">──1:N──→</span><span class="rel-to">holdings</span><span class="rel-type rt-1n" style="margin-left:8px">1:N</span><span class="rel-desc" style="margin-left:8px">Um usuário pode ter tokens em várias startups</span></li>
+      <li><span class="rel-from">startups</span><span class="rel-arrow">──1:N──→</span><span class="rel-to">holdings</span><span class="rel-type rt-1n" style="margin-left:8px">1:N</span><span class="rel-desc" style="margin-left:8px">Uma startup pode ter vários investidores com tokens</span></li>
+      <li><span class="rel-from">users</span><span class="rel-arrow">──1:N──→</span><span class="rel-to">orders</span><span class="rel-type rt-1n" style="margin-left:8px">1:N</span><span class="rel-desc" style="margin-left:8px">Um usuário pode ter várias ordens abertas ou encerradas</span></li>
+      <li><span class="rel-from">startups</span><span class="rel-arrow">──1:N──→</span><span class="rel-to">orders</span><span class="rel-type rt-1n" style="margin-left:8px">1:N</span><span class="rel-desc" style="margin-left:8px">Uma startup pode ter muitas ordens de compra/venda no balcão</span></li>
+      <li><span class="rel-from">orders (buy)</span><span class="rel-arrow">──N:1──→</span><span class="rel-to">transactions</span><span class="rel-type rt-nn" style="margin-left:8px">N:1</span><span class="rel-desc" style="margin-left:8px">Uma ordem de compra pode gerar múltiplas transações (execução parcial)</span></li>
+      <li><span class="rel-from">orders (sell)</span><span class="rel-arrow">──N:1──→</span><span class="rel-to">transactions</span><span class="rel-type rt-nn" style="margin-left:8px">N:1</span><span class="rel-desc" style="margin-left:8px">Uma ordem de venda pode gerar múltiplas transações (execução parcial)</span></li>
+      <li><span class="rel-from">transactions</span><span class="rel-arrow">──1:N──→</span><span class="rel-to">wallet_txs</span><span class="rel-type rt-1n" style="margin-left:8px">1:2</span><span class="rel-desc" style="margin-left:8px">Cada transação gera 2 movimentações: débito no comprador e crédito no vendedor</span></li>
+      <li><span class="rel-from">startups</span><span class="rel-arrow">──1:N──→</span><span class="rel-to">price_history</span><span class="rel-type rt-1n" style="margin-left:8px">1:N</span><span class="rel-desc" style="margin-left:8px">Cada startup acumula um histórico de preços ao longo do tempo</span></li>
+      <li><span class="rel-from">startups</span><span class="rel-arrow">──1:N──→</span><span class="rel-to">questions</span><span class="rel-type rt-1n" style="margin-left:8px">1:N</span><span class="rel-desc" style="margin-left:8px">Uma startup pode receber muitas perguntas de usuários</span></li>
+      <li><span class="rel-from">startups</span><span class="rel-arrow">──1:N──→</span><span class="rel-to">updates</span><span class="rel-type rt-1n" style="margin-left:8px">1:N</span><span class="rel-desc" style="margin-left:8px">Uma startup pode publicar vários eventos/atualizações</span></li>
+      <li><span class="rel-from">startups</span><span class="rel-arrow">──1:N──→</span><span class="rel-to">partners (sub)</span><span class="rel-type rt-n1" style="margin-left:8px">Sub</span><span class="rel-desc" style="margin-left:8px">Subcoleção diretamente sob o documento da startup</span></li>
+      </tr>
+    </ul>
+  </div>
+
+</main>
+</body>
+</html>
