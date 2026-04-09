@@ -6,21 +6,15 @@ class NavLink extends StatelessWidget {
   final String label;
   final Widget destination; // a página que vai abrir
 
-  const NavLink({
-    super.key,
-    required this.label,
-    required this.destination,
-  });
+  const NavLink({super.key, required this.label, required this.destination});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        // onTap é usado para detectar cliques em elementos que normalmente não são botões
         // Empurra a nova página na pilha de navegação
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => destination),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (_) => destination));
       },
       child: Text(
         label,
