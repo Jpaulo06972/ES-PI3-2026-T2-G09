@@ -1,17 +1,95 @@
-# mesclainvest_f
+# ES-PI3-2026-T2-G09
 
-A new Flutter project.
+### Integrantes
+* **João Paulo Ferreira** - 25000684 - [Clique aqui para acessar o perfil do aluno](https://github.com/Jpaulo06972)
+* **Felipe Batista Bastos** - 25005337 - [Clique aqui para acessar o perfil do aluno](https://github.com/Febastos21)
+* **Felipe Cesar Ferreira Lirani** - 25007003 - [Clique aqui para acessar o perfil do aluno](https://github.com/felipelirani)
+* **Tomás de Paula Michelon Toniato** - 25004211 - [Clique aqui para acessar o perfil do aluno](https://github.com/lightblueyz)
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🚀 Sobre o Projeto
+O **Mesclainvest** é um aplicativo mobile focado em gestão de investimentos e controle financeiro. O objetivo do projeto é oferecer um frontend amigável e seguro, proporcionando um fluxo intuitivo desde a autenticação até a visualização de portfolios de investimento. *(Você pode complementar esta breve descrição abordando o valor exato no PI III)*.
 
-A few resources to get you started if this is your first Flutter project:
+---
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## 🛠️ Gestão e Organização (Avaliação PI III)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Para este projeto, adotamos práticas de governança de código e gestão ágil diretamente no ecossistema GitHub:
+
+### 📊 Gestão de Projeto (GitHub Projects)
+Nosso fluxo de trabalho é gerenciado através do **GitHub Project**, onde organizamos nossas sprints e prioridades.
+* [🔗 Clique aqui para acessar o Kanban do Projeto](https://github.com/users/Jpaulo06972/projects/3)
+
+### 🚩 Rastreabilidade (Issues)
+Utilizamos **Issues** para documentar requisitos, bugs e melhorias. Cada integrante é atribuído a tarefas específicas para garantir a transparência da colaboração.
+* [🔗 Visualizar Issues Ativas](https://github.com/Jpaulo06972/ES-PI3-2026-T2-G09/issues)
+
+### 🌿 Estratégia de Versionamento
+Para garantir a integridade do código, seguimos o padrão, com as seguintes divisões principais e fluxos:
+* `main`: Código estável em produção.
+* `develop`: Ambiente de integração de novas funcionalidades.
+* `feature/`: Branches individuais para desenvolvimento de tarefas (ex: `feature/auth`).
+
+---
+
+## ✨ Funcionalidades do Aplicativo 
+
+O Frontend do aplicativo atualmente está estruturado nos seguintes módulos:
+
+### 🔐 Autenticação (Fluxo de Entrada)
+- **Página de Login**: Acesso para usuários existentes.
+- **Página de Cadastro**: Fluxo para registro de novos usuários.
+- **Componentes de Entrada Seguros e Validados**:
+  - `CpfField`: Campo testado com máscara e validação de formato de CPF.
+  - `PasswordField`: Campo oculto com função para alternar a visibilidade (mostrar/esconder senha).
+  - `NameField`: Campo padrão para entradas de nome.
+- **Validação de Dados**: Uso robusto de formulários via `GlobalKey<FormState>`.
+
+### 📊 Dashboard Principal (Em Breve)
+- *A tela inicial pós-login será detalhada aqui conforme o avanço do desenvolvimento.*
+
+---
+
+## 💻 Tecnologias Utilizadas
+* **Linguagem Frontend:** Dart
+* **Framework:** Flutter
+* **Linguagem Backend:** TypeScript/Node.js *(em desenvolvimento/a definir)*
+* **Banco de Dados:** Firestore
+
+---
+
+## 📂 Estrutura de Diretórios (Visão Geral)
+
+```text
+lib/
+ ├── autentication/      # Módulo de Autenticação
+ │   ├── components/     # Widgets reutilizáveis (CpfField, PasswordField, etc.)
+ │   └── pages/          # Telas de Login e Signup
+ ├── dashboard/          # Módulo da Tela Principal do usuário logado
+ │   └── home.dart       # Tela principal do Dashboard
+ └── main.dart           # Ponto de entrada do aplicativo
+```
+
+---
+
+## ⚙️ Como Executar o Projeto
+
+Certifique-se de ter o ambiente [Flutter instalado](https://docs.flutter.dev/get-started/install) na sua máquina.
+
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/Jpaulo06972/ES-PI3-2026-T2-G09.git
+   ```
+2. Navegue até a pasta do projeto:
+   ```bash
+   cd ES-PI3-2026-T2-G09
+   ```
+3. Baixe as dependências:
+   ```bash
+   flutter pub get
+   ```
+4. Execute o aplicativo (usando um emulador ou dispositivo físico conectado):
+   ```bash
+   flutter run
+   ```
