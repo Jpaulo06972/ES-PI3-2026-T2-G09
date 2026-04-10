@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'autentication/pages/signin.dart';
 
 void main() {
@@ -13,6 +14,18 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mescla Invest',
       debugShowCheckedModeBanner: false,
+
+      // Localização em Português do Brasil
+      locale: const Locale('pt', 'BR'),
+      supportedLocales: const [
+        Locale('pt', 'BR'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF107649),

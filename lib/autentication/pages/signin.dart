@@ -58,7 +58,7 @@ class _SignInPageState extends State<SignInPage> {
         // Empurramos e Substituímos (pushReplacement) a tela atual pela "Home"
         // Como ele "substitui", a tela de login desaparece da memória,
         // impossibilitando que o usuário aperte "voltar" pro login sem deslogar.
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),
         );

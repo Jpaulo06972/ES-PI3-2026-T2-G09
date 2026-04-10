@@ -14,7 +14,10 @@ class NavLink extends StatelessWidget {
       onTap: () {
         // onTap é usado para detectar cliques em elementos que normalmente não são botões
         // Empurra a nova página na pilha de navegação
-        Navigator.push(context, MaterialPageRoute(builder: (_) => destination));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => destination),
+        );
       },
       child: Text(
         label,
