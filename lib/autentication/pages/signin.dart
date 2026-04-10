@@ -54,7 +54,7 @@ class _SignInPageState extends State<SignInPage> {
 
       // 3. Verificamos se as palavras batem com as credenciais cadastradas
       // Se bater (FOR VERDADEIRO):
-      if (email == "jpaulo@gmail.com" && password == "Jp@01062000") {
+      if (email == "Teste@gmail.com" && password == "teste@123456") {
         // Empurramos e Substituímos (pushReplacement) a tela atual pela "Home"
         // Como ele "substitui", a tela de login desaparece da memória,
         // impossibilitando que o usuário aperte "voltar" pro login sem deslogar.
