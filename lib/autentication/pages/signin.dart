@@ -116,6 +116,7 @@ class _SignInPageState extends State<SignInPage> {
                 // Campos de e-mail e senha
                 EmailField(controller: _emailController),
                 const SizedBox(height: 16),
+
                 PasswordField(controller: _passwordController),
                 const SizedBox(height: 32),
 
@@ -151,6 +152,7 @@ class _SignInPageState extends State<SignInPage> {
                     debugPrint('Google login acionado');
                   },
                 ),
+
                 const SizedBox(height: 24),
 
                 // Link pra recuperar senha
@@ -158,6 +160,7 @@ class _SignInPageState extends State<SignInPage> {
                   label: 'Esqueci minha senha',
                   destination: const PassRecoveryPage(),
                 ),
+
                 const SizedBox(height: 16),
 
                 // Link pra criar conta nova

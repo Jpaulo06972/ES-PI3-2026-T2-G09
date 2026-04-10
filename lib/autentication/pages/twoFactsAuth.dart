@@ -13,8 +13,10 @@ class TwoFactsAuthPage extends StatefulWidget {
 
 class _TwoFactsAuthPageState extends State<TwoFactsAuthPage> {
   // Um controller por quadradinho — são 6 campos independentes
-  final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> _controllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
 
   // FocusNodes controlam qual campo está "ativo" (com cursor) no momento
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
@@ -22,15 +24,19 @@ class _TwoFactsAuthPageState extends State<TwoFactsAuthPage> {
   @override
   void dispose() {
     // Libera todos os controllers e focusNodes da memória de uma vez
-    for (final c in _controllers) { c.dispose(); }
-    for (final f in _focusNodes) { f.dispose(); }
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
   // Monta o código final juntando o dígito de cada campo
   String get _code => _controllers.map((c) => c.text).join();
 
-  void _onVerifyPressed() {
+  Future<void> _onVerifyPressed() async {
     if (_code.length < 6) {
       // Avisa se o usuário não preencheu todos os 6 campos
       ScaffoldMessenger.of(context).showSnackBar(
