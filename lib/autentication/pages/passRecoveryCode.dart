@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../components/primaryButton.dart';
 import '../../dashboard/home.dart';
+import 'signin.dart';
+import '../components/navLink.dart';
 
-// Tela onde o usuário digita o código de recuperação recebido por e-mail
-// Após validação correta, redireciona para o Home substituindo toda a pilha de navegação
+/// Tela onde o usuário digita o código de 6 dígitos que recebeu por e-mail.
+/// Se o código tiver certo, ele entra no app. Se não recebeu, pode pedir pra reenviar.
 class PassRecoveryCodePage extends StatefulWidget {
   const PassRecoveryCodePage({super.key});
 
@@ -13,26 +15,36 @@ class PassRecoveryCodePage extends StatefulWidget {
 }
 
 class _PassRecoveryCodePageState extends State<PassRecoveryCodePage> {
-  // Um controller por quadradinho — são 6 campos independentes
-  final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
+  // Um controller pra cada quadradinho (são 6 no total)
+  final List<TextEditingController> _controllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
 
-  // FocusNodes controlam qual campo está "ativo" (com cursor) no momento
+  // FocusNode controla qual campo tá "ativo" (com o cursor piscando)
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
+  // Controla o loading do botão Confirmar
+  bool _isLoading = false;
+
+  // Limpa todos os controllers e focusNodes da memória quando sai da tela
+  // São 6 de cada, então usa um loop pra não repetir código
   @override
   void dispose() {
-    // Libera todos os controllers e focusNodes da memória ao sair da tela
-    for (final c in _controllers) { c.dispose(); }
-    for (final f in _focusNodes) { f.dispose(); }
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
-  // Junta os dígitos de cada campo em uma string única ex: "483920"
+  // Junta o texto de cada campo num código só (ex: "483920")
   String get _code => _controllers.map((c) => c.text).join();
 
-  void _onVerifyPressed() {
-    // Garante que todos os 6 campos foram preenchidos antes de prosseguir
+  // Roda quando o usuário aperta "Confirmar"
+  Future<void> _onVerifyPressed() async {
     if (_code.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Preencha todos os 6 dígitos')),
@@ -40,40 +52,47 @@ class _PassRecoveryCodePageState extends State<PassRecoveryCodePage> {
       return;
     }
 
-    // TODO: integrar com backend para validar o código de recuperação
-    // Simulação: qualquer código de 6 dígitos é aceito por enquanto
-    if (_code.length == 6) {
-      // pushAndRemoveUntil substitui TODA a pilha de navegação pelo Home
-      // O usuário não consegue voltar para o fluxo de recuperação após entrar
+    // Liga o loading
+    setState(() => _isLoading = true);
+
+    // Simula validação com o backend
+    await Future.delayed(const Duration(milliseconds: 1500));
+
+    // TODO: validar o código com o backend
+    if (_code.length == 6 && mounted) {
+      // Limpa toda a pilha de telas e vai direto pra Home
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const HomePage()),
-        (route) => false, // remove todas as rotas anteriores
+        (route) => false,
       );
     }
   }
 
+  // Reenviar o código por e-mail
   void _onResendPressed() {
-    // TODO: integrar com backend para reenviar o código por e-mail
+    // TODO: chamar a API pra reenviar
     debugPrint('Reenviar código de recuperação');
   }
 
-  // Constrói cada um dos 6 quadradinhos de dígito
+  // Monta cada quadradinho de dígito
   Widget _buildDigitBox(int index) {
     return SizedBox(
-      width: 48,
-      height: 56,
+      width: 44,
+      height: 50,
       child: TextFormField(
         controller: _controllers[index],
         focusNode: _focusNodes[index],
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
-        // Limita a 1 dígito numérico por campo
+        // Só aceita 1 número por campo
         inputFormatters: [
           LengthLimitingTextInputFormatter(1),
           FilteringTextInputFormatter.digitsOnly,
         ],
         decoration: InputDecoration(
+          // Centraliza o conteúdo dentro da caixa
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
@@ -83,13 +102,14 @@ class _PassRecoveryCodePageState extends State<PassRecoveryCodePage> {
             ),
           ),
         ),
-        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         onChanged: (value) {
+          // Digitou? Pula pro próximo campo
           if (value.isNotEmpty && index < 5) {
-            // Avança o foco para o próximo campo automaticamente ao digitar
             FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
-          } else if (value.isEmpty && index > 0) {
-            // Volta o foco ao campo anterior ao apagar
+          }
+          // Apagou? Volta pro campo anterior
+          else if (value.isEmpty && index > 0) {
             FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
           }
         },
@@ -107,7 +127,7 @@ class _PassRecoveryCodePageState extends State<PassRecoveryCodePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Ícone de e-mail com verificação
+              // Ícone de e-mail verificado
               Icon(
                 Icons.mark_email_read_outlined,
                 size: 72,
@@ -129,48 +149,59 @@ class _PassRecoveryCodePageState extends State<PassRecoveryCodePage> {
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 32),
 
-              // Os 6 quadradinhos lado a lado com espaço uniforme entre eles
+              // Os 6 quadradinhos
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(6, _buildDigitBox),
               ),
               const SizedBox(height: 32),
 
-              // Botão que valida o código e redireciona para o Home
-              PrimaryButton(label: 'Confirmar', onPressed: _onVerifyPressed),
+              // Botão de confirmar (com loading)
+              PrimaryButton(
+                label: 'Confirmar',
+                onPressed: _onVerifyPressed,
+                isLoading: _isLoading,
+              ),
               const SizedBox(height: 20),
 
-              // Link para reenviar o código caso não tenha chegado
-              Align(
-                alignment: Alignment.center,
-                child: GestureDetector(
-                  onTap: _onResendPressed,
-                  child: Text(
-                    'Não recebi o código',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      decoration: TextDecoration.underline,
+              // "Não recebeu o código?" + link "Reenviar o código"
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Não recebeu o código?'),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: _onResendPressed,
+                    child: Container(
+                      padding: const EdgeInsets.only(bottom: 1),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        'Reenviar o código',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
               const SizedBox(height: 12),
 
-              // Navigator.pop() desempilha essa tela e volta para o passRecovery
-              Align(
-                alignment: Alignment.center,
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Text(
-                    'Voltar para o login',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
+              // Voltar pro login
+              NavLink(
+                destination: const SignInPage(),
+                label: 'Voltar para o login',
               ),
             ],
           ),

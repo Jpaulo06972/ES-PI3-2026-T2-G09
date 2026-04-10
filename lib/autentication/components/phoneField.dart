@@ -1,55 +1,52 @@
+// Importa o pacote do Flutter pra montar a interface
 import 'package:flutter/material.dart';
+
+// Importa o services pra usar o TextInputFormatter (formatação de texto)
 import 'package:flutter/services.dart';
 
-// -----------------------------------------------------------------------------
-// Formatador de Telefone Customizado
-// Esta classe é responsável por formatar o texto ENQUANTO o usuário digita,
-// colocando os parênteses () e o traço (-) automaticamente.
-// Resultado final: (11) 91234-5678
-// -----------------------------------------------------------------------------
+// Formatador customizado que coloca parênteses e traço no telefone automaticamente
+// Enquanto o usuário digita "11912345678", aparece "(11) 91234-5678"
 class PhoneInputFormatter extends TextInputFormatter {
+  // Essa função roda toda vez que o texto do campo muda
   @override
   TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
+    TextEditingValue oldValue, // o que tinha antes
+    TextEditingValue newValue, // o que ficou depois de digitar
   ) {
-    // 1. Pega o novo texto e remove tudo que não for número,
-    // caso o usuário tente digitar uma letra ou colar texto
+    // Remove tudo que não é número (letras, espaços, símbolos)
     String numbers = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // 2. Trava a quantidade de dígitos no máximo em 11
+    // Telefone brasileiro tem no máximo 11 dígitos, trava aqui
     if (numbers.length > 11) {
       numbers = numbers.substring(0, 11);
     }
 
-    // 3. Constroi a string formatando com parênteses () e o traço (-) automaticamente
+    // Monta o texto formatado com a máscara (XX) XXXXX-XXXX
     String formatted = '';
-
-    // Percorre cada dígito e vai montando a máscara
     for (int i = 0; i < numbers.length; i++) {
-      // Adiciona o "(" antes do primeiro dígito
+      // Antes do primeiro dígito, abre parêntese
       if (i == 0) {
         formatted += '(';
-
-        // Adiciona o ") " depois do segundo dígito (fecha o DDD)
-      } else if (i == 2) {
+      }
+      // Depois do segundo dígito (DDD), fecha parêntese e espaço
+      else if (i == 2) {
         formatted += ') ';
-
-        // Adiciona o "-" na posição correta dependendo se é celular (11 dígitos) ou fixo (10 dígitos)
-        // Celular: (11) 91234-5678 → traço depois do 5º dígito do número (posição 7 geral)
-      } else if (numbers.length == 11 && i == 7) {
+      }
+      // Posição do traço muda dependendo se é celular ou fixo:
+      // Celular (11 dígitos): traço depois do 7º dígito geral
+      else if (numbers.length == 11 && i == 7) {
         formatted += '-';
-
-        // Fixo: (11) 1234-5678 → traço depois do 4º dígito do número (posição 6 geral)
-      } else if (numbers.length <= 10 && i == 6) {
+      }
+      // Fixo (10 dígitos): traço depois do 6º dígito geral
+      else if (numbers.length <= 10 && i == 6) {
         formatted += '-';
       }
 
-      // Adiciona o dígito atual na string formatada
+      // Adiciona o número atual na string
       formatted += numbers[i];
     }
 
-    // 4. Retorna o valor formatado com o cursor sempre no final
+    // Devolve o texto formatado com o cursor no final
     return TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),
@@ -57,19 +54,20 @@ class PhoneInputFormatter extends TextInputFormatter {
   }
 }
 
-// -----------------------------------------------------------------------------
-// Componente PhoneField
-// Campo de telefone reutilizável, mesmo estilo visual dos outros componentes.
-// Formata automaticamente enquanto o usuário digita: (XX) XXXXX-XXXX
-// Valida se o número tem pelo menos 10 dígitos (fixo) ou 11 (celular).
-// -----------------------------------------------------------------------------
+// Campo de telefone com formatação automática e validação
+// Aplica a máscara (XX) XXXXX-XXXX enquanto digita
+// Verifica se tem pelo menos 10 dígitos (fixo) ou 11 (celular)
 class PhoneField extends StatelessWidget {
-  // "Props" do componente
-  final TextEditingController
-  controller; // O "caderno" que guarda o telefone digitado
-  final String? label; // Texto do campo (opcional, padrão: 'Telefone')
-  final void Function(String)? onChanged; // Callback disparado a cada tecla
+  // controller = guarda o texto digitado
+  final TextEditingController controller;
 
+  // label = texto do campo (padrão: "Telefone")
+  final String? label;
+
+  // onChanged = função que roda a cada tecla (opcional)
+  final void Function(String)? onChanged;
+
+  // Construtor
   const PhoneField({
     super.key,
     required this.controller,
@@ -77,40 +75,59 @@ class PhoneField extends StatelessWidget {
     this.onChanged,
   });
 
+  // Monta o campo na tela
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      // Conecta o controller
       controller: controller,
+
+      // Função opcional que roda a cada tecla
       onChanged: onChanged,
 
-      // Abre o teclado numérico no celular (só números aparecem)
+      // Abre o teclado de telefone no celular
       keyboardType: TextInputType.phone,
 
-      // Conecta o formatador: enquanto o usuário digita, a máscara é aplicada
+      // Conecta nosso formatador que coloca parênteses e traço
       inputFormatters: [PhoneInputFormatter()],
 
-      // Visual idêntico aos outros campos do projeto
+      // Visual do campo
       decoration: InputDecoration(
+        // Texto do campo
         labelText: label ?? 'Telefone',
+
+        // Ícone de telefone na esquerda
         prefixIcon: const Icon(Icons.phone_outlined),
+
+        // Borda retangular
         border: const OutlineInputBorder(),
+
+        // Compacta o campo
+        isDense: true,
+
+        // Texto de erro menor
+        errorStyle: const TextStyle(fontSize: 11, height: 0.8),
+
+        // Texto fantasma mostrando o formato esperado
         hintText: '(11) 11111-1111',
       ),
 
-      // Validação: verifica se o campo está preenchido e se tem dígitos suficientes
+      // Validação
       validator: (value) {
+        // Se tá vazio, mostra erro
         if (value == null || value.isEmpty) {
           return 'Informe seu telefone';
         }
 
-        // Remove a formatação para contar apenas os dígitos puros
+        // Remove a formatação pra contar só os números puros
         final digitos = value.replaceAll(RegExp(r'[^0-9]'), '');
 
-        // Telefone brasileiro precisa ter no mínimo 10 dígitos (fixo) ou 11 (celular)
+        // Precisa ter pelo menos 10 dígitos (telefone fixo)
         if (digitos.length < 10) {
           return 'Telefone incompleto';
         }
 
+        // Tudo certo!
         return null;
       },
     );

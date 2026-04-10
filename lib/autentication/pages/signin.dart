@@ -1,20 +1,20 @@
-// Importa o pacote principal do Flutter (Material Design), que traz botões, cores, telas (Scaffold), etc.
 import 'package:flutter/material.dart';
 
-// Importa os nossos componentes visuais criados separadamente para manter este arquivo limpo
-import '../components/emailField.dart'; // Campo de digitar o email
-import '../components/passwordField.dart'; // Campo de digitar a senha
-import '../components/navLink.dart'; // O link de texto clicável (ex: "Cadastre-se")
-import '../components/primaryButton.dart'; // Nosso botão principal azulzinho
+// Componentes visuais do nosso projeto
+import '../components/emailField.dart';
+import '../components/passwordField.dart';
+import '../components/navLink.dart';
+import '../components/primaryButton.dart';
+import '../components/socialButton.dart';
 
-// Importa as outras telas para onde podemos viajar saindo do Login
-import '../../dashboard/home.dart'; // A tela principal (quando acerta a senha)
-import 'passRecovery.dart'; // A tela de esqueci a senha
-import 'signup.dart'; // A tela de criar conta
+// Telas que a gente navega a partir daqui
+import '../../dashboard/home.dart';
+import 'passRecovery.dart';
+import 'signup.dart';
 
-// A SignInPage é a representação da "Tela de Login" inteira.
-// Usamos "StatefulWidget" pois a tela tem coisas que mudam de estado em tempo real
-// (como o olhinho de mostrar/esconder a senha, erros de digitação e o texto nos campos).
+/// Tela de Login do app.
+/// Aqui o usuário digita e-mail e senha pra entrar na conta dele.
+/// Também tem opção de entrar com Google, recuperar senha ou criar conta nova.
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
 
@@ -22,133 +22,156 @@ class SignInPage extends StatefulWidget {
   State<SignInPage> createState() => _SignInPageState();
 }
 
-// O "_SignInPageState" é o cérebro da tela (o estado). É aqui que fica a lógica.
 class _SignInPageState extends State<SignInPage> {
-  // Fabricamos um "controle remoto" exclusivo para o nosso formulário
-  // Ele nos permite validar todos os campos ao mesmo tempo depois
+  // Chave do formulário — usamos pra validar todos os campos de uma vez
   final _formKey = GlobalKey<FormState>();
 
-  // Os Controllers (Controladores) são "gravadores".
-  // Eles capturam e guardam tudo o que o usuário digita nos sub-campos de texto.
+  // Controllers guardam o que o usuário tá digitando em cada campo
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // A função dispose() é chamada quando a tela é fechada e destruída (quando saímos do app)
+  // Controla o estado de loading do botão
+  // Quando tá true, o botão mostra uma bolinha girando e bloqueia novos cliques
+  bool _isLoading = false;
+
+  // Limpa os controllers da memória quando sai da tela
+  // Se não fizer isso, eles ficam ocupando espaço à toa (memory leak)
   @override
   void dispose() {
-    // É OBRIGATÓRIO limpar a memória jogando fora os gravadores quando não precisarmos mais!
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  // Função que roda assim que o usuário clica no botão azul "Entrar"
-  void _onSigInPressed() {
-    // 1. O código aperta o botão "validate" no nosso controle remoto.
-    // O formulário pergunta aos campos: "Alguém aí tá vazio ou errado?"
-    // Se todos responderem "Tá tudo certo (null)", ele retorna verdadeiro (true).
+  // Roda quando o usuário aperta "Entrar"
+  // É async porque simula uma espera (como se tivesse chamando a API)
+  Future<void> _onSigInPressed() async {
     if (_formKey.currentState!.validate()) {
-      // 2. Extraímos o texto exato que ficou guardado nos controladores
+      // Liga o loading (bolinha girando no botão)
+      setState(() => _isLoading = true);
+
+      // Simula um tempo de espera como se fosse uma chamada de API
+      // Quando integrar com o backend, troca esse delay pela chamada real
+      await Future.delayed(const Duration(milliseconds: 1500));
+
       final email = _emailController.text;
       final password = _passwordController.text;
 
-      // 3. Verificamos se as palavras batem com as credenciais cadastradas
-      // Se bater (FOR VERDADEIRO):
+      // Por enquanto tá com credencial fixa pra teste
       if (email == "Teste@gmail.com" && password == "teste@123456") {
-        // Empurramos e Substituímos (pushReplacement) a tela atual pela "Home"
-        // Como ele "substitui", a tela de login desaparece da memória,
-        // impossibilitando que o usuário aperte "voltar" pro login sem deslogar.
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
-        );
-        debugPrint('Email: $email | Senha: $password');
+        // Desliga o loading antes de navegar
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+        }
       } else {
-        // Se a senha NÃO bater, avisamos apenas o programador no console (por enquanto)
-        debugPrint('Email ou senha incorretos');
+        // Desliga o loading e mostra erro
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('E-mail ou senha incorretos')),
+          );
+        }
       }
     }
   }
 
-  // Este é o método "build". É aqui que nós desenhamos a parte visual com as peças virtuais.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Scaffold é a estrutura básica de uma tela no celular (chão, parede e teto)
       body: Center(
-        // Centraliza tudo na tela, verticalmente e horizontalmente
         child: SingleChildScrollView(
-          // Permite que a tela deslize/role (scroll) para cima e para baixo.
-          // Muito importante no login para que o teclado não engula os botões!
+          // Scroll pra quando o teclado abrir não empurrar tudo
           padding: const EdgeInsets.symmetric(horizontal: 32),
-
           child: Form(
-            // A caixa mestre "Televisão" que guarda nossos campos de texto importantes
-            key:
-                _formKey, // Sintonizamos o formulário com o controle remoto (key)
-
+            key: _formKey,
             child: Column(
-              // Uma Coluna (Pilha de blocos empilhados de cima para baixo)
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment
-                  .stretch, // Estica os botões até as paredes laterais
-
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. Desenhamos a imagem da logo puxada dos arquivos
+                // Logo do app
                 Image.asset('assets/images/Logo1.png', height: 80),
-                const SizedBox(
-                  height: 16,
-                ), // Caixa invisível só para dar espaço (respiro)
-                // 2. Título principal de boas-vindas
+                const SizedBox(height: 8),
+
+                // Título e subtítulo
                 const Text(
                   'Bem-vindo de volta',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 40),
-
-                // 3. O nosso componente visual de Email!
-                // Passamos o gravador (_emailController) como parâmetro para ele trabalhar lá dentro.
-                EmailField(controller: _emailController),
-                const SizedBox(height: 16),
-
-                // 4. O nosso componente visual de Senha!
-                // Passamos o gravador de Senha!
-                PasswordField(controller: _passwordController),
-                const SizedBox(height: 20),
-
-                // 5. O link para "Esqueci minha senha"
-                Align(
-                  alignment: Alignment.center,
-                  child: NavLink(
-                    // O NavLink é um widget customizado nosso que já faz Navegação ao clicar
-                    label: 'Esqueci minha senha',
-                    destination: const PassRecoveryPage(),
+                const SizedBox(height: 8),
+                const Text(
+                  'Faça o login na sua conta',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
+                const SizedBox(height: 32),
 
-                const SizedBox(height: 8),
+                // Campos de e-mail e senha
+                EmailField(controller: _emailController),
+                const SizedBox(height: 16),
+                PasswordField(controller: _passwordController),
+                const SizedBox(height: 32),
 
-                // 6. Uma "Fileira" (Row) coloca os itens lado a lado horizontalmente
+                // Botão principal (com loading enquanto processa)
+                PrimaryButton(
+                  label: 'Entrar',
+                  onPressed: _onSigInPressed,
+                  isLoading: _isLoading,
+                ),
+                const SizedBox(height: 24),
+
+                // Linha divisória com texto "entre com"
+                const Row(
+                  children: [
+                    Expanded(child: Divider()),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'entre com',
+                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                      ),
+                    ),
+                    Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Botão de login com Google
+                SocialButton(
+                  label: 'Entrar com Google',
+                  onPressed: () {
+                    // TODO: integrar com Firebase/Google Sign-In
+                    debugPrint('Google login acionado');
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // Link pra recuperar senha
+                NavLink(
+                  label: 'Esqueci minha senha',
+                  destination: const PassRecoveryPage(),
+                ),
+                const SizedBox(height: 16),
+
+                // Link pra criar conta nova
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Não tem conta?'), // Um texto normal estático
-                    const SizedBox(width: 4), // Espacinho lateral de 4 pixels
-
+                    const Text('Não tem conta?'),
+                    const SizedBox(width: 4),
                     NavLink(
-                      // E o link clicável logo ao lado
                       label: 'Cadastre-se',
                       destination: const SignUpPage(),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-
-                // 7. E por fim, desenhamos o nosso botão primário azulão
-                // E dizemos que a função a ser chamada quando ele for clicado (onPressed) é a _onLoginPressed
-                PrimaryButton(label: 'Entrar', onPressed: _onSigInPressed),
-                const SizedBox(height: 16),
               ],
             ),
           ),

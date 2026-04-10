@@ -1,136 +1,162 @@
+// Importa o pacote do Flutter pra montar a interface
 import 'package:flutter/material.dart';
 
-// Componente reutilizável para selecionar a Data de Nascimento.
-// Visualmente ele parece um campo de texto normal (igual ao EmailField, NameField, etc.),
-// mas quando o usuário toca nele, abre um calendário para selecionar a data.
-// Isso evita que alguém digite uma data errada (ex: 32/13/2020).
+// Campo de data de nascimento que abre um calendário quando o usuário toca
+// Evita que alguém digite uma data errada (tipo dia 32 ou mês 13)
+// Também verifica se o usuário tem pelo menos 18 anos
+// É StatefulWidget porque precisa guardar a data selecionada internamente
 class DateField extends StatefulWidget {
-  // "Props" — dados que a página de fora (signup.dart) envia para cá
-  final TextEditingController controller; // O "caderno" que guarda a data selecionada como texto
-  final String? label;                    // Texto que aparece em cima do campo (opcional)
-  final void Function(DateTime)? onDateSelected; // Função chamada quando o usuário escolhe uma data
+  // controller = guarda a data como texto no formato DD/MM/AAAA
+  final TextEditingController controller;
 
+  // label = texto do campo (padrão: "Data de Nasc.")
+  final String? label;
+
+  // onDateSelected = função que roda quando o usuário escolhe uma data no calendário
+  final void Function(DateTime)? onDateSelected;
+
+  // Construtor - controller é obrigatório
   const DateField({
     super.key,
-    required this.controller, // Obrigatório: sem controller, não tem como ler a data depois
+    required this.controller,
     this.label,
     this.onDateSelected,
   });
 
-  // Como esse widget precisa guardar estado interno (a data selecionada),
-  // ele é um StatefulWidget. A "parte visual" fica na classe abaixo.
+  // Cria o estado interno do widget
   @override
   State<DateField> createState() => _DateFieldState();
 }
 
-// Essa é a classe de estado — aqui mora a lógica e o visual do componente.
+// Classe de estado - aqui fica a lógica do calendário e a validação
 class _DateFieldState extends State<DateField> {
-  // Guarda a data que o usuário escolheu no calendário.
-  // Começa como null porque nenhuma data foi selecionada ainda.
+  // Guarda a data que o usuário escolheu (começa null = nada selecionado ainda)
   DateTime? _selectedDate;
 
-  // Pega um DateTime (ex: 2001-03-15) e transforma em texto bonito: "15/03/2001"
-  // O padLeft(2, '0') garante que dia e mês sempre tenham 2 dígitos (ex: 5 vira 05)
+  // Pega um DateTime (ex: 2001-03-15) e transforma em texto bonito "15/03/2001"
   String _formatDate(DateTime date) {
+    // padLeft(2, '0') garante que sempre tenha 2 dígitos (5 vira 05)
     final day = date.day.toString().padLeft(2, '0');
     final month = date.month.toString().padLeft(2, '0');
     final year = date.year.toString();
     return '$day/$month/$year';
   }
 
-  // Essa função abre o calendário na tela quando o usuário toca no campo.
-  // É async/await porque o calendário é uma "janela" que pausa o código
-  // até o usuário escolher uma data ou cancelar.
+  // Abre o calendário na tela do celular
+  // É async porque precisa esperar o usuário escolher uma data
   Future<void> _pickDate() async {
-    // showDatePicker é uma função nativa do Flutter que exibe o calendário.
-    // Ela retorna a data escolhida ou null se o usuário apertar "Cancelar".
+    // showDatePicker é uma função do Flutter que mostra o calendário nativo
+    // Retorna a data escolhida ou null se o usuário cancelou
     final picked = await showDatePicker(
       context: context,
 
-      // A data que já vem selecionada quando o calendário abre.
-      // Se o usuário já escolheu antes, mostra aquela. Senão, mostra 18 anos atrás.
+      // Data que já vem marcada quando o calendário abre
+      // Se já escolheu antes, mostra aquela. Se não, mostra 18 anos atrás
       initialDate: _selectedDate ?? DateTime(DateTime.now().year - 18),
 
-      // A data mais antiga que o usuário pode selecionar (120 anos no passado)
+      // A data mais antiga que pode selecionar (120 anos no passado)
       firstDate: DateTime(DateTime.now().year - 120),
 
-      // A data mais recente que o usuário pode selecionar (hoje — sem datas futuras)
+      // A data mais recente (hoje - não pode escolher data no futuro)
       lastDate: DateTime.now(),
 
-      // Textos que aparecem no calendário (já traduzidos pro português via localização)
+      // Textos em português no calendário
       helpText: 'Selecione sua data de nascimento',
       cancelText: 'Cancelar',
       confirmText: 'Confirmar',
     );
 
-    // Se o usuário realmente escolheu uma data (não apertou "Cancelar")...
+    // Se o usuário realmente escolheu uma data (não apertou cancelar)
     if (picked != null) {
+      // setState avisa o Flutter que algo mudou e precisa redesenhar
       setState(() {
         // Salva a data escolhida na memória do componente
         _selectedDate = picked;
 
-        // Coloca o texto formatado (ex: "15/03/2001") dentro do controller,
-        // fazendo ele aparecer visualmente no campo de texto na tela
+        // Coloca o texto formatado no controller pra aparecer no campo
         widget.controller.text = _formatDate(picked);
       });
 
-      // Se a página de fora passou uma função onDateSelected, chama ela
-      // passando o DateTime completo (útil para enviar para API depois)
+      // Se a tela pai passou uma função onDateSelected, chama ela
+      // Isso é útil pra quando quiser mandar o DateTime pra uma API depois
       widget.onDateSelected?.call(picked);
     }
   }
 
+  // Monta o campo na tela
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      // Conecta o controller ao campo (mesmo esquema do NameField, EmailField, etc.)
+      // Conecta o controller
       controller: widget.controller,
 
-      // readOnly: true = o teclado NUNCA abre. O campo só aceita toque.
-      // Quando o usuário toca, o onTap dispara e abre o calendário.
+      // readOnly = o teclado NÃO abre quando toca no campo
+      // A gente quer que abra o calendário, não o teclado
       readOnly: true,
+
+      // Quando o usuário toca no campo, abre o calendário
       onTap: _pickDate,
 
-      // A parte visual do campo — idêntica aos outros componentes do projeto
+      // Visual do campo
       decoration: InputDecoration(
+        // Texto do campo
         labelText: widget.label ?? 'Data de Nasc.',
+
+        // Ícone de calendário na esquerda
         prefixIcon: const Icon(Icons.calendar_today_outlined),
+
+        // Reduz a área do ícone
+        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+
+        // Borda retangular
         border: const OutlineInputBorder(),
-        hintText: 'DD/MM/AAAA', // Texto fantasma que aparece quando o campo está vazio
+
+        // Compacta o campo
+        isDense: true,
+
+        // Padding interno
+        contentPadding: const EdgeInsets.fromLTRB(0, 14, 12, 14),
+
+        // Texto de erro menor
+        errorStyle: const TextStyle(fontSize: 11, height: 0.8),
+
+        // Texto fantasma que aparece quando o campo tá vazio
+        hintText: 'DD/MM/AAAA',
       ),
 
-      // Validação: o Flutter chama essa função quando _formKey.currentState!.validate() é acionado.
-      // O "value" é o texto que está dentro do controller naquele momento (ex: "15/03/2001" ou "").
+      // Validação
       validator: (value) {
-        // Primeiro: verifica se o campo está vazio (o usuário não tocou no calendário)
+        // Se não selecionou nenhuma data, mostra erro
         if (value == null || value.isEmpty) {
           return 'Selecione sua data de nascimento';
         }
 
-        // Segundo: verifica se a pessoa tem pelo menos 18 anos
+        // Verifica se a pessoa tem pelo menos 18 anos
         if (_selectedDate != null) {
           final hoje = DateTime.now();
 
-          // Calcula a idade de forma básica (ano atual - ano de nascimento)
+          // Calcula a idade: ano atual menos ano de nascimento
           int idade = hoje.year - _selectedDate!.year;
 
-          // Mas tem um detalhe: se a pessoa AINDA NÃO fez aniversário neste ano,
-          // a idade real é 1 a menos. Exemplo:
-          // Nasceu em 20/12/2008, hoje é 09/04/2026:
-          // 2026 - 2008 = 18, MAS dezembro ainda não chegou → idade real = 17
+          // Mas tem um detalhe: se a pessoa AINDA NÃO fez aniversário esse ano,
+          // a idade real é 1 a menos
+          // Exemplo: nasceu em dezembro/2008, hoje é abril/2026
+          // 2026 - 2008 = 18, mas dezembro ainda não chegou, então tem 17
           final aindaNaoFezAniversario =
               (hoje.month < _selectedDate!.month) ||
               (hoje.month == _selectedDate!.month &&
                   hoje.day < _selectedDate!.day);
 
+          // Se ainda não fez aniversário, subtrai 1 da idade
           if (aindaNaoFezAniversario) idade--;
 
+          // Se tem menos de 18, mostra erro
           if (idade < 18) {
             return 'Você precisa ter pelo menos 18 anos';
           }
         }
 
-        // Se passou por todas as verificações, retorna null = campo válido!
+        // Passou por tudo = tá válido!
         return null;
       },
     );

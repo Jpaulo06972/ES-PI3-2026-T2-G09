@@ -1,16 +1,7 @@
-// Importa o pacote principal do Flutter (Material Design)
 import 'package:flutter/material.dart';
 
-// Importa o componente de campo de data de nascimento
+// Componentes visuais do projeto
 import 'package:mesclainvest_f/autentication/components/dateField.dart';
-
-// Importa a tela do dashboard (para onde vamos após o cadastro)
-import '../../dashboard/home.dart';
-
-// Importa a página de Login para o link "Já possui conta?"
-import 'signin.dart';
-
-// Importando os componentes visuais reutilizáveis
 import '../components/emailField.dart';
 import '../components/passwordField.dart';
 import '../components/primaryButton.dart';
@@ -18,50 +9,43 @@ import '../components/navLink.dart';
 import '../components/nameField.dart';
 import '../components/cpfField.dart';
 import '../components/phoneField.dart';
+import '../components/socialButton.dart';
 
-// -----------------------------------------------------------------------------
-// Página de Cadastro (Sign Up)
-// É um StatefulWidget porque tem campos de texto com controladores,
-// ou seja, tem "coisas que mudam" (estado) conforme o usuário preenche.
-// -----------------------------------------------------------------------------
+// Telas que a gente pode navegar a partir daqui
+import '../../dashboard/home.dart';
+import 'signin.dart';
+
+/// Tela de Cadastro do app.
+/// O usuário preenche nome, CPF, data, telefone, e-mail e senha pra criar a conta.
+/// Também dá pra se cadastrar direto pelo Google.
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
-  // Conecta a casca (StatefulWidget) com o cérebro (State) logo abaixo
   @override
   State<SignUpPage> createState() => _SignUpPageState();
 }
 
-// -----------------------------------------------------------------------------
-// Estado da página — aqui fica toda a lógica e o visual do cadastro
-// -----------------------------------------------------------------------------
 class _SignUpPageState extends State<SignUpPage> {
-  // O "controle remoto" do formulário.
-  // Quando apertamos _formKey.currentState!.validate(), ele percorre
-  // TODOS os campos que estão dentro do Form e chama o validator de cada um.
+  // Chave do formulário pra validar tudo de uma vez
   final _formKey = GlobalKey<FormState>();
 
-  // ---------------------------------------------------------------------------
-  // Controllers (cadernos) — cada campo de texto tem o seu.
-  // Eles guardam na memória o que o usuário digita, permitindo que a gente
-  // leia o valor depois (ex: _firstNameController.text retorna "João").
-  // ---------------------------------------------------------------------------
-  final _firstNameController = TextEditingController();   // Nome
-  final _lastNameController = TextEditingController();    // Sobrenome
-  final _dataNascimentoController = TextEditingController(); // Data de nascimento
-  final _cpfController = TextEditingController();         // CPF
-  final _emailController = TextEditingController();       // E-mail
-  final _passwordController = TextEditingController();    // Senha
-  final _confirmPasswordController = TextEditingController(); // Confirmar senha
-  final _telefoneController = TextEditingController();    // Telefone
+  // Cada campo tem seu controller pra guardar o que foi digitado
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _dataNascimentoController = TextEditingController();
+  final _cpfController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _telefoneController = TextEditingController();
 
-  // ---------------------------------------------------------------------------
-  // dispose() — Chamado quando a tela é destruída (saiu da página).
-  // Obrigatório liberar os controllers da memória para evitar vazamento (memory leak).
-  // Pense nisso como "desligar os gravadores" quando não precisa mais deles.
-  // ---------------------------------------------------------------------------
+  // Controla o loading do botão (bolinha girando enquanto processa)
+  bool _isLoading = false;
+
   @override
   void dispose() {
+    // Sempre limpar os controllers quando a tela é destruída
+    // pra não vazar memória
     _firstNameController.dispose();
     _lastNameController.dispose();
     _cpfController.dispose();
@@ -73,100 +57,75 @@ class _SignUpPageState extends State<SignUpPage> {
     super.dispose();
   }
 
-  // ---------------------------------------------------------------------------
-  // Função chamada quando o usuário aperta o botão "Concluir Cadastro".
-  // Primeiro valida todos os campos, depois verifica se as senhas batem,
-  // e finalmente navega para a HomePage.
-  // ---------------------------------------------------------------------------
-  void _onSignUpPressed() {
-    // Aperta o "validate" no controle remoto — cada campo verifica suas regras
+  // Roda quando o usuário aperta "Concluir Cadastro"
+  // É async porque simula espera de API
+  Future<void> _onSignUpPressed() async {
     if (_formKey.currentState!.validate()) {
-      // Lê o texto de todos os controllers (cadernos) e salva em variáveis locais
+      // Liga o loading
+      setState(() => _isLoading = true);
+
+      // Simula espera da API (trocar pelo cadastro real depois)
+      await Future.delayed(const Duration(milliseconds: 1500));
+
+      // Pega o texto de cada campo
       final firstName = _firstNameController.text;
       final lastName = _lastNameController.text;
       final dataNascimento = _dataNascimentoController.text;
       final cpf = _cpfController.text;
       final email = _emailController.text;
       final password = _passwordController.text;
-      final confirmPassword = _confirmPasswordController.text;
       final telefone = _telefoneController.text;
 
-      // Verifica se a senha e a confirmação de senha são iguais
-      if (password != confirmPassword) {
-        // Se forem diferentes, mostra um SnackBar (barrinha de aviso no rodapé)
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('As senhas não são iguais')),
-        );
-        // Retorna sem continuar — o cadastro NÃO é finalizado
-        return;
-      }
-
-      // ---------------------------------------------------------------
-      // RETIRAR DEPOIS AQUI: Exibição dos dados no console (apenas para debug)
+      // Mostra os dados no console pra conferência (temporário)
       debugPrint('Nome: $firstName');
       debugPrint('Sobrenome: $lastName');
       debugPrint('Data de Nascimento: $dataNascimento');
       debugPrint('CPF: $cpf');
       debugPrint('Email: $email');
       debugPrint('Senha: $password');
-      debugPrint('Confirmar Senha: $confirmPassword');
       debugPrint('Telefone: $telefone');
-      // ---------------------------------------------------------------
 
-      // Navega para a HomePage após o cadastro ser concluído com sucesso
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
+      // Navega pra Home se a tela ainda tiver montada
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      }
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // build() — Constrói a parte visual da tela de cadastro.
-  // Estrutura: Scaffold > Center > SingleChildScrollView > Form > Column
-  // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Scaffold = estrutura base de uma tela (chão, parede e teto)
       body: Center(
-        // Center = centraliza tudo na tela
         child: SingleChildScrollView(
-          // SingleChildScrollView = permite rolar a tela quando o teclado abre
-          // ou quando o conteúdo é maior que a tela
           padding: const EdgeInsets.symmetric(horizontal: 32),
-
           child: Form(
-            // Form = "caixa mestre" que agrupa todos os campos e permite validar
-            // todos de uma vez com o controle remoto (_formKey)
             key: _formKey,
-
             child: Column(
-              // Column = empilha os widgets de cima para baixo
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch, // Estica até as bordas laterais
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-
-                // Logo do app no topo
-                Image.asset('assets/images/Logo1.png', height: 80),
-                const SizedBox(height: 16), // Espaço entre a logo e o título
-
-                // Título da página
+                // Logo e cabeçalho
+                const SizedBox(height: 12),
+                Image.asset('assets/images/Logo1.png', height: 45),
+                const SizedBox(height: 8),
                 const Text(
-                  'Crie sua conta',
+                  'Cadastre-se',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                 ),
+                const Text(
+                  'Preencha seus dados para começar',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
 
-                const SizedBox(height: 40), // Espaço maior antes dos campos
+                // --- Dados pessoais ---
 
-                // =========================================================
-                // SEÇÃO 1: Dados Pessoais
-                // =========================================================
-
-                // Nome e Sobrenome lado a lado usando Row + Expanded
-                // Row = coloca filhos lado a lado (horizontal)
-                // Expanded = cada filho ocupa metade do espaço disponível
+                // Nome e sobrenome lado a lado
                 Row(
                   children: [
                     Expanded(
@@ -175,7 +134,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         label: 'Nome',
                       ),
                     ),
-                    const SizedBox(width: 16), // Espaço entre os dois campos
+                    const SizedBox(width: 12),
                     Expanded(
                       child: NameField(
                         controller: _lastNameController,
@@ -184,87 +143,73 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
 
-                const SizedBox(height: 16),
-
-                // Campo de CPF com formatação automática (XXX.XXX.XXX-XX)
                 CpfField(controller: _cpfController),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
-                // Data de Nascimento e Telefone lado a lado (mesmo esquema do Nome/Sobrenome)
-                Row(
-                  children: [
-                    Expanded(
-                      child: DateField(
-                        controller: _dataNascimentoController,
-                        label: 'Data de Nasc.',
-                      ),
-                    ),
-
-                    const SizedBox(width: 16),
-
-                    Expanded(
-                      child: PhoneField(
-                        controller: _telefoneController,
-                        label: 'Telefone',
-                      ),
-                    ),
-                  ],
+                // Data e telefone cada um na sua linha pra caber o texto
+                DateField(
+                  controller: _dataNascimentoController,
+                  label: 'Data de Nasc.',
                 ),
+                const SizedBox(height: 12),
+                PhoneField(controller: _telefoneController, label: 'Telefone'),
+                const SizedBox(height: 12),
 
-                const SizedBox(height: 16),
-
-                // =========================================================
-                // SEÇÃO 2: Dados de Acesso
-                // =========================================================
-
-                // Linha horizontal para separar visualmente as duas seções
-                const Divider(height: 32),
-
-                // Subtítulo da seção
-                const Text(
-                  'Dados de Acesso',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Campo de e-mail com validação de @ e campo obrigatório
+                // --- Dados de acesso ---
                 EmailField(controller: _emailController),
-                const SizedBox(height: 16),
-
-                // Campo de senha com olhinho para mostrar/esconder
-                // isCadastro: true ativa validações extras (mínimo de caracteres, etc.)
+                const SizedBox(height: 12),
                 PasswordField(
                   controller: _passwordController,
                   isCadastro: true,
                 ),
-                const SizedBox(height: 16),
-
-                // Campo de confirmar senha (mesmo componente, label diferente)
+                const SizedBox(height: 12),
+                // Confirmar Senha - compara em tempo real com o campo de cima
+                // O confirmController faz o erro "As senhas não são iguais"
+                // aparecer/desaparecer enquanto o usuário digita
                 PasswordField(
                   controller: _confirmPasswordController,
                   label: 'Confirmar Senha',
                   isCadastro: true,
+                  confirmController: _passwordController,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
 
-                // =========================================================
-                // BOTÃO E LINK
-                // =========================================================
+                // --- Finalização ---
 
-                // Botão principal que dispara a função _onSignUpPressed
+                // Botão com loading enquanto processa o cadastro
                 PrimaryButton(
                   label: 'Concluir Cadastro',
                   onPressed: _onSignUpPressed,
+                  isLoading: _isLoading,
                 ),
+                const SizedBox(height: 12),
 
-                const SizedBox(height: 16),
+                // Divisor com texto
+                const Row(
+                  children: [
+                    Expanded(child: Divider()),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'cadastre com',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ),
+                    Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: 12),
 
-                // Link "Já possui conta? Acesse aqui" para voltar ao login
+                // Cadastro via Google
+                SocialButton(
+                  label: 'Cadastre-se com Google',
+                  onPressed: () => debugPrint('Google login'),
+                ),
+                const SizedBox(height: 12),
+
+                // Link pra quem já tem conta
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -277,7 +222,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   ],
                 ),
 
-                // Espaço extra no final para o scroll não colar no pé da tela
+                // Espaço extra no final pra quando os erros de validação empurram
+                // tudo pra baixo — garante que o link "Já possui conta?" fica acessível
                 const SizedBox(height: 24),
               ],
             ),
