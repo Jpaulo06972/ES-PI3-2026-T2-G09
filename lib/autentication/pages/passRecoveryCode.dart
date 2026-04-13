@@ -91,8 +91,8 @@ class _PassRecoveryCodePageState extends State<PassRecoveryCodePage> {
           FilteringTextInputFormatter.digitsOnly,
         ],
         decoration: InputDecoration(
-          // Centraliza o conteúdo dentro da caixa
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          // Remove o padding padrão para o dígito ficar centralizado na caixa
+          contentPadding: EdgeInsets.zero,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),

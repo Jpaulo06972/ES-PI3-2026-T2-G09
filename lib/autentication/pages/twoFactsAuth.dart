@@ -69,6 +69,8 @@ class _TwoFactsAuthPageState extends State<TwoFactsAuthPage> {
           FilteringTextInputFormatter.digitsOnly,
         ],
         decoration: InputDecoration(
+          // Remove o padding padrão para o dígito ficar centralizado na caixa
+          contentPadding: EdgeInsets.zero,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
