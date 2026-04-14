@@ -18,7 +18,7 @@ class NavLink extends StatelessWidget {
   // Monta o link na tela
   @override
   Widget build(BuildContext context) {
-    // Pega a cor primária do tema (verde/azul) pra usar no texto e na linha
+    // Pega a cor primária do tea (vermde/azul) pra usar no texto e na linha
     final Color linkColor = Theme.of(context).colorScheme.primary;
 
     // GestureDetector = detecta toques em qualquer widget
