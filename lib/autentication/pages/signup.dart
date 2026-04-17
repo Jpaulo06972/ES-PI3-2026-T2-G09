@@ -16,7 +16,6 @@ import '../components/successDialog.dart';
 import '../services/signUp.dart';
 
 // Telas que a gente pode navegar a partir daqui
-import '../../dashboard/home.dart';
 import 'signin.dart';
 
 /// Tela de Cadastro do app.
@@ -84,15 +83,14 @@ class _SignUpPageState extends State<SignUpPage> {
           await showSuccessDialog(
             context: context,
             title: 'Cadastro realizado!',
-            message: 'Sua conta foi criada com sucesso.\nBem-vindo(a) ao MesclaInvest!',
+            message:
+                'Sua conta foi criada com sucesso.\nBem-vindo(a) ao MesclaInvest!',
             buttonLabel: 'Começar',
             onPressed: () {
               Navigator.of(context).pop(); // Fecha o dialog
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const HomePage(),
-                ),
+                MaterialPageRoute(builder: (context) => const SignInPage()),
                 (route) => false, // Remove todas as telas anteriores
               );
             },
