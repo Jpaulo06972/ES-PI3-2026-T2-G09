@@ -10,6 +10,10 @@ import '../components/nameField.dart';
 import '../components/cpfField.dart';
 import '../components/phoneField.dart';
 import '../components/socialButton.dart';
+import '../components/successDialog.dart';
+
+// Services
+import '../services/signUp.dart';
 
 // Telas que a gente pode navegar a partir daqui
 import '../../dashboard/home.dart';
@@ -58,39 +62,61 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   // Roda quando o usuário aperta "Concluir Cadastro"
-  // É async porque simula espera de API
   Future<void> _onSignUpPressed() async {
     if (_formKey.currentState!.validate()) {
       // Liga o loading
       setState(() => _isLoading = true);
 
-      // Simula espera da API (trocar pelo cadastro real depois)
-      await Future.delayed(const Duration(milliseconds: 1500));
-
-      // Pega o texto de cada campo
-      final firstName = _firstNameController.text;
-      final lastName = _lastNameController.text;
-      final dataNascimento = _dataNascimentoController.text;
-      final cpf = _cpfController.text;
-      final email = _emailController.text;
-      final password = _passwordController.text;
-      final telefone = _telefoneController.text;
-
-      // Mostra os dados no console pra conferência (temporário)
-      debugPrint('Nome: $firstName');
-      debugPrint('Sobrenome: $lastName');
-      debugPrint('Data de Nascimento: $dataNascimento');
-      debugPrint('CPF: $cpf');
-      debugPrint('Email: $email');
-      debugPrint('Senha: $password');
-      debugPrint('Telefone: $telefone');
-
-      // Navega pra Home se a tela ainda tiver montada
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+      try {
+        // Chama o service de cadastro
+        await SignUpService().signUp(
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          dataNascimento: _dataNascimentoController.text.trim(),
+          cpf: _cpfController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          telefone: _telefoneController.text.trim(),
         );
+
+        // Cadastro deu certo — mostra o dialog de sucesso
+        if (mounted) {
+          await showSuccessDialog(
+            context: context,
+            title: 'Cadastro realizado!',
+            message: 'Sua conta foi criada com sucesso.\nBem-vindo(a) ao MesclaInvest!',
+            buttonLabel: 'Começar',
+            onPressed: () {
+              Navigator.of(context).pop(); // Fecha o dialog
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HomePage(),
+                ),
+                (route) => false, // Remove todas as telas anteriores
+              );
+            },
+          );
+        }
+      } on SignUpException catch (e) {
+        // Erro tratado — mostra mensagem amigável
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.message),
+              backgroundColor: Colors.red.shade600,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+        }
+      } finally {
+        // Desliga o loading independente do resultado
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
