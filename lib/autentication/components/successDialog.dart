@@ -57,7 +57,7 @@ Future<void> showSuccessDialog({
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey.shade600,
+                color: Colors.white70,
               ),
             ),
             const SizedBox(height: 24),

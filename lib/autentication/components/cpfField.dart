@@ -131,7 +131,14 @@ class CpfField extends StatelessWidget {
 
       // Visual do campo
       decoration: InputDecoration(
-        labelText: label ?? 'CPF',
+        label: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: label ?? 'CPF'),
+              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
         prefixIcon: const Icon(Icons.badge_outlined),
         prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
         border: const OutlineInputBorder(),

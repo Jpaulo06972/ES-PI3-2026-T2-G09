@@ -43,6 +43,47 @@ class _PasswordFieldState extends State<PasswordField> {
   // Começa escondida por segurança
   bool _obscure = true;
 
+  @override
+  void initState() {
+    super.initState();
+    // Atualiza a tela a cada tecla se for o campo de senha de cadastro
+    if (widget.isCadastro && widget.confirmController == null) {
+      widget.controller.addListener(_onTextChanged);
+    }
+  }
+
+  void _onTextChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    if (widget.isCadastro && widget.confirmController == null) {
+      widget.controller.removeListener(_onTextChanged);
+    }
+    super.dispose();
+  }
+
+  // Gera o texto dinâmico mostrando apenas o que falta
+  String? _getMissingRequirements() {
+    if (!widget.isCadastro || widget.confirmController != null) return null;
+    
+    final value = widget.controller.text;
+    if (value.isEmpty) {
+      return 'A senha precisa de 6+ caracteres, contendo letra maiúscula, número e símbolo especial.';
+    }
+
+    List<String> faltam = [];
+    if (value.length < 6) faltam.add('6+ caracteres');
+    if (!value.contains(RegExp(r'[A-Z]'))) faltam.add('letra maiúscula');
+    if (!value.contains(RegExp(r'[0-9]'))) faltam.add('número');
+    if (!value.contains(RegExp(r'[!@#$%^&*]'))) faltam.add('símbolo especial');
+    if (value.contains(RegExp(r'\s'))) faltam.add('remover espaços');
+
+    if (faltam.isEmpty) return 'Senha forte e válida!';
+    return 'Faltam: ${faltam.join(', ')}';
+  }
+
   // Função que valida a senha e retorna a mensagem de erro (ou null se tá ok)
   String? _validarSenha(String? value) {
     // Se o campo tá vazio, já retorna erro direto
@@ -109,7 +150,14 @@ class _PasswordFieldState extends State<PasswordField> {
       // Visual do campo
       decoration: InputDecoration(
         // Texto do campo (usa o label que passaram ou "Senha" como padrão)
-        labelText: widget.label ?? 'Senha',
+        label: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: widget.label ?? 'Senha'),
+              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
 
         // Ícone de cadeado na esquerda
         prefixIcon: const Icon(Icons.lock_outline),
@@ -125,6 +173,13 @@ class _PasswordFieldState extends State<PasswordField> {
 
         // Padding interno do campo
         contentPadding: const EdgeInsets.fromLTRB(0, 14, 12, 14),
+
+        // Texto auxiliar dinâmico que mostra apenas o que falta preencher
+        helperText: _getMissingRequirements(),
+        helperMaxLines: 2,
+        helperStyle: _getMissingRequirements() == 'Senha forte e válida!'
+            ? const TextStyle(color: Colors.greenAccent)
+            : null,
 
         // Texto de erro menor pra não empurrar os campos de baixo
         errorStyle: const TextStyle(fontSize: 11, height: 0.8),

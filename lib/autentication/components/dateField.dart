@@ -100,7 +100,14 @@ class _DateFieldState extends State<DateField> {
       // Visual do campo
       decoration: InputDecoration(
         // Texto do campo
-        labelText: widget.label ?? 'Data de Nasc.',
+        label: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: widget.label ?? 'Data de Nasc.'),
+              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
 
         // Ícone de calendário na esquerda
         prefixIcon: const Icon(Icons.calendar_today_outlined),

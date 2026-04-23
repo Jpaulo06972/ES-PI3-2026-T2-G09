@@ -94,7 +94,14 @@ class PhoneField extends StatelessWidget {
       // Visual do campo
       decoration: InputDecoration(
         // Texto do campo
-        labelText: label ?? 'Telefone',
+        label: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: label ?? 'Telefone'),
+              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
 
         // Ícone de telefone na esquerda
         prefixIcon: const Icon(Icons.phone_outlined),

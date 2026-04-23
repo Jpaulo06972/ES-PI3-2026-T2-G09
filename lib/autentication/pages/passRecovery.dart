@@ -86,10 +86,10 @@ class _PassRecoveryPageState extends State<PassRecoveryPage> {
                 const SizedBox(height: 8),
 
                 // Instrução pro usuário
-                const Text(
+                Text(
                   'Informe seu e-mail e enviaremos um link para redefinir sua senha.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade300),
                 ),
                 const SizedBox(height: 32),
 

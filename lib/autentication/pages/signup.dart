@@ -13,7 +13,7 @@ import '../components/socialButton.dart';
 import '../components/successDialog.dart';
 
 // Services
-import '../services/signUp.dart';
+import '../services/signUpService.dart';
 
 // Telas que a gente pode navegar a partir daqui
 import 'signin.dart';
@@ -140,10 +140,10 @@ class _SignUpPageState extends State<SignUpPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                 ),
-                const Text(
+                Text(
                   'Preencha seus dados para começar',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade300),
                 ),
                 const SizedBox(height: 16),
 
@@ -211,14 +211,14 @@ class _SignUpPageState extends State<SignUpPage> {
                 const SizedBox(height: 12),
 
                 // Divisor com texto
-                const Row(
+                Row(
                   children: [
                     Expanded(child: Divider()),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
                         'cadastre com',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                        style: TextStyle(color: Colors.grey.shade300, fontSize: 12),
                       ),
                     ),
                     Expanded(child: Divider()),

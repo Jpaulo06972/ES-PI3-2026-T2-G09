@@ -39,7 +39,14 @@ class EmailField extends StatelessWidget {
       // Decoration = a "roupa" do campo (ícone, borda, texto de ajuda)
       decoration: InputDecoration(
         // Texto que aparece em cima do campo
-        labelText: label ?? 'E-mail',
+        label: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: label ?? 'E-mail'),
+              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
 
         // Ícone de envelope na esquerda do campo
         prefixIcon: const Icon(Icons.email_outlined),

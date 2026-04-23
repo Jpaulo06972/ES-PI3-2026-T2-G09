@@ -36,7 +36,14 @@ class NameField extends StatelessWidget {
       // Visual do campo
       decoration: InputDecoration(
         // Se não passaram label, usa "Nome" como padrão
-        labelText: label ?? 'Nome',
+        label: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: label ?? 'Nome'),
+              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
 
         // Ícone de pessoa na esquerda do campo
         prefixIcon: const Icon(Icons.person_outline),

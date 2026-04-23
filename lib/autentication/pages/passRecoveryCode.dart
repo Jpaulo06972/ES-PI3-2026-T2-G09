@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../components/primaryButton.dart';
-import '../../dashboard/home.dart';
 import 'signin.dart';
 import '../components/navLink.dart';
 
@@ -60,10 +59,10 @@ class _PassRecoveryCodePageState extends State<PassRecoveryCodePage> {
 
     // TODO: validar o código com o backend
     if (_code.length == 6 && mounted) {
-      // Limpa toda a pilha de telas e vai direto pra Home
+      // Após validar o código, redireciona para o login
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(builder: (_) => const SignInPage()),
         (route) => false,
       );
     }

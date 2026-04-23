@@ -11,6 +11,7 @@ import '../components/socialButton.dart';
 import '../../dashboard/home.dart';
 import 'passRecovery.dart';
 import 'signup.dart';
+import '../services/SignInServices.dart';
 
 /// Tela de Login do app.
 /// Aqui o usuário digita e-mail e senha pra entrar na conta dele.
@@ -52,27 +53,47 @@ class _SignInPageState extends State<SignInPage> {
 
       // Simula um tempo de espera como se fosse uma chamada de API
       // Quando integrar com o backend, troca esse delay pela chamada real
-      await Future.delayed(const Duration(milliseconds: 1500));
+      // await Future.delayed(const Duration(milliseconds: 1500));
 
       final email = _emailController.text;
       final password = _passwordController.text;
 
-      // Por enquanto tá com credencial fixa pra teste
-      if (email == "Teste@gmail.com" && password == "teste@123456") {
-        // Desliga o loading antes de navegar
+      try {
+        final user = await SignInService().signIn(
+          email: email,
+          password: password,
+        );
+
+        if (user != null) {
+          // Login deu certo — navega para a Home passando os dados do usuário
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage(user: user)),
+            );
+          }
+        }
+      } on SignInException catch (e) {
+        // Erro tratado — mostra mensagem amigável
         if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                e.message,
+                style: const TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.red.shade600,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
           );
         }
-      } else {
-        // Desliga o loading e mostra erro
+      } finally {
+        // Desliga o loading independente do resultado
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('E-mail ou senha incorretos')),
-          );
         }
       }
     }
@@ -102,12 +123,12 @@ class _SignInPageState extends State<SignInPage> {
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Faça o login na sua conta',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey,
+                    color: Colors.grey.shade300,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -129,14 +150,14 @@ class _SignInPageState extends State<SignInPage> {
                 const SizedBox(height: 24),
 
                 // Linha divisória com texto "entre com"
-                const Row(
+                Row(
                   children: [
                     Expanded(child: Divider()),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         'entre com',
-                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                        style: TextStyle(color: Colors.grey.shade300, fontSize: 13),
                       ),
                     ),
                     Expanded(child: Divider()),
