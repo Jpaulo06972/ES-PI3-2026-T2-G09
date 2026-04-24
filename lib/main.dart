@@ -6,9 +6,7 @@ import 'autentication/pages/signin.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -23,9 +21,7 @@ class MyApp extends StatelessWidget {
 
       // Localização em Português do Brasil
       locale: const Locale('pt', 'BR'),
-      supportedLocales: const [
-        Locale('pt', 'BR'),
-      ],
+      supportedLocales: const [Locale('pt', 'BR')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -33,9 +29,7 @@ class MyApp extends StatelessWidget {
       ],
 
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF107649),
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF107649)),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(

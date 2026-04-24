@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mesclainvest_f/model/userModel.dart';
 
 /// Exceção customizada para erros de cadastro.
 /// Contém uma [message] amigável para exibir ao usuário.
@@ -22,9 +23,9 @@ class SignUpService {
   /// 1. Cria a conta no Firebase Auth (email + senha)
   /// 2. Salva os dados do perfil no Firestore (doc ID = uid)
   ///
-  /// Retorna o [User] criado em caso de sucesso.
+  /// Retorna o [UserModel] criado em caso de sucesso.
   /// Lança [SignUpException] com mensagem amigável em caso de erro.
-  Future<User?> signUp({
+  Future<UserModel?> signUp({
     required String firstName,
     required String lastName,
     required String dataNascimento,
@@ -43,20 +44,28 @@ class SignUpService {
       final user = credential.user;
 
       if (user != null) {
-        // 2. Salvar perfil no Firestore (users/{uid})
-        await _firestore.collection('users').doc(user.uid).set({
-          'firstName': firstName,
-          'lastName': lastName,
-          'dataNascimento': dataNascimento,
-          'cpf': cpf,
-          'email': email,
-          'telefone': telefone,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+        // 2. Cria o UserModel
+        final userModel = UserModel(
+          uid: user.uid,
+          firstName: firstName,
+          lastName: lastName,
+          dataNascimento: dataNascimento,
+          cpf: cpf,
+          email: email,
+          telefone: telefone,
+        );
+
+        final userData = userModel.toMap();
+        userData['createdAt'] = FieldValue.serverTimestamp();
+        userData['updatedAt'] = FieldValue.serverTimestamp();
+
+        // 3. Salvar perfil no Firestore (users/{uid})
+        await _firestore.collection('users').doc(user.uid).set(userData);
+
+        return userModel;
       }
 
-      return user;
+      return null;
     } on FirebaseAuthException catch (e) {
       throw SignUpException(_mapAuthError(e.code));
     } on FirebaseException catch (e) {

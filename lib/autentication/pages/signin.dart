@@ -8,7 +8,7 @@ import '../components/primaryButton.dart';
 import '../components/socialButton.dart';
 
 // Telas que a gente navega a partir daqui
-import '../../dashboard/home.dart';
+import '../../dashboard/pages/home.dart';
 import 'passRecovery.dart';
 import 'signup.dart';
 import '../services/SignInServices.dart';
@@ -157,7 +157,10 @@ class _SignInPageState extends State<SignInPage> {
                       padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         'entre com',
-                        style: TextStyle(color: Colors.grey.shade300, fontSize: 13),
+                        style: TextStyle(
+                          color: Colors.grey.shade300,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     Expanded(child: Divider()),
