@@ -1,49 +1,61 @@
 import 'package:flutter/material.dart';
 
-import '../components/emailField.dart';
+import '../components/passwordField.dart';
 import '../components/primaryButton.dart';
-import '../components/navLink.dart';
 import '../services/passwordResetService.dart';
-import 'passRecoveryCode.dart';
 import 'signin.dart';
 
-class PassRecoveryPage extends StatefulWidget {
-  const PassRecoveryPage({super.key});
+class NewPasswordPage extends StatefulWidget {
+  final String email;
+  final String code;
+
+  const NewPasswordPage({
+    super.key,
+    required this.email,
+    required this.code,
+  });
 
   @override
-  State<PassRecoveryPage> createState() => _PassRecoveryPageState();
+  State<NewPasswordPage> createState() => _NewPasswordPageState();
 }
 
-class _PassRecoveryPageState extends State<PassRecoveryPage> {
+class _NewPasswordPageState extends State<NewPasswordPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
   final _service = PasswordResetService();
 
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
-  Future<void> _onSendPressed() async {
+  Future<void> _onConfirmPressed() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    final email = _emailController.text.trim();
-
     try {
-      await _service.sendResetCode(email);
+      await _service.resetPassword(
+        email: widget.email,
+        code: widget.code,
+        newPassword: _passwordController.text,
+      );
 
       if (!mounted) return;
 
-      Navigator.push(
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Senha redefinida com sucesso!')),
+      );
+
+      Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (_) => PassRecoveryCodePage(email: email),
-        ),
+        MaterialPageRoute(builder: (_) => const SignInPage()),
+        (route) => false,
       );
     } on PasswordResetException catch (e) {
       if (!mounted) return;
@@ -68,34 +80,40 @@ class _PassRecoveryPageState extends State<PassRecoveryPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Icon(
-                  Icons.lock_reset_outlined,
+                  Icons.lock_outline,
                   size: 72,
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Recuperar senha',
+                  'Nova senha',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Informe seu e-mail e enviaremos um código de 6 dígitos para redefinir sua senha.',
+                  'Crie uma senha forte para sua conta.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade300),
                 ),
                 const SizedBox(height: 32),
-                EmailField(controller: _emailController),
+                PasswordField(
+                  controller: _passwordController,
+                  label: 'Nova senha',
+                  isCadastro: true,
+                ),
+                const SizedBox(height: 16),
+                PasswordField(
+                  controller: _confirmController,
+                  label: 'Confirmar nova senha',
+                  isCadastro: true,
+                  confirmController: _passwordController,
+                ),
                 const SizedBox(height: 32),
                 PrimaryButton(
-                  label: 'Enviar código',
-                  onPressed: _onSendPressed,
+                  label: 'Redefinir senha',
+                  onPressed: _onConfirmPressed,
                   isLoading: _isLoading,
-                ),
-                const SizedBox(height: 24),
-                NavLink(
-                  destination: const SignInPage(),
-                  label: 'Voltar para o login',
                 ),
               ],
             ),

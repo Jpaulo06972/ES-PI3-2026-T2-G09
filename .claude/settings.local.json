@@ -4,7 +4,11 @@
       "Bash(flutter run:*)",
       "Bash(flutter devices:*)",
       "Bash(flutter emulators:*)",
-      "Bash(flutter doctor:*)"
+      "Bash(flutter doctor:*)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(flutter pub *)",
+      "Bash(firebase functions:delete sendPasswordResetCode resetPassword --region us-central1 --force)"
     ]
   }
 }
