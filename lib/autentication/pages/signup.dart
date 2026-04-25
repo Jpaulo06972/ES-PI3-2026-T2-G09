@@ -132,9 +132,8 @@ class _SignUpPageState extends State<SignUpPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Logo e cabeçalho
-                const SizedBox(height: 12),
+                const SizedBox(height: 42),
                 Image.asset('assets/images/Logo1.png', height: 45),
-                const SizedBox(height: 8),
                 const Text(
                   'Cadastre-se',
                   textAlign: TextAlign.center,
