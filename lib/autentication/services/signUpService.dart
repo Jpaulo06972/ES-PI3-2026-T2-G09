@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 // Importa o modelo de dados do usuário
 import 'package:mesclainvest_f/model/userModel.dart';
+import 'package:mesclainvest_f/enum/userRole.dart';
 
 // Exceção personalizada para erros de cadastro
 // Contém uma mensagem amigável para exibir no SnackBar ao usuário
@@ -59,6 +60,7 @@ class SignUpService {
           cpf: cpf,
           email: email,
           telefone: telefone,
+          role: UserRole.investidor,
         );
 
         // Converte para Map e adiciona timestamps de criação/atualização
@@ -147,4 +149,3 @@ class SignUpService {
     }
   }
 }
-

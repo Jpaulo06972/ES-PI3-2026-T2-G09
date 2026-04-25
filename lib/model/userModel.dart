@@ -1,3 +1,5 @@
+import 'package:mesclainvest_f/enum/userRole.dart';
+
 // Modelo de dados do usuário — representa as informações de quem está logado
 // É usado em todo o app para passar os dados do usuário entre telas e componentes
 class UserModel {
@@ -22,6 +24,8 @@ class UserModel {
   // Data de nascimento do usuário (opcional, pode ficar vazio)
   final String dataNascimento;
 
+  final UserRole role;
+
   // Construtor — uid e email são obrigatórios, o resto tem valor padrão vazio
   UserModel({
     required this.uid,
@@ -31,6 +35,7 @@ class UserModel {
     this.cpf = '',
     this.telefone = '',
     this.dataNascimento = '',
+    required this.role,
   });
 
   // Junta o primeiro nome e sobrenome para ter o nome completo
@@ -50,6 +55,10 @@ class UserModel {
       cpf: map['cpf'] ?? '',
       telefone: map['telefone'] ?? '',
       dataNascimento: map['dataNascimento'] ?? '',
+      role: UserRole.values.firstWhere(
+        (e) => e.name == (map['role'] ?? ''),
+        orElse: () => UserRole.investidor,
+      ),
     );
   }
 

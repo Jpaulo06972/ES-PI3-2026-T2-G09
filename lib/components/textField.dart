@@ -39,8 +39,11 @@ class NameField extends StatelessWidget {
         label: Text.rich(
           TextSpan(
             children: [
-              TextSpan(text: label ?? 'Nome'),
-              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+              TextSpan(text: label ?? 'Campo'),
+              const TextSpan(
+                text: ' *',
+                style: TextStyle(color: Colors.red),
+              ),
             ],
           ),
         ),
@@ -49,7 +52,10 @@ class NameField extends StatelessWidget {
         prefixIcon: const Icon(Icons.person_outline),
 
         // Reduz a área do ícone pra alinhar o erro com a borda da caixa
-        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 40,
+          minHeight: 40,
+        ),
 
         // Borda retangular ao redor
         border: const OutlineInputBorder(),

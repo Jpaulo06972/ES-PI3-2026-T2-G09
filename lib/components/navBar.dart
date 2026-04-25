@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 // Importa as páginas que serão navegadas pela barra inferior
 import 'package:mesclainvest_f/dashboard/pages/home.dart';
 import 'package:mesclainvest_f/dashboard/pages/notification.dart';
-import 'package:mesclainvest_f/startups/startupsList.dart';
+import 'package:mesclainvest_f/startups/pages/startupsList.dart';
+import 'package:mesclainvest_f/startups/pages/startupsCreate.dart';
 
 // Importa o modelo de usuário para passar os dados entre as telas
 import 'package:mesclainvest_f/model/userModel.dart';
@@ -31,7 +32,9 @@ class CustomNavBar extends StatelessWidget {
       // Espaçamento interno da barra de navegação
       padding: EdgeInsets.only(
         top: 12,
-        bottom: MediaQuery.of(context).padding.bottom + 8, // Respeita a área segura inferior do celular
+        bottom:
+            MediaQuery.of(context).padding.bottom +
+            8, // Respeita a área segura inferior do celular
         left: 8,
         right: 8,
       ),
@@ -72,7 +75,8 @@ class CustomNavBar extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => StartupsList(userModel: userModel),
+                  //builder: (context) => StartupsList(userModel: userModel),
+                  builder: (context) => StartupsCreate(userModel: userModel),
                 ),
               );
             },
