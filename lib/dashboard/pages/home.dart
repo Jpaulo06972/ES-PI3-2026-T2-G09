@@ -69,8 +69,25 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
 
-            // Gráfico de desempenho da carteira
+            // Gráfico de desempenho da carteira de investimentos
             const DashboardChart(),
+
+            // Espaçamento entre o gráfico e a seção de startups
+            const SizedBox(height: 18),
+            // Seção "Minhas Startups" com padding lateral
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Text(
+                "Minhas Startups",
+                style: const TextStyle(
+                  fontSize: 28,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            // Lista de startups com border radius
+            // Mais startups...
           ],
         ),
       ),

@@ -2,6 +2,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 // Importa o Firestore para buscar os dados extras do usuário
 import 'package:cloud_firestore/cloud_firestore.dart';
+// Importa o Flutter foundation para usar debugPrint (logs no console)
+import 'package:flutter/foundation.dart';
 // Importa o modelo de usuário do projeto
 import 'package:mesclainvest_f/model/userModel.dart';
 
@@ -54,10 +56,12 @@ class SignInService {
       // Se não encontrou o perfil, retorna null
       return null;
     } on FirebaseAuthException catch (e) {
-      // Erro do Firebase Auth — converte o código técnico em mensagem amigável
+      // Erro do Firebase Auth — imprime o código real para debug e converte em mensagem amigável
+      debugPrint('FirebaseAuthException code: ${e.code}');
       throw SignInException(_mapAuthError(e.code));
     } catch (e) {
-      // Erro genérico não esperado
+      // Imprime o erro real no console para facilitar o debug
+      debugPrint('Erro inesperado no login: $e');
       throw SignInException(
         'Ocorreu um erro inesperado. Tente novamente mais tarde.',
       );
@@ -66,18 +70,25 @@ class SignInService {
 
   // Traduz os códigos de erro técnicos do Firebase Auth para mensagens
   // que o usuário consiga entender (em português)
+  // NOTA: O Firebase Auth moderno unificou 'wrong-password' e 'user-not-found'
+  // no código 'invalid-credential' por motivos de segurança
   String _mapAuthError(String code) {
     switch (code) {
-      case 'email-already-in-use':
-        return 'Este e-mail já está cadastrado.';
-      case 'user-disabled':
-        return 'Este usuário está desativado.';
+      // Código moderno — email ou senha incorretos (Firebase não diz qual dos dois)
+      case 'invalid-credential':
+      case 'INVALID_LOGIN_CREDENTIALS':
+        return 'E-mail ou senha incorretos. Verifique e tente novamente.';
+      // Códigos legados — mantidos para compatibilidade com versões mais antigas
+      case 'wrong-password':
+        return 'Senha incorreta. Verifique e tente novamente.';
+      case 'user-not-found':
+        return 'Nenhuma conta encontrada com este e-mail.';
       case 'invalid-email':
         return 'O e-mail informado é inválido.';
-      case 'user-not-found':
-        return 'Usuário não encontrado.';
-      case 'wrong-password':
-        return 'Senha incorreta.';
+      case 'user-disabled':
+        return 'Este usuário está desativado. Contate o suporte.';
+      case 'email-already-in-use':
+        return 'Este e-mail já está cadastrado.';
       case 'too-many-requests':
         return 'Muitas tentativas. Aguarde um momento e tente novamente.';
       case 'operation-not-allowed':
@@ -92,8 +103,12 @@ class SignInService {
         return 'Código de verificação expirado. Solicite um novo.';
       case 'invalid-action-code':
         return 'Código de verificação inválido. Solicite um novo.';
+      case 'channel-error':
+        return 'Preencha todos os campos antes de continuar.';
       default:
-        return 'Erro ao entrar. Tente novamente.';
+        // Imprime o código desconhecido para podermos adicionar no futuro
+        debugPrint('Código de erro Auth não mapeado: $code');
+        return 'Erro ao entrar ($code). Tente novamente.';
     }
   }
 }

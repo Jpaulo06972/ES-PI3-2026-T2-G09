@@ -2,6 +2,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 // Importa o Firestore para salvar os dados do perfil do usuário
 import 'package:cloud_firestore/cloud_firestore.dart';
+// Importa o Flutter foundation para usar debugPrint (logs no console)
+import 'package:flutter/foundation.dart';
 // Importa o modelo de dados do usuário
 import 'package:mesclainvest_f/model/userModel.dart';
 
@@ -73,13 +75,16 @@ class SignUpService {
 
       return null;
     } on FirebaseAuthException catch (e) {
-      // Erro do Firebase Auth — converte para mensagem amigável
+      // Imprime o código real do erro para facilitar o debug
+      debugPrint('FirebaseAuthException no cadastro: ${e.code}');
       throw SignUpException(_mapAuthError(e.code));
     } on FirebaseException catch (e) {
-      // Erro do Firestore — converte para mensagem amigável
+      // Imprime o código real do erro do Firestore
+      debugPrint('FirebaseException no cadastro: ${e.code}');
       throw SignUpException(_mapFirestoreError(e.code));
     } catch (e) {
-      // Erro genérico não esperado
+      // Imprime o erro genérico no console
+      debugPrint('Erro inesperado no cadastro: $e');
       throw SignUpException(
         'Ocorreu um erro inesperado. Tente novamente mais tarde.',
       );
@@ -87,34 +92,59 @@ class SignUpService {
   }
 
   // Traduz códigos de erro do Firebase Auth para mensagens em português
+  // NOTA: O Firebase Auth moderno pode usar códigos diferentes das versões antigas
   String _mapAuthError(String code) {
     switch (code) {
+      // E-mail já cadastrado
       case 'email-already-in-use':
-        return 'Este e-mail já está cadastrado.';
+        return 'Este e-mail já está cadastrado. Tente fazer login.';
+      // Senha muito fraca (menos de 6 caracteres)
       case 'weak-password':
         return 'A senha é muito fraca. Use pelo menos 6 caracteres.';
+      // E-mail com formato inválido
       case 'invalid-email':
-        return 'O e-mail informado é inválido.';
+        return 'O e-mail informado é inválido. Verifique e tente novamente.';
+      // Cadastro por e-mail desativado no console do Firebase
       case 'operation-not-allowed':
         return 'Cadastro por e-mail está desativado. Contate o suporte.';
+      // Muitas tentativas seguidas
       case 'too-many-requests':
         return 'Muitas tentativas. Aguarde um momento e tente novamente.';
+      // Sem internet
       case 'network-request-failed':
         return 'Sem conexão com a internet. Verifique sua rede.';
+      // Campos vazios (quando o Flutter não consegue enviar os dados)
+      case 'channel-error':
+        return 'Preencha todos os campos antes de continuar.';
+      // Credencial inválida (código moderno do Firebase)
+      case 'invalid-credential':
+        return 'Dados inválidos. Verifique as informações e tente novamente.';
       default:
-        return 'Erro ao criar conta. Tente novamente.';
+        // Mostra o código do erro na mensagem para facilitar o debug
+        debugPrint('Código de erro Auth não mapeado no cadastro: $code');
+        return 'Erro ao criar conta ($code). Tente novamente.';
     }
   }
 
   // Traduz códigos de erro do Firestore para mensagens em português
   String _mapFirestoreError(String code) {
     switch (code) {
+      // Sem permissão para escrever no Firestore (regras de segurança)
       case 'permission-denied':
         return 'Sem permissão para salvar os dados. Contate o suporte.';
+      // Servidor indisponível
       case 'unavailable':
         return 'Servidor indisponível. Tente novamente mais tarde.';
+      // Tempo de conexão esgotado
+      case 'deadline-exceeded':
+        return 'A conexão demorou demais. Verifique sua internet e tente novamente.';
+      // Documento não encontrado
+      case 'not-found':
+        return 'Erro ao acessar os dados. Tente novamente.';
       default:
-        return 'Erro ao salvar seu perfil. Tente novamente.';
+        debugPrint('Código de erro Firestore não mapeado: $code');
+        return 'Erro ao salvar seu perfil ($code). Tente novamente.';
     }
   }
 }
+
