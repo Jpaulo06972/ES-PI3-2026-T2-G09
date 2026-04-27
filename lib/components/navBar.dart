@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 // Importa as páginas que serão navegadas pela barra inferior
 import 'package:mesclainvest_f/dashboard/pages/home.dart';
 import 'package:mesclainvest_f/dashboard/pages/notification.dart';
-import 'package:mesclainvest_f/startups/pages/startupsList.dart';
 import 'package:mesclainvest_f/startups/pages/startupsCreate.dart';
 
 // Importa o modelo de usuário para passar os dados entre as telas

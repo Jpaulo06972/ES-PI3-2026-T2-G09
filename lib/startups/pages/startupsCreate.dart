@@ -4,6 +4,9 @@ import 'dart:io';
 // Importação do pacote principal do Flutter para construir a interface do usuário (UI)
 import 'package:flutter/material.dart';
 
+// Importação do pacote de Cloud Functions para conectar com o backend
+import 'package:cloud_functions/cloud_functions.dart';
+
 // ============================================================================
 // IMPORTAÇÃO DOS NOSSOS COMPONENTES VISUAIS (WIDGETS PERSONALIZADOS)
 // ============================================================================
@@ -60,6 +63,8 @@ class _StartupsCreateState extends State<StartupsCreate> {
   // ============================================================================
   final _nomeController = TextEditingController();
   final _descricaoController = TextEditingController();
+  final _shortDescController = TextEditingController(); // Novo: Descrição Curta
+  final _execSummaryController = TextEditingController(); // Novo: Resumo Executivo
   final _setorController = TextEditingController();
   final _capitalAportadoController = TextEditingController();
   final _tokensEmitidosController = TextEditingController();
@@ -84,6 +89,8 @@ class _StartupsCreateState extends State<StartupsCreate> {
   void dispose() {
     _nomeController.dispose();
     _descricaoController.dispose();
+    _shortDescController.dispose();
+    _execSummaryController.dispose();
     _setorController.dispose();
     _capitalAportadoController.dispose();
     _tokensEmitidosController.dispose();
@@ -112,44 +119,68 @@ class _StartupsCreateState extends State<StartupsCreate> {
       // Passo 3: Se passou nas validações, ativamos o loading! A tela se redesenha com a bolinha girando.
       setState(() => _isLoading = true);
 
-      // (Simulação) Espera 2 segundos de mentirinha, fingindo que está enviando para a internet
-      await Future.delayed(const Duration(seconds: 2));
+      try {
+        // Passo 4: Preparar os dados numéricos (remover formatação e converter para centavos)
+        final capitalString = _capitalAportadoController.text.replaceAll(RegExp(r'[^0-9]'), '');
+        final capitalCents = int.tryParse(capitalString) ?? 0;
+        
+        final tokensString = _tokensEmitidosController.text.replaceAll(RegExp(r'[^0-9]'), '');
+        final tokens = int.tryParse(tokensString) ?? 0;
 
-      // Passo 4: Coleta todos os dados digitados e selecionados e joga no console (debugPrint)
-      // Aqui é onde, no futuro, vamos mandar esses dados pro Firebase!
-      debugPrint("====== DADOS PARA A CLOUD FUNCTION ======");
-      debugPrint("Criador (UID): ${widget.userModel.uid}"); // Pega o ID de quem tá logado
-      debugPrint("Nome: ${_nomeController.text}"); // Lê o texto do caderninho do Nome
-      debugPrint("Descrição: ${_descricaoController.text}");
-      debugPrint("Estágio: ${_selectedStage?.name}"); // Pega o nome do Enum (ex: 'nova')
-      debugPrint("Setor: ${_setorController.text}");
-      debugPrint("Capital: ${_capitalAportadoController.text}");
-      debugPrint("Tokens: ${_tokensEmitidosController.text}");
-      
-      // Para imagem e vídeo, se ele tiver selecionado (diferente de nulo), pega o caminho do arquivo (path)
-      debugPrint("Imagem selecionada: ${_selectedImage?.path ?? 'Nenhuma'}");
-      debugPrint("Vídeo selecionado: ${_selectedVideo?.path ?? 'Nenhum'}");
-      
-      // Toda nova startup começa com o status "inativa" até ser aprovada (ou ativada pelo admin)
-      debugPrint("Status Padrão: ${StatusStartup.inativa.name}");
-      debugPrint("=========================================");
+        // Passo 5: Conectar com a Cloud Function do backend
+        // 'startups-createStartup' é o nome da função gerada pelo Firebase baseada no nosso index.ts
+        final callable = FirebaseFunctions.instance.httpsCallable('startups-createStartup');
+        
+        // Passo 6: Chamar a função passando o "pacote" (payload) de dados no formato que o backend espera
+        final response = await callable.call(<String, dynamic>{
+          'name': _nomeController.text,
+          'stage': _selectedStage!.name, // Enum convertido para string (ex: 'nova')
+          'shortDescription': _shortDescController.text,
+          'description': _descricaoController.text,
+          'executiveSummary': _execSummaryController.text,
+          'capitalRaisedCents': capitalCents,
+          'totalTokensIssued': tokens,
+          'currentTokenPriceCents': 0, // Preço inicial, pode ser atualizado depois
+          
+          // Enviando listas vazias temporárias conforme acordado no planejamento
+          'founders': [],
+          'externalMembers': [],
+          'demoVideos': [],
+          
+          // Colocamos o setor como uma "tag" inicial
+          'tags': [_setorController.text], 
+        });
 
-      // Passo 5: Terminou de salvar? Desliga o loading!
-      setState(() => _isLoading = false);
+        // Pega o ID que o backend devolveu
+        final newStartupId = response.data['id'];
+        debugPrint("Sucesso! Startup criada com ID: $newStartupId");
 
-      // Passo 6: O 'mounted' checa se a tela ainda tá aberta. Se sim, mostra o aviso verde de Sucesso!
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            // Mensagem e estilo do texto
-            content: Text(
-              'Startup pronta para ser enviada! Verifique o console.',
-              style: TextStyle(color: Colors.white),
+        // Passo 7: Mostra o aviso verde de Sucesso!
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Startup criada com sucesso!', style: TextStyle(color: Colors.white)),
+              backgroundColor: Colors.green,
             ),
-            // Fundo verde para indicar que deu bom
-            backgroundColor: Colors.green,
-          ),
-        );
+          );
+          // Navigator.pop(context); // Descomente para voltar de tela após salvar
+        }
+      } catch (e) {
+        // Se der erro na internet ou o backend rejeitar, cai aqui
+        debugPrint("Erro ao criar startup: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao salvar: $e', style: const TextStyle(color: Colors.white)),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        // Passo 8: Terminou de salvar (com sucesso ou erro)? Desliga o loading!
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -201,7 +232,21 @@ class _StartupsCreateState extends State<StartupsCreate> {
                 // CAMPO 2: Descrição da Startup (Texto)
                 NameField(
                   controller: _descricaoController,
-                  label: 'Descrição / Propósito',
+                  label: 'Descrição Longa / Propósito',
+                ),
+                const SizedBox(height: 16),
+
+                // CAMPO 2.1: Descrição Curta (Exigido pelo backend)
+                NameField(
+                  controller: _shortDescController,
+                  label: 'Descrição Curta (Resumo em 1 frase)',
+                ),
+                const SizedBox(height: 16),
+
+                // CAMPO 2.2: Resumo Executivo (Exigido pelo backend)
+                NameField(
+                  controller: _execSummaryController,
+                  label: 'Resumo Executivo (Pitch de negócio)',
                 ),
                 const SizedBox(height: 16),
 
