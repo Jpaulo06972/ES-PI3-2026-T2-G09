@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 // Importa as páginas que serão navegadas pela barra inferior
 import 'package:mesclainvest_f/dashboard/pages/home.dart';
 import 'package:mesclainvest_f/dashboard/pages/notification.dart';
-import 'package:mesclainvest_f/startups/pages/startupsCreate.dart';
+import 'package:mesclainvest_f/startups/pages/startupsList.dart';
 
 // Importa o modelo de usuário para passar os dados entre as telas
 import 'package:mesclainvest_f/model/userModel.dart';
@@ -75,7 +75,7 @@ class CustomNavBar extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   //builder: (context) => StartupsList(userModel: userModel),
-                  builder: (context) => StartupsCreate(userModel: userModel),
+                  builder: (context) => StartupsList(userModel: userModel),
                 ),
               );
             },
