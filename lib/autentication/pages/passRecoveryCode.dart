@@ -51,19 +51,23 @@ class _PassRecoveryCodePageState extends State<PassRecoveryCodePage> {
 
     setState(() => _isLoading = true);
 
-    // Navega para a tela de nova senha — a validação real do código
-    // acontece lá quando o usuário confirma a nova senha
-    if (mounted) {
-      setState(() => _isLoading = false);
+    try {
+      await _service.verifyCode(email: widget.email, code: _code);
+
+      if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => NewPasswordPage(
-            email: widget.email,
-            code: _code,
-          ),
+          builder: (_) => NewPasswordPage(email: widget.email, code: _code),
         ),
       );
+    } on PasswordResetException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

@@ -25,6 +25,24 @@ class PasswordResetService {
     }
   }
 
+  Future<void> verifyCode({
+    required String email,
+    required String code,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/verifyCode'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email, 'code': code}),
+    );
+
+    if (response.statusCode != 200) {
+      final body = json.decode(response.body) as Map<String, dynamic>;
+      throw PasswordResetException(
+        (body['error'] as String?) ?? 'Código inválido.',
+      );
+    }
+  }
+
   Future<void> resetPassword({
     required String email,
     required String code,
