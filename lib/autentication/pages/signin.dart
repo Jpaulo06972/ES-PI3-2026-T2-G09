@@ -80,7 +80,6 @@ class _SignInPageState extends State<SignInPage> {
           }
         }
       } on SignInException catch (e) {
-        // Erro tratado — mostra mensagem amigável
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -88,6 +87,19 @@ class _SignInPageState extends State<SignInPage> {
                 e.message,
                 style: const TextStyle(color: Colors.white),
               ),
+              backgroundColor: Colors.red.shade600,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao enviar código 2FA: $e'),
               backgroundColor: Colors.red.shade600,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -202,6 +214,7 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                   ],
                 ),
+
               ],
             ),
           ),
@@ -210,3 +223,4 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 }
+
