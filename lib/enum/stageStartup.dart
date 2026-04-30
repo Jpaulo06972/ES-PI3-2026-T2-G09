@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 // Enum que define os estágios possíveis de uma startup
 // Usado no StartupModel para indicar em que fase a empresa está
 enum StageStartup {

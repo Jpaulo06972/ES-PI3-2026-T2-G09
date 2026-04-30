@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 // Importa o pacote do Flutter pra montar a interface
 import 'package:flutter/material.dart';
 
@@ -49,8 +54,9 @@ class PrimaryButton extends StatelessWidget {
 
         // Cor quando o botão tá desabilitado (durante o loading)
         // Usa a mesma cor primária mas com opacidade pra parecer "meio apagado"
-        disabledBackgroundColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+        disabledBackgroundColor: Theme.of(
+          context,
+        ).colorScheme.primary.withValues(alpha: 0.6),
         disabledForegroundColor: Colors.white70,
       ),
 

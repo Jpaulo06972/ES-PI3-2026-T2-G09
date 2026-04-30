@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 // Importa o pacote do Flutter pra montar a interface
 import 'package:flutter/material.dart';
 
@@ -45,7 +50,7 @@ class NavLink extends StatelessWidget {
             border: Border(
               bottom: BorderSide(
                 color: linkColor, // Mesma cor do texto
-                width: 1,        // Espessura da linha
+                width: 1, // Espessura da linha
               ),
             ),
           ),
@@ -54,8 +59,9 @@ class NavLink extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: linkColor,         // Cor do texto (primária do tema)
-              fontWeight: FontWeight.bold, // Negrito pra destacar que é clicável
+              color: linkColor, // Cor do texto (primária do tema)
+              fontWeight:
+                  FontWeight.bold, // Negrito pra destacar que é clicável
               fontSize: 14,
             ),
           ),

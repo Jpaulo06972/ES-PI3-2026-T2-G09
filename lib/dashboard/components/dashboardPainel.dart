@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 // Importa a biblioteca fl_chart que permite criar gráficos bonitos no Flutter
 import 'package:fl_chart/fl_chart.dart';
 
@@ -213,10 +218,18 @@ class _DashboardChartState extends State<DashboardChart> {
                 gridData: const FlGridData(show: false),
                 // Esconde todos os rótulos dos eixos — as datas são exibidas manualmente
                 titlesData: const FlTitlesData(
-                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 // Configuração do tooltip (balão que aparece ao tocar no gráfico)
                 lineTouchData: LineTouchData(
@@ -332,11 +345,13 @@ class _DashboardChartState extends State<DashboardChart> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             // Transforma a lista de datas em widgets Text
             children: _getDateLabels()
-                .map((label) => Text(
-                      label,
-                      // Estilo discreto: cinza claro e fonte pequena
-                      style: const TextStyle(color: Colors.white38, fontSize: 11),
-                    ))
+                .map(
+                  (label) => Text(
+                    label,
+                    // Estilo discreto: cinza claro e fonte pequena
+                    style: const TextStyle(color: Colors.white38, fontSize: 11),
+                  ),
+                )
                 .toList(),
           ),
         ),

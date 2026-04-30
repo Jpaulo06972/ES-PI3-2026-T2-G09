@@ -1,23 +1,31 @@
-import {FieldValue} from "firebase-admin/firestore";
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
+// import {FieldValue} from "firebase-admin/firestore";
+
 import {
   StartupDocument,
   StartupListItem,
   StartupQuestionDocument,
 } from "../types";
 import {db} from "../shared/firebase";
+
 const startupsCollection = db.collection("startups");
+/*
 const demoStartups: Array<StartupDocument & {id: string}> = [
   {
     id: "biochip-campus",
     name: "BioChip Campus",
     stage: "nova",
     shortDescription: "Sensores portateis para analises laboratoriais " +
- "didaticas.",
+      "didaticas.",
     description: "A BioChip Campus simula kits de diagnostico rapido para " +
- "laboratorios universitarios, conectando sensores de baixo custo a um " +
- "aplicativo de acompanhamento.",
+      "laboratorios universitarios, conectando sensores de baixo custo a um " +
+      "aplicativo de acompanhamento.",
     executiveSummary: "Startup em fase de ideacao com foco em prototipagem " +
- "de sensores educacionais e validacao com cursos da area de saude.",
+      "de sensores educacionais e validacao com cursos da area de saude.",
     capitalRaisedCents: 1850000,
     totalTokensIssued: 100000,
     currentTokenPriceCents: 125,
@@ -46,7 +54,7 @@ const demoStartups: Array<StartupDocument & {id: string}> = [
     demoVideos: ["https://example.com/videos/biochip-campus-demo"],
     pitchDeckUrl: "https://example.com/decks/biochip-campus.pdf",
     coverImageUrl: "https://images.unsplash.com/photo-" +
- "1581093458791-9d15482442f6",
+      "1581093458791-9d15482442f6",
     tags: ["healthtech", "iot", "educacao"],
   },
   {
@@ -55,10 +63,10 @@ const demoStartups: Array<StartupDocument & {id: string}> = [
     stage: "em_operacao",
     shortDescription: "Otimizacao de rotas sustentaveis para entregas urbanas.",
     description: "A Rota Verde usa dados de distancia, emissao estimada e " +
- "ocupacao de entregadores para sugerir rotas urbanas com menor impacto " +
- "ambiental.",
+      "ocupacao de entregadores para sugerir rotas urbanas com menor impacto " +
+      "ambiental.",
     executiveSummary: "Startup em operacao piloto com pequenos comercios " +
- "locais e validacao de indicadores de economia de combustivel.",
+      "locais e validacao de indicadores de economia de combustivel.",
     capitalRaisedCents: 7400000,
     totalTokensIssued: 250000,
     currentTokenPriceCents: 310,
@@ -79,7 +87,7 @@ const demoStartups: Array<StartupDocument & {id: string}> = [
     demoVideos: ["https://example.com/videos/rota-verde-demo"],
     pitchDeckUrl: "https://example.com/decks/rota-verde.pdf",
     coverImageUrl: "https://images.unsplash.com/photo-" +
- "1500530855697-b586d89ba3ee",
+      "1500530855697-b586d89ba3ee",
     tags: ["logtech", "sustentabilidade", "mobilidade"],
   },
   {
@@ -87,12 +95,12 @@ const demoStartups: Array<StartupDocument & {id: string}> = [
     name: "MentorAI",
     stage: "em_expansao",
     shortDescription: "Triagem inteligente para programas de mentoria " +
- "universitarios.",
+      "universitarios.",
     description: "A MentorAI organiza perfis de estudantes e mentores para " +
- "recomendar encontros com base em objetivos, disponibilidade e " +
- "historico de acompanhamento.",
+      "recomendar encontros com base em objetivos, disponibilidade e " +
+      "historico de acompanhamento.",
     executiveSummary: "Startup em expansao com uso simulado em programas de " +
- "pre-aceleracao e potencial de integracao a plataformas educacionais.",
+      "pre-aceleracao e potencial de integracao a plataformas educacionais.",
     capitalRaisedCents: 12350000,
     totalTokensIssued: 500000,
     currentTokenPriceCents: 525,
@@ -119,6 +127,7 @@ const demoStartups: Array<StartupDocument & {id: string}> = [
     tags: ["edtech", "ia", "mentoria"],
   },
 ];
+*/
 function toListItem(id: string, startup: StartupDocument): StartupListItem {
   return {
     id,
@@ -132,24 +141,27 @@ function toListItem(id: string, startup: StartupDocument): StartupListItem {
     tags: startup.tags,
   };
 }
+
 export async function listStartupItems(): Promise<StartupListItem[]> {
   const snapshot = await startupsCollection.limit(100).get();
-
+  
   return snapshot.docs.map((doc) =>
     toListItem(doc.id, doc.data() as StartupDocument)
   );
 }
+
 export async function getStartupById(
   startupId: string
 ): Promise<StartupDocument | undefined> {
   const startupSnapshot = await startupsCollection.doc(startupId).get();
-
+  
   if (!startupSnapshot.exists) {
     return undefined;
   }
-
+  
   return startupSnapshot.data() as StartupDocument;
 }
+
 export async function userIsInvestor(
   startupId: string,
   uid: string
@@ -159,9 +171,10 @@ export async function userIsInvestor(
     .collection("investors")
     .doc(uid)
     .get();
-
+    
   return investorSnapshot.exists;
 }
+
 export async function listPublicQuestions(startupId: string) {
   const questionsSnapshot = await startupsCollection
     .doc(startupId)
@@ -169,7 +182,7 @@ export async function listPublicQuestions(startupId: string) {
     .where("visibility", "==", "publica")
     .limit(50)
     .get();
-
+    
   return questionsSnapshot.docs
     .map((doc) => ({
       id: doc.id,
@@ -181,6 +194,7 @@ export async function listPublicQuestions(startupId: string) {
     .sort((left, right) => String(right.createdAt ?? "")
       .localeCompare(String(left.createdAt ?? "")));
 }
+
 export async function createQuestion(
   startupId: string,
   question: StartupQuestionDocument
@@ -189,32 +203,27 @@ export async function createQuestion(
     .doc(startupId)
     .collection("questions")
     .add(question);
-
+    
   return questionRef.id;
 }
+
+/*
 export async function seedDemoStartups(): Promise<string[]> {
   const batch = db.batch();
-
+  
   for (const startup of demoStartups) {
     const {id, ...data} = startup;
     const startupRef = startupsCollection.doc(id);
+    
     batch.set(startupRef, {
       ...data,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     }, {merge: true});
   }
-
+  
   await batch.commit();
-
+  
   return demoStartups.map((startup) => startup.id);
 }
-
-export async function insertStartup(startup: StartupDocument): Promise<string> {
-  const startupRef = await startupsCollection.add({
-    ...startup,
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
-  });
-  return startupRef.id;
-}
+  */

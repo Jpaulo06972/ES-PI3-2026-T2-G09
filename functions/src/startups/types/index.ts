@@ -93,7 +93,7 @@ export type StartupQuestionDocument = {
  authorEmail?: string;
  text: string;
  visibility: QuestionVisibility;
- nswer?: string;
+  answer?: string;
  answeredAt?: Timestamp;
  createdAt: FieldValue;
 };

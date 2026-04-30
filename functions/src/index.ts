@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 import {setGlobalOptions} from "firebase-functions";
 import {onRequest} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
@@ -162,4 +167,4 @@ export const resetPassword = onRequest(
   }
 );
 
-export * as startups from "./startups";
+export * from "./startups";

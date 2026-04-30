@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 // Importa o pacote do Flutter pra montar a interface
 import 'package:flutter/material.dart';
 
@@ -11,7 +16,9 @@ class CpfInputFormatter extends TextInputFormatter {
   // oldValue = o que tinha antes, newValue = o que ficou agora
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     // Pega só os números do texto (remove qualquer letra, ponto ou traço)
     String numbers = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
 
@@ -24,10 +31,11 @@ class CpfInputFormatter extends TextInputFormatter {
     String formatted = '';
     for (int i = 0; i < numbers.length; i++) {
       // Depois do 3º e do 6º dígito, coloca um ponto
-      if (i == 3 || i == 6) formatted += '.';
-
+      if (i == 3 || i == 6)
+        formatted += '.';
       // Depois do 9º dígito, coloca um traço
-      else if (i == 9) formatted += '-';
+      else if (i == 9)
+        formatted += '-';
 
       // Adiciona o número atual
       formatted += numbers[i];
@@ -135,12 +143,18 @@ class CpfField extends StatelessWidget {
           TextSpan(
             children: [
               TextSpan(text: label ?? 'CPF'),
-              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+              const TextSpan(
+                text: ' *',
+                style: TextStyle(color: Colors.red),
+              ),
             ],
           ),
         ),
         prefixIcon: const Icon(Icons.badge_outlined),
-        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 40,
+          minHeight: 40,
+        ),
         border: const OutlineInputBorder(),
 
         // Compacta o campo

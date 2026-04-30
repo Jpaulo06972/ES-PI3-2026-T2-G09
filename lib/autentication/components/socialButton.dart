@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 // Importa o pacote do Flutter pra montar a interface
 import 'package:flutter/material.dart';
 
@@ -14,11 +19,7 @@ class SocialButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   // Construtor - os dois são obrigatórios
-  const SocialButton({
-    super.key,
-    required this.label,
-    required this.onPressed,
-  });
+  const SocialButton({super.key, required this.label, required this.onPressed});
 
   // Monta o botão na tela
   @override
@@ -38,9 +39,7 @@ class SocialButton extends StatelessWidget {
         side: BorderSide(color: Colors.grey.shade700),
 
         // Cantos arredondados (8 pixels de raio)
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
 
         // Fundo transparente pra aparecer a cor da tela atrás
         backgroundColor: Colors.transparent,
@@ -87,8 +86,8 @@ class SocialButton extends StatelessWidget {
             label,
             style: const TextStyle(
               fontSize: 16,
-              color: Colors.white,          // Texto branco
-              fontWeight: FontWeight.w500,   // Peso médio (nem fino nem negrito)
+              color: Colors.white, // Texto branco
+              fontWeight: FontWeight.w500, // Peso médio (nem fino nem negrito)
             ),
           ),
         ],

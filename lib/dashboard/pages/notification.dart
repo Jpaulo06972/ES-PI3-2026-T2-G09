@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 // Importa o pacote básico de UI do Flutter
 import 'package:flutter/material.dart';
 
@@ -31,11 +36,7 @@ class NotificationPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Ícone grande de construção (indica que está sendo desenvolvido)
-              Icon(
-                Icons.construction,
-                size: 100,
-                color: Colors.grey.shade500,
-              ),
+              Icon(Icons.construction, size: 100, color: Colors.grey.shade500),
 
               // Espaçamento entre o ícone e o título
               const SizedBox(height: 24),
@@ -43,10 +44,7 @@ class NotificationPage extends StatelessWidget {
               // Texto principal: "Em Desenvolvimento"
               const Text(
                 'Em Desenvolvimento',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
 
@@ -56,10 +54,7 @@ class NotificationPage extends StatelessWidget {
               // Texto explicativo dizendo que a tela será implementada em breve
               Text(
                 'A tela de notificações está sendo construída e estará disponível nas próximas atualizações!',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade400,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade400),
                 textAlign: TextAlign.center,
               ),
 
@@ -83,13 +78,16 @@ class NotificationPage extends StatelessWidget {
                   // Texto e ícone em branco
                   foregroundColor: Colors.white,
                   // Espaçamento interno do botão
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   // Cantos arredondados
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),

@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 // Importa o pacote do Flutter com tudo que precisamos pra montar a interface
 import 'package:flutter/material.dart';
 
@@ -67,7 +72,7 @@ class _PasswordFieldState extends State<PasswordField> {
   // Gera o texto dinâmico mostrando apenas o que falta
   String? _getMissingRequirements() {
     if (!widget.isCadastro || widget.confirmController != null) return null;
-    
+
     final value = widget.controller.text;
     if (value.isEmpty) {
       return 'A senha precisa de 6+ caracteres, contendo letra maiúscula, número e símbolo especial.';
@@ -154,7 +159,10 @@ class _PasswordFieldState extends State<PasswordField> {
           TextSpan(
             children: [
               TextSpan(text: widget.label ?? 'Senha'),
-              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+              const TextSpan(
+                text: ' *',
+                style: TextStyle(color: Colors.red),
+              ),
             ],
           ),
         ),
@@ -163,7 +171,10 @@ class _PasswordFieldState extends State<PasswordField> {
         prefixIcon: const Icon(Icons.lock_outline),
 
         // Reduz a área do ícone pra alinhar o erro com a borda da caixa
-        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 40,
+          minHeight: 40,
+        ),
 
         // Borda retangular
         border: const OutlineInputBorder(),
