@@ -31,6 +31,8 @@ class UserModel {
 
   final UserRole role;
 
+  final double saldo;
+
   // Construtor — uid e email são obrigatórios, o resto tem valor padrão vazio
   UserModel({
     required this.uid,
@@ -41,6 +43,7 @@ class UserModel {
     this.telefone = '',
     this.dataNascimento = '',
     required this.role,
+    this.saldo = 0,
   });
 
   // Junta o primeiro nome e sobrenome para ter o nome completo
@@ -64,6 +67,7 @@ class UserModel {
         (e) => e.name == (map['role'] ?? ''),
         orElse: () => UserRole.investidor,
       ),
+      saldo: (map['saldo'] as num?)?.toDouble() ?? 0,
     );
   }
 
@@ -78,6 +82,7 @@ class UserModel {
       'cpf': cpf,
       'telefone': telefone,
       'dataNascimento': dataNascimento,
+      'saldo': saldo,
     };
   }
 }

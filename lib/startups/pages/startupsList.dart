@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 import 'package:flutter/material.dart';
 
 import 'package:mesclainvest_f/components/appBar.dart';
@@ -6,7 +11,10 @@ import 'package:mesclainvest_f/model/userModel.dart';
 import 'package:mesclainvest_f/startups/components/cardStartups.dart';
 import 'package:mesclainvest_f/startups/services/getStartup.dart';
 
+/// Página que exibe a lista (catálogo) de startups disponíveis para investimento.
+/// Permite buscar startups por nome ou setor e visualizar seus detalhes básicos.
 class StartupsList extends StatefulWidget {
+  // Modelo do usuário logado, necessário para a navegação e identificação
   final UserModel userModel;
 
   const StartupsList({super.key, required this.userModel});
@@ -15,8 +23,13 @@ class StartupsList extends StatefulWidget {
   State<StartupsList> createState() => _StartupsListState();
 }
 
+/// Estado da página de lista de startups.
+/// Gerencia a busca de dados no backend e a exibição dos cards dinâmicos.
 class _StartupsListState extends State<StartupsList> {
+  // Instância do serviço que busca dados no Firebase
   final StartupService _startupService = StartupService();
+  
+  // Future que armazenará a lista de startups carregada do banco
   late Future<List<Map<String, dynamic>>> _startupsFuture;
 
   @override

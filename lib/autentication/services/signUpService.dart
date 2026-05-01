@@ -66,6 +66,7 @@ class SignUpService {
           email: email,
           telefone: telefone,
           role: UserRole.investidor,
+          saldo: 0.00,
         );
 
         // Converte para Map e adiciona timestamps de criação/atualização

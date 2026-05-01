@@ -6,8 +6,8 @@
 import 'package:mesclainvest_f/enum/stageStartup.dart';
 import 'package:mesclainvest_f/enum/statusStartup.dart';
 
-// Modelo de dados do usuário — representa as informações de quem está logado
-// É usado em todo o app para passar os dados do usuário entre telas e componentes
+// Modelo de dados da Startup — representa as informações de uma empresa cadastrada
+// É usado para exibir as informações nos cards e nas telas de detalhes
 class StartupModel {
   // ID único da Startup no Firebase (gerado automaticamente ao criar a conta)
   final String uid;
@@ -100,6 +100,8 @@ class StartupModel {
   // Status da startup
   StatusStartup get getStatus => status;
 
+  // --- Setters para alteração de dados ---
+
   // Altera o nome da startup
   set setName(String value) {
     nome = value;
@@ -150,10 +152,10 @@ class StartupModel {
     this.status = status;
   }
 
-  // Cria um UserModel a partir de um documento do Firestore
+  // Cria um StartupModel a partir de um documento do Firestore ou de um Map
   // O Firestore retorna os dados como Map<String, dynamic>, então precisamos
   // "traduzir" isso para o nosso modelo. O '?? ""' garante que se o campo
-  // não existir no banco, ele não vai quebrar o app (fica como string vazia)
+  // não existir no banco, ele não vai quebrar o app (fica como valor padrão)
   factory StartupModel.fromMap(String id, Map<String, dynamic> map) {
     return StartupModel(
       uid: id,
@@ -172,9 +174,9 @@ class StartupModel {
     );
   }
 
-  // Converte o UserModel de volta para Map — usado quando queremos salvar
-  // os dados do usuário no Firestore (o Firestore só aceita Map)
-  // Obs: o uid não é incluído porque ele já é o ID do documento
+  // Converte o StartupModel de volta para Map — usado para salvar no Firestore
+  // O Firestore só aceita dados no formato de Map (chave-valor)
+  // Obs: o uid não é incluído no Map porque ele já é usado como o ID do documento
   Map<String, dynamic> toMap() {
     return {
       'name': nome,
