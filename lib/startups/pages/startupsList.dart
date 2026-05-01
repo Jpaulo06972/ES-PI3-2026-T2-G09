@@ -222,9 +222,10 @@ class _StartupsListState extends State<StartupsList> {
                   final valorCents = startup['capitalRaisedCents'] ?? 0;
                   final valorReal = valorCents / 100;
 
-                  final imgUrl = startup['coverImageUrl'];
-                  // Se tiver imgUrl e começar com startups/, é um caminho do Storage
-                  final bool isStorage = imgUrl != null && imgUrl.startsWith('startups/');
+                  // Ignora o campo coverImageUrl do documento e busca a imagem no Storage
+                  // baseando-se no nome da startup, pois a imagem é salva com o nome da startup.
+                  final storageName = nome.toLowerCase().replaceAll(' ', '-');
+                  final storagePath = 'startups_images/$storageName.png';
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
@@ -236,8 +237,8 @@ class _StartupsListState extends State<StartupsList> {
                       valor: 'R\$ ${valorReal.toStringAsFixed(0)}',
                       progress: 0.65,
                       icon: Icons.rocket_launch_rounded,
-                      imageUrl: isStorage ? null : imgUrl,
-                      storagePath: isStorage ? imgUrl : (imgUrl == null ? 'startups_images/${nome.toLowerCase().replaceAll(' ', '-')}.png' : null),
+                      imageUrl: null,
+                      storagePath: storagePath,
                     ),
                   );
                 }),

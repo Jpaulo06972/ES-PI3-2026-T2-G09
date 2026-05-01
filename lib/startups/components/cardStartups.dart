@@ -145,8 +145,7 @@ class startupCard extends StatelessWidget {
                 child: storagePath != null && storagePath!.isNotEmpty
                     // Busca dinamicamente do Firebase Storage
                     ? FutureBuilder<String>(
-                        future: FirebaseStorage.instanceFor(
-                                bucket: "gs://mesclainvest-5ee48.firebasestorage.app")
+                        future: FirebaseStorage.instance
                             .ref(storagePath)
                             .getDownloadURL(),
                         builder: (context, snapshot) {
