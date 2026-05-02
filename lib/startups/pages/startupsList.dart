@@ -4,6 +4,7 @@ import 'package:mesclainvest_f/components/appBar.dart';
 import 'package:mesclainvest_f/components/navBar.dart';
 import 'package:mesclainvest_f/model/userModel.dart';
 import 'package:mesclainvest_f/startups/components/cardStartups.dart';
+import 'package:mesclainvest_f/startups/pages/startupsDetails.dart';
 import 'package:mesclainvest_f/startups/services/getStartup.dart';
 
 class StartupsList extends StatefulWidget {
@@ -96,7 +97,7 @@ class _StartupsListState extends State<StartupsList> {
                 decoration: BoxDecoration(
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -164,7 +165,7 @@ class _StartupsListState extends State<StartupsList> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A9B5F).withOpacity(0.2),
+                          color: const Color(0xFF1A9B5F).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -227,18 +228,36 @@ class _StartupsListState extends State<StartupsList> {
                   final storageName = nome.toLowerCase().replaceAll(' ', '-');
                   final storagePath = 'startups_images/$storageName.png';
 
+                  final startupId =
+                      (startup['id'] ?? startup['uid'] ?? '').toString();
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: startupCard(
-                      nome: nome,
-                      descricao: desc,
-                      status: status.replaceAll('_', ' ').toUpperCase(),
-                      tokens: tokensInt.toString(),
-                      valor: 'R\$ ${valorReal.toStringAsFixed(0)}',
-                      progress: 0.65,
-                      icon: Icons.rocket_launch_rounded,
-                      imageUrl: null,
-                      storagePath: storagePath,
+                    child: GestureDetector(
+                      onTap: startupId.isEmpty
+                          ? null
+                          : () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => StartupsDetails(
+                                    startupId: startupId,
+                                    startupName: nome,
+                                    startupStage: status,
+                                    userModel: widget.userModel,
+                                  ),
+                                ),
+                              ),
+                      child: startupCard(
+                        nome: nome,
+                        descricao: desc,
+                        status: status.replaceAll('_', ' ').toUpperCase(),
+                        tokens: tokensInt.toString(),
+                        valor: 'R\$ ${valorReal.toStringAsFixed(0)}',
+                        progress: 0.65,
+                        icon: Icons.rocket_launch_rounded,
+                        imageUrl: null,
+                        storagePath: storagePath,
+                      ),
                     ),
                   );
                 }),
