@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+/// Widget de estado vazio para futuras implementações ou placeholders.
 class cardStartup extends StatefulWidget {
   const cardStartup({super.key});
 
@@ -20,15 +21,26 @@ class _cardStartupState extends State<cardStartup> {
   }
 }
 
+/// Widget que representa o card visual de uma startup na lista.
+/// Exibe informações como nome, descrição, progresso de captação e status.
 class startupCard extends StatelessWidget {
+  // Nome da startup
   final String nome;
+  // Descrição curta da empresa
   final String descricao;
+  // Status/estágio atual (ex: NOVA, EM OPERAÇÃO)
   final String status;
+  // Quantidade de tokens disponíveis
   final String tokens;
+  // Valor total captado ou objetivo
   final String valor;
+  // Porcentagem de progresso da captação (0.0 a 1.0)
   final double progress;
+  // Ícone representativo do setor ou da empresa
   final IconData icon;
+  // URL da imagem (se for link direto HTTP)
   final String? imageUrl;
+  // Caminho no Firebase Storage (se a imagem estiver no Storage)
   final String? storagePath;
 
   const startupCard({
@@ -46,10 +58,16 @@ class startupCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Determine status color based on text
-    final bool isOpen = status.toLowerCase().contains('aberta');
-    final Color statusColor = isOpen
-        ? const Color(0xFF1A9B5F)
-        : const Color(0xFF4A90E2);
+    final String statusLower = status.toLowerCase();
+    Color statusColor = const Color(0xFF4A90E2); // default azul
+
+    if (statusLower.contains('nova')) {
+      statusColor = const Color(0xFF1A9B5F); // Verde para "Nova"
+    } else if (statusLower.contains('expansao') || statusLower.contains('expansão')) {
+      statusColor = const Color(0xFFF5A623); // Laranja para "Em expansão"
+    } else if (statusLower.contains('operacao') || statusLower.contains('operação')) {
+      statusColor = const Color(0xFF4A90E2); // Azul para "Em operação"
+    }
 
     return Container(
       padding: const EdgeInsets.all(24),
