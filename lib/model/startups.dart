@@ -2,53 +2,54 @@
 // Grupo: G09
 // Trabalho: PI3-2026-T2-G09
 // RA: 25000684
+// Revisado e comentado por: Antigravity AI
 
 import 'package:mesclainvest_f/enum/stageStartup.dart';
 import 'package:mesclainvest_f/enum/statusStartup.dart';
 
-// Modelo de dados da Startup — representa as informações de uma empresa cadastrada
-// É usado para exibir as informações nos cards e nas telas de detalhes
+/// Modelo de dados que representa uma Startup dentro do ecossistema MesclaInvest.
+/// Centraliza todas as informações de negócio, métricas financeiras e composição societária.
 class StartupModel {
-  // ID único da Startup no Firebase (gerado automaticamente ao criar a conta)
+  // Identificador único gerado pelo Firestore
   final String uid;
 
-  // Nome da empresa
+  // Nome fantasia da startup
   String nome;
 
-  // Descricao da startup
+  // Texto detalhado sobre a proposta de valor e mercado da startup
   String descricao;
 
-  // Estagio atual da startup
+  // Estágio de maturidade (Ex: Nova, Em Operação, Em Expansão)
   StageStartup stageStartup;
 
-  // Setor da startup
+  // Ramo de atividade (Ex: Fintech, Agrotech, Edtech)
   String setor;
 
-  // Valor de investimento total da startup
+  // Montante total em Reais que a startup já captou ou deseja captar
   double capitalAportado;
 
-  // Quantidade de tokens emitidos pela startup
+  // Volume total de ativos digitais (tokens) disponibilizados pela empresa
   double tokensEmitidos;
 
-  // Sócios da startup
+  // Lista de sócios fundadores: Armazena maps com 'nome', 'cargo' e 'bio'
   List<Map<String, String>> socios;
 
-  // Participação societária
+  // Divisão percentual do equity: Mapeia o nome do sócio para seu respectivo %
   Map<String, double> participacaoSocietaria;
 
-  // Mentores e conselheiros
+  // Conselheiros e mentores que apoiam a governança da startup
   List<Map<String, String>> mentoresConselho;
 
-  // Imagem da startup
+  // Link ou caminho para a imagem de capa (banner) da startup
   String imagem;
 
-  // Video da startup
+  // Link do vídeo de pitch (YouTube/Vimeo) para apresentação aos investidores
   String video;
 
-  // Status da startup
+  // Status de visibilidade da startup no catálogo (Ex: Ativa, Inativa, Pendente)
   StatusStartup status;
 
-  // Construtor — uid, nome, descricao, stageStartup, setor, tokensEmitidos, socios, participacaoSocietaria são obrigatórios, o resto tem valor padrão vazio
+  // Construtor principal para instanciar uma startup com os dados básicos obrigatórios
   StartupModel({
     required this.uid,
     required this.nome,
@@ -65,123 +66,79 @@ class StartupModel {
     this.status = StatusStartup.inativa,
   });
 
-  // Nome da startup
+  // Getters - Facilitam o acesso aos dados seguindo padrões de encapsulamento
   String get getName => nome;
-
-  // Descrição da startup
   String get getDescription => descricao;
-
-  // Estágio da startup
   String get getStage => '$stageStartup';
-
-  // Setor da startup
   String get getSector => setor;
-  // Capital aportado da startup
   double get getCapital => capitalAportado;
-
-  // Tokens emitidos pela startup
   double get getTokens => tokensEmitidos;
-
-  // Sócios da startup
   List<Map<String, String>> get getPartners => socios;
-
-  // Participação societária da startup
   Map<String, double> get getEquity => participacaoSocietaria;
-
-  // Mentores e conselheiros da startup
   List<Map<String, String>> get getMentors => mentoresConselho;
-
-  // Imagem da startup
   String get getImage => imagem;
-
-  // Video da startup
   String get getVideo => video;
-
-  // Status da startup
   StatusStartup get getStatus => status;
 
-  // --- Setters para alteração de dados ---
+  // Setters - Permitem a alteração controlada das propriedades da instância
+  set setName(String value) => nome = value;
+  set setDescription(String value) => descricao = value;
+  set setStage(StageStartup value) => stageStartup = value;
+  set setSector(String value) => setor = value;
+  set setCapital(double value) => capitalAportado = value;
+  set setTokens(double value) => tokensEmitidos = value;
+  set setPartners(List<Map<String, String>> value) => socios = value;
+  set setEquity(Map<String, double> value) => participacaoSocietaria = value;
+  set setMentors(List<Map<String, String>> value) => mentoresConselho = value;
+  set setImage(String value) => imagem = value;
+  set setVideo(String value) => video = value;
+  set setStatus(StatusStartup value) => status = value;
 
-  // Altera o nome da startup
-  set setName(String value) {
-    nome = value;
-  }
-
-  // Altera a descrição da startup
-  set setDescription(String value) {
-    descricao = value;
-  }
-
-  set setStage(StageStartup stageStartup) {
-    this.stageStartup = stageStartup;
-  }
-
-  set setSector(String setor) {
-    this.setor = setor;
-  }
-
-  set setCapital(double capitalAportado) {
-    this.capitalAportado = capitalAportado;
-  }
-
-  set setTokens(double tokensEmitidos) {
-    this.tokensEmitidos = tokensEmitidos;
-  }
-
-  set setPartners(List<Map<String, String>> socios) {
-    this.socios = socios;
-  }
-
-  set setEquity(Map<String, double> participacaoSocietaria) {
-    this.participacaoSocietaria = participacaoSocietaria;
-  }
-
-  set setMentors(List<Map<String, String>> mentoresConselho) {
-    this.mentoresConselho = mentoresConselho;
-  }
-
-  set setImage(String imagem) {
-    this.imagem = imagem;
-  }
-
-  set setVideo(String video) {
-    this.video = video;
-  }
-
-  set setStatus(StatusStartup status) {
-    this.status = status;
-  }
-
-  // Cria um StartupModel a partir de um documento do Firestore ou de um Map
-  // O Firestore retorna os dados como Map<String, dynamic>, então precisamos
-  // "traduzir" isso para o nosso modelo. O '?? ""' garante que se o campo
-  // não existir no banco, ele não vai quebrar o app (fica como valor padrão)
+  /// Método Factory para converter um documento do Firestore (Map) em uma instância de StartupModel.
+  /// Inclui proteções contra tipos nulos ou incorretos vindos do banco de dados.
   factory StartupModel.fromMap(String id, Map<String, dynamic> map) {
     return StartupModel(
       uid: id,
       nome: map['name'] ?? '',
       descricao: map['description'] ?? '',
-      stageStartup: map['stage'] ?? '',
+      // Tenta converter o estágio vindo como String para o Enum correspondente
+      stageStartup: StageStartup.values.firstWhere(
+        (e) => e.name == (map['stage'] ?? ''),
+        orElse: () => StageStartup.nova,
+      ),
       setor: map['setor'] ?? '',
-      capitalAportado: map['capital'] ?? '',
-      tokensEmitidos: map['tokens'] ?? '',
-      socios: map['socios'] ?? '',
-      participacaoSocietaria: map['participacao'] ?? '',
-      mentoresConselho: map['mentores'] ?? '',
+      // Garante que valores numéricos sejam tratados como double, mesmo se vierem como int
+      capitalAportado: (map['capital'] as num?)?.toDouble() ?? 0.0,
+      tokensEmitidos: (map['tokens'] as num?)?.toDouble() ?? 0.0,
+      // Converte listas dinâmicas para listas tipadas de Maps
+      socios: (map['socios'] as List<dynamic>?)
+              ?.map((e) => Map<String, String>.from(e as Map))
+              .toList() ??
+          [],
+      // Converte o map de participações garantindo que os valores sejam double
+      participacaoSocietaria: (map['participacao'] as Map<dynamic, dynamic>?)
+              ?.map((k, v) => MapEntry(k.toString(), (v as num).toDouble())) ??
+          {},
+      mentoresConselho: (map['mentores'] as List<dynamic>?)
+              ?.map((e) => Map<String, String>.from(e as Map))
+              .toList() ??
+          [],
       imagem: map['imagem'] ?? '',
       video: map['video'] ?? '',
-      status: map['status'] ?? '',
+      // Tenta converter o status vindo como String para o Enum correspondente
+      status: StatusStartup.values.firstWhere(
+        (e) => e.name == (map['status'] ?? ''),
+        orElse: () => StatusStartup.inativa,
+      ),
     );
   }
 
-  // Converte o StartupModel de volta para Map — usado para salvar no Firestore
-  // O Firestore só aceita dados no formato de Map (chave-valor)
-  // Obs: o uid não é incluído no Map porque ele já é usado como o ID do documento
+  /// Converte o objeto para um Map pronto para ser persistido no Firestore.
   Map<String, dynamic> toMap() {
     return {
       'name': nome,
       'description': descricao,
-      'stage': stageStartup,
+      'stage': stageStartup.name, // Salva o nome do enum como string no banco
       'setor': setor,
       'capital': capitalAportado,
       'tokens': tokensEmitidos,
@@ -190,7 +147,7 @@ class StartupModel {
       'mentores': mentoresConselho,
       'imagem': imagem,
       'video': video,
-      'status': status,
+      'status': status.name, // Salva o nome do enum como string no banco
     };
   }
 }

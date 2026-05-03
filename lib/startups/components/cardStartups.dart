@@ -2,6 +2,7 @@
 // Grupo: G09
 // Trabalho: PI3-2026-T2-G09
 // RA: 25000684
+// Revisado e comentado por: Antigravity AI
 
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -24,23 +25,23 @@ class _cardStartupState extends State<cardStartup> {
 /// Widget que representa o card visual de uma startup na lista.
 /// Exibe informações como nome, descrição, progresso de captação e status.
 class startupCard extends StatelessWidget {
-  // Nome da startup
+  // Nome da startup exibido em destaque
   final String nome;
-  // Descrição curta da empresa
+  // Breve resumo do que a startup faz
   final String descricao;
-  // Status/estágio atual (ex: NOVA, EM OPERAÇÃO)
+  // Estágio atual do negócio para definir a cor e o rótulo do badge
   final String status;
-  // Quantidade de tokens disponíveis
+  // Quantidade total de tokens disponíveis para investimento
   final String tokens;
-  // Valor total captado ou objetivo
+  // Valor monetário já captado ou meta de investimento
   final String valor;
-  // Porcentagem de progresso da captação (0.0 a 1.0)
+  // Fator decimal (0.0 a 1.0) para preenchimento da barra de progresso
   final double progress;
-  // Ícone representativo do setor ou da empresa
+  // Ícone decorativo que representa a categoria da startup
   final IconData icon;
-  // URL da imagem (se for link direto HTTP)
+  // Link direto para uma imagem hospedada na web
   final String? imageUrl;
-  // Caminho no Firebase Storage (se a imagem estiver no Storage)
+  // Caminho lógico dentro do bucket do Firebase Storage
   final String? storagePath;
 
   const startupCard({
@@ -57,27 +58,29 @@ class startupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine status color based on text
+    // Lógica para definir a cor de identidade do card baseada no status da startup
     final String statusLower = status.toLowerCase();
-    Color statusColor = const Color(0xFF4A90E2); // default azul
+    Color statusColor = const Color(0xFF4A90E2); // Azul padrão para outros estados
 
     if (statusLower.contains('nova')) {
-      statusColor = const Color(0xFF1A9B5F); // Verde para "Nova"
+      statusColor = const Color(0xFF1A9B5F); // Verde vibrante para novos negócios
     } else if (statusLower.contains('expansao') || statusLower.contains('expansão')) {
-      statusColor = const Color(0xFFF5A623); // Laranja para "Em expansão"
+      statusColor = const Color(0xFFF5A623); // Laranja para fase de crescimento
     } else if (statusLower.contains('operacao') || statusLower.contains('operação')) {
-      statusColor = const Color(0xFF4A90E2); // Azul para "Em operação"
+      statusColor = const Color(0xFF4A90E2); // Azul corporativo para maturidade
     }
 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
+        // Gradiente suave para dar profundidade e um aspecto premium ao card
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [Color(0xFF2C2C30), Color(0xFF222225)],
         ),
         borderRadius: BorderRadius.circular(24),
+        // Borda fina quase transparente para definição de contorno no dark mode
         border: Border.all(color: Colors.white.withOpacity(0.05), width: 1.5),
         boxShadow: [
           BoxShadow(
@@ -90,11 +93,12 @@ class startupCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: Icon and Status Badge
+          // Linha Superior: Contém o ícone da categoria e o badge de status
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Recipiente do ícone com gradiente baseado na cor do status
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -114,6 +118,7 @@ class startupCard extends StatelessWidget {
                 ),
                 child: Icon(icon, color: Colors.white, size: 28),
               ),
+              // Badge de status com fundo semi-transparente e borda colorida
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -127,6 +132,7 @@ class startupCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Pequeno ponto luminoso indicador
                     Container(
                       width: 6,
                       height: 6,
@@ -153,7 +159,7 @@ class startupCard extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // Cover Image (Se houver imageUrl HTTP direto ou storagePath)
+          // Seção de Imagem: Carrega do Storage se houver um caminho definido, senão tenta URL direta
           if ((imageUrl != null && imageUrl!.isNotEmpty) ||
               (storagePath != null && storagePath!.isNotEmpty))
             Padding(
@@ -161,7 +167,7 @@ class startupCard extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: storagePath != null && storagePath!.isNotEmpty
-                    // Busca dinamicamente do Firebase Storage
+                    // Usa FutureBuilder para resolver a URL temporária do Firebase Storage
                     ? FutureBuilder<String>(
                         future: FirebaseStorage.instance
                             .ref(storagePath)
@@ -169,6 +175,7 @@ class startupCard extends StatelessWidget {
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
+                            // Shimmer/Loading state enquanto a imagem é buscada
                             return Container(
                               height: 140,
                               width: double.infinity,
@@ -185,6 +192,7 @@ class startupCard extends StatelessWidget {
                               ),
                             );
                           }
+                          // Trata falhas na busca do arquivo no bucket
                           if (snapshot.hasError || !snapshot.hasData) {
                             if (snapshot.hasError) {
                               debugPrint('Erro ao buscar imagem ($storagePath): ${snapshot.error}');
@@ -202,15 +210,29 @@ class startupCard extends StatelessWidget {
                               ),
                             );
                           }
+                          // Renderiza a imagem final após sucesso
                           return Image.network(
                             snapshot.data!,
                             height: 140,
                             width: double.infinity,
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                              height: 140,
+                              width: double.infinity,
+                              color: Colors.white.withOpacity(0.05),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.broken_image_rounded,
+                                  color: Colors.white24,
+                                  size: 40,
+                                ),
+                              ),
+                            ),
                           );
                         },
                       )
-                    // Se não tem storagePath, usa a imageUrl (link estático)
+                    // Fallback para URL estática convencional
                     : Image.network(
                         imageUrl!,
                         height: 140,
@@ -232,7 +254,7 @@ class startupCard extends StatelessWidget {
               ),
             ),
 
-          // Middle Row: Title & Description
+          // Título e Descrição: Informações principais de identificação
           Text(
             nome,
             style: const TextStyle(
@@ -254,7 +276,7 @@ class startupCard extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // Progress Bar (Mockup)
+          // Barra de Progresso: Representação visual do quão perto a meta de investimento está
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -280,6 +302,7 @@ class startupCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
+              // Trilho da barra de progresso
               Container(
                 height: 6,
                 width: double.infinity,
@@ -312,11 +335,13 @@ class startupCard extends StatelessWidget {
           const Divider(color: Colors.white12, height: 1),
           const SizedBox(height: 20),
 
-          // Bottom Row: Stats
+          // Rodapé do Card: Estatísticas resumidas de tokens e valor total
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Coluna esquerda: Tokens disponíveis
               _buildStatColumn('Tokens', tokens, Icons.token_outlined),
+              // Coluna direita: Valor captado (alinhado à direita)
               _buildStatColumn(
                 'Captado',
                 valor,
@@ -330,6 +355,7 @@ class startupCard extends StatelessWidget {
     );
   }
 
+  // Método auxiliar para construir as colunas de estatísticas com ícone e rótulo
   Widget _buildStatColumn(
     String label,
     String value,
@@ -342,6 +368,7 @@ class startupCard extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Posiciona o ícone antes do texto se estiver alinhado à esquerda
             if (crossAxisAlignment == CrossAxisAlignment.start) ...[
               Icon(iconData, color: Colors.white38, size: 14),
               const SizedBox(width: 4),
@@ -354,6 +381,7 @@ class startupCard extends StatelessWidget {
                 fontWeight: FontWeight.w500,
               ),
             ),
+            // Posiciona o ícone depois do texto se estiver alinhado à direita
             if (crossAxisAlignment == CrossAxisAlignment.end) ...[
               const SizedBox(width: 4),
               Icon(iconData, color: Colors.white38, size: 14),

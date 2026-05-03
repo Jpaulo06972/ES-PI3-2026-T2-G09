@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 // Barra de navegação inferior compartilhada entre as telas
 import 'package:mesclainvest_f/components/navBar.dart';
 import 'package:mesclainvest_f/enum/userRole.dart';
@@ -16,6 +18,8 @@ class StartupsDetails extends StatefulWidget {
   final String startupName;
   final String startupStage;
   final UserModel userModel;
+  // Caminho da imagem no Firebase Storage (ex: startups_images/agrisense.png)
+  final String? storagePath;
 
   const StartupsDetails({
     super.key,
@@ -23,6 +27,7 @@ class StartupsDetails extends StatefulWidget {
     required this.startupName,
     required this.startupStage,
     required this.userModel,
+    this.storagePath,
   });
 
   @override
@@ -77,6 +82,25 @@ class _StartupsDetailsState extends State<StartupsDetails>
     _detailsFuture = _service.getStartupDetails(widget.startupId);
     // Busca os eventos filtrando pelo nome da startup na coleção event_startups
     _eventosFuture = _service.listEventos(widget.startupName);
+    // Carrega a URL da imagem de capa do Firebase Storage
+    _loadCoverImage();
+  }
+
+  // URL da imagem de capa carregada do Firebase Storage
+  String? _coverImageUrl;
+
+  // Busca a download URL da imagem de capa no Storage
+  Future<void> _loadCoverImage() async {
+    if (widget.storagePath == null || widget.storagePath!.isEmpty) return;
+    try {
+      final ref = FirebaseStorage.instance.ref(widget.storagePath!);
+      final url = await ref.getDownloadURL();
+      if (mounted) {
+        setState(() => _coverImageUrl = url);
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar imagem de capa: $e');
+    }
   }
 
   @override
@@ -202,59 +226,183 @@ class _StartupsDetailsState extends State<StartupsDetails>
     );
   }
 
-  // Cabeçalho com gradiente verde → escuro, botão de voltar, nome e badges
+  // Cabeçalho com imagem de capa da startup + overlay escuro + nome e badges
   Widget _buildHeader() {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0D5C38), Color(0xFF1A1A1E)],
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      height: 200,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          // Botão voltar — retorna para a lista de startups
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: Colors.white70,
-                  size: 14,
+          // Camada 1: imagem de fundo ou gradiente fallback
+          if (_coverImageUrl != null)
+            Image.network(
+              _coverImageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF0D5C38), Color(0xFF1A1A1E)],
+                  ),
                 ),
-                SizedBox(width: 6),
-                Text(
-                  'Catálogo',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+            )
+          else
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF0D5C38), Color(0xFF1A1A1E)],
+                ),
+              ),
+            ),
+
+          // Camada 2: overlay cinza claro para legibilidade sem esconder a imagem
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0.0, 0.5, 1.0],
+                colors: [
+                  Colors.black.withValues(alpha: 0.25),
+                  Colors.black.withValues(alpha: 0.4),
+                  Colors.black.withValues(alpha: 0.7),
+                ],
+              ),
+            ),
+          ),
+
+          // Camada 3: conteúdo (botão voltar, nome, badges)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Botão voltar — pill branca translúcida
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _cardBg.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          'Catálogo',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Nome e badges na parte inferior
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Nome da startup
+                    Text(
+                      widget.startupName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black87,
+                            blurRadius: 12,
+                          ),
+                          Shadow(
+                            color: Colors.black54,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    // Badges com fundo sólido para contraste
+                    Row(
+                      children: [
+                        // Badge do estágio — fundo verde sólido
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _green,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _green.withValues(alpha: 0.4),
+                                blurRadius: 8,
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            _stageLabel(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        // Badge do papel — fundo escuro translúcido
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _cardBg.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.15),
+                            ),
+                          ),
+                          child: Text(
+                            _roleLabel(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 14),
-          // Nome da startup recebido como parâmetro da tela anterior
-          Text(
-            widget.startupName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              // Badge verde com o estágio da startup (ex: "Em operação")
-              _badge(_stageLabel(), _green, filled: true),
-              const SizedBox(width: 8),
-              // Badge branco com o papel do usuário logado (ex: "Investidor")
-              _badge(_roleLabel(), Colors.white, filled: false),
-            ],
           ),
         ],
       ),
@@ -299,13 +447,20 @@ class _StartupsDetailsState extends State<StartupsDetails>
     );
   }
 
-  // Aba Sobre: estatísticas (tokens, capital, preço) + descrição + vídeo
+  // Aba Sobre: estatísticas (tokens, capital, preço) + descrição + vídeos demo
   Widget _buildSobreTab(Map<String, dynamic> data) {
     final rawTokens = data['totalTokensIssued'] ?? data['tokens'] ?? 0;
     final rawCapital = data['capitalRaisedCents'] ?? data['capital'] ?? 0;
+    final rawTokenPrice = data['currentTokenPriceCents'] ?? 0;
     final description =
         (data['description'] ?? data['descricao'] ?? '').toString().trim();
-    final videoUrl = (data['video'] ?? '').toString().trim();
+
+    // Extrai a lista de URLs de vídeos demo da startup
+    final rawDemoVideos = data['demoVideos'] as List<dynamic>? ?? [];
+    final demoVideos = rawDemoVideos
+        .map((e) => e.toString().trim())
+        .where((url) => url.isNotEmpty)
+        .toList();
 
     return ListView(
       physics: const BouncingScrollPhysics(),
@@ -314,7 +469,13 @@ class _StartupsDetailsState extends State<StartupsDetails>
         // Linha de 3 cards com as métricas principais da startup
         Row(
           children: [
-            Expanded(child: _statCard('--', 'Preço\ntoken')),
+            // Preço do token calculado a partir de currentTokenPriceCents
+            Expanded(
+              child: _statCard(
+                _formatTokenPrice(rawTokenPrice),
+                'Preço\ntoken',
+              ),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: _statCard(_formatTokens(rawTokens), 'Tokens\nemitidos'),
@@ -349,23 +510,25 @@ class _StartupsDetailsState extends State<StartupsDetails>
 
         const SizedBox(height: 28),
 
-        _sectionTitle('VÍDEOS'),
+        _sectionTitle('VÍDEO DEMO'),
         const SizedBox(height: 12),
-        _videoPlayer(videoUrl),
+        // Exibe os vídeos demo da startup ou estado vazio
+        _buildDemoVideosSection(demoVideos),
 
         const SizedBox(height: 32),
       ],
     );
   }
 
-  // Aba Sócios: barra de participação + legenda + cards individuais de cada sócio
+  // Aba Sócios: Exibe um gráfico de barras proporcional e cards individuais de cada fundador
   Widget _buildSociosTab(Map<String, dynamic> data) {
-    // Extrai a lista de founders do retorno da Firebase Function
+    // Extrai a lista de sócios (founders) retornada pela Cloud Function
     final rawFounders = data['founders'] as List<dynamic>? ?? [];
     final founders = rawFounders
         .map((e) => Map<String, dynamic>.from(e as Map))
         .toList();
 
+    // Caso não haja sócios cadastrados, exibe uma mensagem centralizada
     if (founders.isEmpty) {
       return const Center(
         child: Text(
@@ -375,21 +538,22 @@ class _StartupsDetailsState extends State<StartupsDetails>
       );
     }
 
+    // Lista com scroll para exibir toda a composição societária
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       children: [
         _sectionTitle('COMPOSIÇÃO SOCIETÁRIA'),
         const SizedBox(height: 16),
-        // Barra horizontal colorida proporcional ao equityPercent de cada sócio
+        // Renderiza a barra horizontal colorida com as porcentagens
         _buildEquityBar(founders),
         const SizedBox(height: 8),
-        // Legenda com nome e percentual de cada sócio
+        // Legenda explicativa com nomes e porcentagens individuais
         _buildEquityLegend(founders),
         const SizedBox(height: 28),
         _sectionTitle('SÓCIOS E FUNDADORES'),
         const SizedBox(height: 16),
-        // Gera um card para cada sócio usando índice para atribuir a cor correta
+        // Gera dinamicamente os cards detalhados para cada sócio da lista
         ...List.generate(
           founders.length,
           (i) => Padding(
@@ -402,8 +566,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
     );
   }
 
-  // Barra empilhada: cada segmento tem largura proporcional ao equityPercent
-  // Usa List.generate em vez de .asMap().entries.map() para compatibilidade com Flutter web
+  // Barra de Equity: Cada segmento da barra tem um Flex proporcional à sua participação
   Widget _buildEquityBar(List<Map<String, dynamic>> founders) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
@@ -411,11 +574,13 @@ class _StartupsDetailsState extends State<StartupsDetails>
         height: 18,
         child: Row(
           children: List.generate(founders.length, (i) {
+            // Converte a porcentagem para um valor numérico flexível
             final pct =
                 (founders[i]['equityPercent'] as num?)?.toDouble() ?? 0;
+            // Escolhe uma cor da paleta baseado na posição do sócio
             final color = _chartColors[i % _chartColors.length];
-            // flex proporcional ao percentual (multiplicado por 100 para int)
             return Flexible(
+              // Define o tamanho relativo do segmento na barra
               flex: (pct * 100).round(),
               child: Container(color: color),
             );
@@ -425,7 +590,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
     );
   }
 
-  // Legenda colorida abaixo da barra: bolinha + "Nome • XX%"
+  // Legenda de Equity: Pequenos indicadores circulares com o resumo de cada sócio
   Widget _buildEquityLegend(List<Map<String, dynamic>> founders) {
     return Wrap(
       spacing: 16,
@@ -437,12 +602,14 @@ class _StartupsDetailsState extends State<StartupsDetails>
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Círculo colorido da legenda
             Container(
               width: 10,
               height: 10,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
             const SizedBox(width: 6),
+            // Nome do sócio e sua porcentagem de participação
             Text(
               '$name • ${pct.toStringAsFixed(0)}%',
               style: const TextStyle(color: Colors.white54, fontSize: 12),
@@ -453,7 +620,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
     );
   }
 
-  // Card individual de sócio: avatar com iniciais, nome, cargo, badge de % e bio
+  // Card do Fundador: Exibe foto (iniciais), cargo, bio e barra de progresso individual
   Widget _buildFounderCard(Map<String, dynamic> founder, int colorIndex) {
     final name = (founder['name'] as String?) ?? '';
     final role = (founder['role'] as String?) ?? '';
@@ -461,7 +628,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
     final bio = (founder['bio'] as String?)?.trim() ?? '';
     final color = _chartColors[colorIndex % _chartColors.length];
 
-    // Gera as iniciais a partir das duas primeiras palavras do nome
+    // Lógica para pegar as primeiras letras do nome e criar o avatar circular
     final initials = name
         .split(' ')
         .where((w) => w.isNotEmpty)
@@ -481,7 +648,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
         children: [
           Row(
             children: [
-              // Avatar circular com as iniciais do sócio
+              // Avatar com iniciais sobre um fundo colorido suave
               Container(
                 width: 48,
                 height: 48,
@@ -502,7 +669,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
                 ),
               ),
               const SizedBox(width: 14),
-              // Nome e cargo do sócio
+              // Nome e cargo hierárquico na empresa
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -526,7 +693,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
                   ],
                 ),
               ),
-              // Badge com o percentual de participação
+              // Badge de porcentagem com bordas arredondadas
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -546,7 +713,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
               ),
             ],
           ),
-          // Bio só aparece se estiver preenchida no documento da startup
+          // Exibe a bio resumida se estiver disponível no banco de dados
           if (bio.isNotEmpty) ...[
             const SizedBox(height: 12),
             const Divider(color: Colors.white10, height: 1),
@@ -561,7 +728,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
             ),
           ],
           const SizedBox(height: 12),
-          // Barra de progresso visual do percentual de participação
+          // Indicador visual de progresso refletindo a participação do sócio
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
@@ -576,14 +743,14 @@ class _StartupsDetailsState extends State<StartupsDetails>
     );
   }
 
-  // Aba Q&A: lista perguntas públicas do servidor + perguntas enviadas localmente
+  // Aba Q&A: Interface de chat para perguntas públicas e envio de novas questões
   Widget _buildQATab(Map<String, dynamic> data) {
-    // Perguntas públicas retornadas pela Firebase Function
+    // Busca perguntas oficiais retornadas pelo servidor
     final rawQuestions = data['publicQuestions'] as List<dynamic>? ?? [];
     final serverQuestions =
         rawQuestions.map((e) => Map<String, dynamic>.from(e as Map)).toList();
 
-    // Mescla as perguntas locais (topo) com as do servidor
+    // Combina as perguntas que o usuário acabou de enviar (locais) com as do servidor
     final allQuestions = [..._localQuestions, ...serverQuestions];
 
     return Column(
@@ -591,7 +758,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
         Expanded(
           child: allQuestions.isEmpty
               ? Center(
-                  // Estado vazio: encoraja o usuário a fazer a primeira pergunta
+                  // Estado vazio quando ainda não há interação na startup
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: const [
@@ -623,108 +790,91 @@ class _StartupsDetailsState extends State<StartupsDetails>
                   ),
                 ),
         ),
-        // Campo fixo na parte inferior para digitar e enviar perguntas
+        // Campo de entrada fixo na base da aba Q&A
         _buildQuestionInput(),
       ],
     );
   }
 
-  // Card de pergunta: exibe visibilidade, autor mascarado, texto e resposta (se houver)
+  // Card de Pergunta: Mostra o autor (mascarado por segurança), o texto e a resposta dos fundadores
   Widget _buildQuestionCard(Map<String, dynamic> q) {
     final text = (q['text'] as String?) ?? '';
     final answer = (q['answer'] as String?)?.trim() ?? '';
     final isPrivate = (q['visibility'] as String?) == 'privada';
     final authorEmail = (q['authorEmail'] as String?) ?? '';
 
-    // Mascara o email do autor por privacidade: "t***@email.com"
-    final maskedAuthor = authorEmail.contains('@')
-        ? '${authorEmail.split('@')[0][0]}***@${authorEmail.split('@')[1]}'
-        : 'Anônimo';
+    // Mascara o e-mail para privacidade (ex: j***@gmail.com)
+    String maskedEmail = 'Usuário';
+    if (authorEmail.contains('@')) {
+      final parts = authorEmail.split('@');
+      maskedEmail = '${parts[0][0]}***@${parts[1]}';
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _cardBg,
         borderRadius: BorderRadius.circular(16),
-        // Borda azul para perguntas privadas, sutil para públicas
         border: Border.all(
-          color: isPrivate
-              ? const Color(0xFF4A90E2).withValues(alpha: 0.25)
-              : Colors.white.withValues(alpha: 0.05),
+          color: isPrivate ? _green.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.05),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Linha superior: ícone de visibilidade e autor mascarado
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                isPrivate ? Icons.lock_outline_rounded : Icons.public_rounded,
-                color: isPrivate ? const Color(0xFF4A90E2) : Colors.white38,
-                size: 14,
-              ),
-              const SizedBox(width: 6),
+              // Identificação do autor e data simulada
               Text(
-                isPrivate ? 'Privada' : 'Pública',
-                style: TextStyle(
-                  color: isPrivate ? const Color(0xFF4A90E2) : Colors.white38,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                maskedEmail,
+                style: const TextStyle(
+                  color: _green,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const Spacer(),
-              Text(
-                maskedAuthor,
-                style: const TextStyle(color: Colors.white24, fontSize: 11),
-              ),
+              // Etiqueta de visibilidade se a pergunta for privada
+              if (isPrivate)
+                const Text(
+                  'PRIVADA',
+                  style: TextStyle(color: Colors.white30, fontSize: 10),
+                ),
             ],
           ),
-          const SizedBox(height: 10),
-          // Texto da pergunta
+          const SizedBox(height: 8),
+          // Texto da pergunta feita pelo usuário
           Text(
             text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              height: 1.5,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 14),
           ),
-          // Bloco de resposta: só aparece se a startup tiver respondido
+          // Se houver uma resposta oficial, exibe um bloco com fundo diferente
           if (answer.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Container(
-              width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _green.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _green.withValues(alpha: 0.2)),
+                color: _pageBg,
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: const [
-                      Icon(Icons.verified_rounded, color: _green, size: 13),
-                      SizedBox(width: 5),
-                      Text(
-                        'Resposta da startup',
-                        style: TextStyle(
-                          color: _green,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    'Resposta oficial:',
+                    style: TextStyle(
+                      color: Colors.white38,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     answer,
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 13,
-                      height: 1.5,
+                      fontStyle: FontStyle.italic,
                     ),
                   ),
                 ],
@@ -736,123 +886,56 @@ class _StartupsDetailsState extends State<StartupsDetails>
     );
   }
 
-  // Área fixa no rodapé da aba Q&A: toggle pública/privada + campo de texto + botão enviar
+  // Campo de Input: Permite digitar, alternar visibilidade e enviar a pergunta
   Widget _buildQuestionInput() {
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        // Respeita a área segura do celular (notch inferior)
-        MediaQuery.of(context).padding.bottom + 16,
-      ),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _cardBg,
-        border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          // Toggle segmentado: Pública (verde) | Privada (azul)
           Row(
             children: [
-              const Text(
-                'Visibilidade:',
-                style: TextStyle(color: Colors.white54, fontSize: 12),
-              ),
-              const SizedBox(width: 10),
-              // Botão "Pública" — lado esquerdo do toggle
+              // Botão para alternar entre pergunta pública e privada (restrito aos sócios)
               GestureDetector(
-                onTap: () => setState(() => _isPrivate = false),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
+                onTap: () => setState(() => _isPrivate = !_isPrivate),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: !_isPrivate
-                        ? _green.withValues(alpha: 0.15)
-                        : Colors.transparent,
-                    borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(20),
-                    ),
+                    color: _isPrivate ? _green.withValues(alpha: 0.2) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: !_isPrivate
-                          ? _green.withValues(alpha: 0.5)
-                          : Colors.white.withValues(alpha: 0.1),
+                      color: _isPrivate ? _green : Colors.white10,
                     ),
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.public_rounded,
-                        size: 13,
-                        color: !_isPrivate ? _green : Colors.white38,
+                        _isPrivate ? Icons.lock_rounded : Icons.public_rounded,
+                        size: 14,
+                        color: _isPrivate ? _green : Colors.white30,
                       ),
-                      const SizedBox(width: 5),
+                      const SizedBox(width: 4),
                       Text(
-                        'Pública',
+                        _isPrivate ? 'Privada' : 'Pública',
                         style: TextStyle(
-                          color: !_isPrivate ? _green : Colors.white38,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          color: _isPrivate ? _green : Colors.white30,
+                          fontSize: 11,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              // Botão "Privada" — lado direito do toggle
-              GestureDetector(
-                onTap: () => setState(() => _isPrivate = true),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _isPrivate
-                        ? const Color(0xFF4A90E2).withValues(alpha: 0.15)
-                        : Colors.transparent,
-                    borderRadius: const BorderRadius.horizontal(
-                      right: Radius.circular(20),
-                    ),
-                    border: Border.all(
-                      color: _isPrivate
-                          ? const Color(0xFF4A90E2).withValues(alpha: 0.5)
-                          : Colors.white.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.lock_outline_rounded,
-                        size: 13,
-                        color:
-                            _isPrivate ? const Color(0xFF4A90E2) : Colors.white38,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        'Privada',
-                        style: TextStyle(
-                          color: _isPrivate
-                              ? const Color(0xFF4A90E2)
-                              : Colors.white38,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              const Spacer(),
             ],
           ),
           const SizedBox(height: 10),
@@ -1185,44 +1268,64 @@ class _StartupsDetailsState extends State<StartupsDetails>
     );
   }
 
-  // Player de vídeo: exibe botão play se houver URL, ícone de indisponível caso contrário
-  Widget _videoPlayer(String videoUrl) {
-    return Container(
-      height: 180,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: _cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Center(
-        child: videoUrl.isNotEmpty
-            ? Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: _green,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: _green.withValues(alpha: 0.4),
-                      blurRadius: 20,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.play_arrow_rounded,
-                  color: Colors.white,
-                  size: 32,
-                ),
-              )
-            : const Icon(
+  // Seção de vídeos demo: lista os players inline ou estado vazio
+  Widget _buildDemoVideosSection(List<String> demoVideos) {
+    if (demoVideos.isEmpty) {
+      // Estado vazio quando não há vídeos cadastrados
+      return Container(
+        height: 140,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: _cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
                 Icons.videocam_off_rounded,
                 color: Colors.white24,
-                size: 40,
+                size: 36,
               ),
-      ),
+              SizedBox(height: 8),
+              Text(
+                'Nenhum vídeo disponível',
+                style: TextStyle(color: Colors.white38, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Exibe um player inline para cada vídeo demo
+    return Column(
+      children: List.generate(demoVideos.length, (i) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: i < demoVideos.length - 1 ? 16 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (demoVideos.length > 1)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Vídeo Demo ${i + 1}',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              // Widget de player inline com controles
+              _InlineVideoPlayer(videoUrl: demoVideos[i]),
+            ],
+          ),
+        );
+      }),
     );
   }
 
@@ -1271,5 +1374,124 @@ class _StartupsDetailsState extends State<StartupsDetails>
       return 'R\$${(reais / 1000).toStringAsFixed(0)}k';
     }
     return 'R\$${reais.toStringAsFixed(0)}';
+  }
+
+  // Formata o preço do token de centavos para reais (ex: 125 cents → R$1,25)
+  String _formatTokenPrice(dynamic value) {
+    final num v = num.tryParse(value.toString()) ?? 0;
+    if (v == 0) return '--';
+    final double reais = v / 100;
+    return 'R\$${reais.toStringAsFixed(2).replaceAll('.', ',')}';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Widget de player de vídeo inline que embute vídeos do YouTube diretamente
+// na tela usando o pacote youtube_player_iframe. Extrai o videoId da URL
+// e renderiza o player com controles nativos do YouTube.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _InlineVideoPlayer extends StatefulWidget {
+  // URL completa do YouTube (ex: https://www.youtube.com/watch?v=XXXXX)
+  final String videoUrl;
+
+  const _InlineVideoPlayer({required this.videoUrl});
+
+  @override
+  State<_InlineVideoPlayer> createState() => _InlineVideoPlayerState();
+}
+
+class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
+  // Controller do YouTube Player
+  late YoutubePlayerController _controller;
+
+  // Indica se a URL do vídeo é válida (contém um videoId extraível)
+  bool _isValidUrl = false;
+
+  // Paleta de cores (mesma da tela pai)
+  static const _cardBg = Color(0xFF262629);
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePlayer();
+  }
+
+  // Extrai o videoId da URL do YouTube e inicializa o controller
+  void _initializePlayer() {
+    final videoId = YoutubePlayer.convertUrlToId(widget.videoUrl);
+
+    if (videoId == null || videoId.isEmpty) {
+      _isValidUrl = false;
+      return;
+    }
+
+    _isValidUrl = true;
+
+    _controller = YoutubePlayerController(
+      initialVideoId: videoId,
+      flags: const YoutubePlayerFlags(
+        autoPlay: false,
+        mute: false,
+        loop: false,
+        forceHD: false,
+        enableCaption: true,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    if (_isValidUrl) {
+      _controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Se a URL não é válida, mostra estado de erro
+    if (!_isValidUrl) {
+      return Container(
+        height: 180,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: _cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                color: Colors.white24,
+                size: 36,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'URL de vídeo inválida',
+                style: TextStyle(color: Colors.white38, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Player do YouTube com cantos arredondados usando o plugin nativo (youtube_player_flutter)
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: YoutubePlayer(
+        controller: _controller,
+        showVideoProgressIndicator: true,
+        progressIndicatorColor: const Color(0xFF1A9B5F), // Nossa cor verde
+        progressColors: const ProgressBarColors(
+          playedColor: Color(0xFF1A9B5F),
+          handleColor: Colors.white,
+        ),
+      ),
+    );
   }
 }
