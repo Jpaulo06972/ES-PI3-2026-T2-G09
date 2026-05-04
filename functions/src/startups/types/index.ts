@@ -98,6 +98,20 @@ export type StartupQuestionDocument = {
  createdAt: FieldValue;
 };
 /**
+ * Documento de pergunta armazenado na subcoleção `comments` da startup.
+ *
+ * Fica em `startups/{startupId}/comments/{commentId}`.
+ * Perguntas públicas são visíveis a todos os usuários autenticados.
+ * Perguntas privadas são visíveis somente a quem as criou (`authorEmail`).
+*/
+export type CommentDocument = {
+  authorUid: string;
+  authorEmail: string;
+  text: string;
+  visibility: QuestionVisibility;
+  createdAt: FieldValue;
+};
+/**
  * Versão resumida de startup usada na listagem do catálogo.
  *
  * Este tipo evita enviar todos os dados da startup para telas que precisam

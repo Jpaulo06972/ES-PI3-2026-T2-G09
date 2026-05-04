@@ -6,6 +6,7 @@
 // import {FieldValue} from "firebase-admin/firestore";
 
 import {
+  CommentDocument,
   StartupDocument,
   StartupListItem,
   StartupQuestionDocument,
@@ -203,8 +204,41 @@ export async function createQuestion(
     .doc(startupId)
     .collection("questions")
     .add(question);
-    
+
   return questionRef.id;
+}
+
+export async function createComment(
+  startupId: string,
+  comment: CommentDocument
+): Promise<string> {
+  const ref = await startupsCollection
+    .doc(startupId)
+    .collection("comments")
+    .add(comment);
+
+  return ref.id;
+}
+
+export async function listComments(startupId: string, userEmail: string) {
+  const snap = await startupsCollection
+    .doc(startupId)
+    .collection("comments")
+    .limit(100)
+    .get();
+
+  return snap.docs
+    .map((doc) => ({
+      id: doc.id,
+      authorEmail: doc.get("authorEmail") as string,
+      text: doc.get("text") as string,
+      visibility: doc.get("visibility") as string,
+      createdAt: doc.get("createdAt")?.toDate?.()?.toISOString?.() ?? null,
+    }))
+    .filter((c) => c.visibility === "publica" || c.authorEmail === userEmail)
+    .sort((a, b) =>
+      String(b.createdAt ?? "").localeCompare(String(a.createdAt ?? ""))
+    );
 }
 
 /*

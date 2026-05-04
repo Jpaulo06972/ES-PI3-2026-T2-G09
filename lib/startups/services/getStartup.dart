@@ -106,6 +106,44 @@ class StartupService {
     }
   }
 
+  /// Cria uma pergunta na subcoleção `comments` de uma startup.
+  /// [visibility] deve ser `'publica'` ou `'privada'`.
+  Future<void> createComment(
+    String startupId,
+    String text,
+    String visibility,
+  ) async {
+    try {
+      final callable = _functions.httpsCallable('createStartupComment');
+      await callable.call(<String, dynamic>{
+        'startupId': startupId,
+        'text': text,
+        'visibility': visibility,
+      });
+    } catch (e) {
+      throw Exception('Erro ao enviar pergunta: $e');
+    }
+  }
+
+  /// Lista as perguntas da subcoleção `comments` de uma startup.
+  /// Retorna perguntas públicas + privadas do usuário logado.
+  Future<List<Map<String, dynamic>>> listComments(String startupId) async {
+    try {
+      final callable = _functions.httpsCallable('listStartupComments');
+      final response = await callable.call(<String, dynamic>{
+        'startupId': startupId,
+      });
+
+      final resultData = response.data as Map<String, dynamic>;
+      final data = resultData['data'] as Map<String, dynamic>;
+      final list = data['comments'] as List<dynamic>;
+
+      return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (e) {
+      throw Exception('Erro ao listar perguntas: $e');
+    }
+  }
+
   /// Roda a function que popula o banco com as startups de demonstração.
   Future<Map<String, dynamic>> seedStartupCatalog() async {
     try {
