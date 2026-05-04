@@ -34,7 +34,7 @@ Para garantir a integridade do código, seguimos o fluxo de [Branching Strategy,
 ---
 
 ## 💻 Tecnologias Utilizadas
-* **Linguagem:** [Dart/typescript]
+* **Linguagem:** [Dart/TypeScript]
 * **Banco de Dados:** [Firestore]
 * **Outros:** [Flutter/Node.js]
 
