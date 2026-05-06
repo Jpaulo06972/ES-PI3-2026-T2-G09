@@ -55,7 +55,7 @@ class SignInService {
 
         if (doc.exists && doc.data() != null) {
           // Passo 3: converte o documento do Firestore para UserModel e retorna
-          return UserModel.fromMap(uid, doc.data()!);
+          return UserModel.fromMap(doc.data()!, uid);
         }
       }
       // Se não encontrou o perfil, retorna null

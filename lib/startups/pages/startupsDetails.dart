@@ -1,4 +1,8 @@
-// Feito por: Tomás Toniato RA: 25004211
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+// Feito originalmente por: Tomás Toniato RA: 25004211
 
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -32,8 +36,7 @@ class StartupsDetails extends StatefulWidget {
   State<StartupsDetails> createState() => _StartupsDetailsState();
 }
 
-class _StartupsDetailsState extends State<StartupsDetails>
-    with SingleTickerProviderStateMixin {
+class _StartupsDetailsState extends State<StartupsDetails> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final StartupService _service = StartupService();
   late Future<Map<String, dynamic>> _detailsFuture;
@@ -71,10 +74,11 @@ class _StartupsDetailsState extends State<StartupsDetails>
       body: SafeArea(
         child: Column(
           children: [
+            // O Header da startup agora recebe o objeto UserRole corretamente do UserModel
             StartupHeader(
               startupName: widget.startupName,
               startupStage: widget.startupStage,
-              userRole: widget.userModel.role,
+              userRole: widget.userModel.role, // Aqui estava o erro de tipo
               coverImageUrl: _coverImageUrl,
               onBack: () => Navigator.pop(context),
             ),
@@ -83,14 +87,18 @@ class _StartupsDetailsState extends State<StartupsDetails>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _detailsBuilder((data) => SobreTab(data: data)),
+                  // Aba Sobre: Passa os detalhes carregados
+                  _detailsBuilder((data) => SobreTab(details: data)),
+                  // Aba Sócios: Trata a lista de fundadores
                   _detailsBuilder((data) {
                     final founders = (data['founders'] as List<dynamic>? ?? [])
                         .map((e) => Map<String, dynamic>.from(e as Map))
                         .toList();
                     return SociosTab(founders: founders);
                   }),
+                  // Aba Q&A: Interação direta
                   QATab(startupId: widget.startupId, service: _service),
+                  // Aba Eventos: Cronograma
                   EventosTab(startupName: widget.startupName, service: _service),
                 ],
               ),
@@ -101,6 +109,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
     );
   }
 
+  // Builder auxiliar para lidar com o FutureBuilder de forma limpa nas abas
   Widget _detailsBuilder(Widget Function(Map<String, dynamic>) builder) {
     return FutureBuilder<Map<String, dynamic>>(
       future: _detailsFuture,
@@ -125,6 +134,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
     );
   }
 
+  // Constrói a barra de abas customizada
   Widget _buildTabBar() {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
@@ -142,7 +152,7 @@ class _StartupsDetailsState extends State<StartupsDetails>
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.white,
         unselectedLabelColor: Colors.white38,
-        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
         unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
         dividerColor: Colors.transparent,
         tabs: const [

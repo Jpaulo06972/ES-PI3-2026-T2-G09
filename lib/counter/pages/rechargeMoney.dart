@@ -3,30 +3,29 @@
 // Trabalho: PI3-2026-T2-G09
 // RA: 25000684
 
-// Importa o pacote básico de UI do Flutter
+// Importação básica de UI do Flutter
 import 'package:flutter/material.dart';
 
-// Importa os componentes globais de cabeçalho e barra de navegação
+// Componentes globais do aplicativo (Cabeçalho e Barra de Navegação)
 import 'package:mesclainvest_f/components/appBar.dart';
 import 'package:mesclainvest_f/components/navBar.dart';
 
-// Importa o modelo de usuário para acessar saldo e dados do usuário logado
+// Modelo de Usuário para gerenciar saldo e perfil
 import 'package:mesclainvest_f/model/userModel.dart';
 
-// Importa os componentes visuais extraídos da tela de carteira
+// Componentes modulares da tela de Carteira
 import 'package:mesclainvest_f/counter/components/saldoCard.dart';
 import 'package:mesclainvest_f/counter/components/quickActions.dart';
 import 'package:mesclainvest_f/counter/components/quickRecharge.dart';
 import 'package:mesclainvest_f/counter/components/transactionHistory.dart';
 
-// Importa a paleta de cores oficial para manter consistência visual com as telas de startups
+// Paleta de cores oficial do projeto MesclaInvest
 import 'package:mesclainvest_f/startups/components/startup_colors.dart';
 
-/// Tela de Carteira — exibe saldo, ações rápidas, recarga e extrato de transações.
-/// Segue o mesmo padrão visual da tela de Startups (título grande, filtros, lista).
+/// Tela principal da Carteira Digital.
+/// Permite gerenciar o saldo, realizar depósitos, pagamentos e visualizar o histórico.
 class RechargeMoneyPage extends StatefulWidget {
-  // Recebe os dados do usuário logado via construtor
-  final UserModel user;
+  final UserModel user; // Usuário logado recebido da navegação
 
   const RechargeMoneyPage({super.key, required this.user});
 
@@ -36,46 +35,44 @@ class RechargeMoneyPage extends StatefulWidget {
 }
 
 class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
-  // Armazena o modelo do usuário localmente no estado
-  final UserModel userModel;
+  final UserModel userModel; // Instância local do usuário para manipulação de estado
 
-  // Getter que retorna o saldo atual do usuário
+  // Getter para facilitar o acesso ao saldo atualizado
   double get saldo => userModel.saldo;
 
-  // Adiciona dinheiro ao saldo (recarga/depósito)
+  // Função para aumentar o saldo (Depósito)
   void setRecharge(double money) {
     setState(() {
       userModel.saldo += money;
     });
   }
 
-  // Subtrai dinheiro do saldo (pagamento)
+  // Função para diminuir o saldo (Pagamento/Investimento)
   void setPay(double money) {
     setState(() {
       userModel.saldo -= money;
     });
   }
 
-  // Controla a visibilidade do saldo (olho aberto/fechado)
+  // Controle de visibilidade do saldo (ícone do olho)
   bool _saldoVisible = true;
 
-  // Valor selecionado nos chips de recarga rápida (null = nenhum selecionado)
+  // Valor selecionado nos botões de recarga rápida
   double? _selectedQuickValue;
 
-  // Controller para o campo de valor personalizado
+  // Controller do campo de entrada de valor manual
   final TextEditingController _customValueController = TextEditingController();
 
-  // Filtro de tipo de transação ativo (null = todas)
+  // Filtro ativo no histórico de transações
   String? _selectedFilter;
 
-  // Controla se o painel de filtros do extrato está expandido
+  // Controle de exibição do painel de filtros
   bool _showFilters = false;
 
-  // Paleta de cores — centralizada em StartupColors para consistência com o resto do app
-  static const Color _greenAccent = StartupColors.green;
+  // Atalhos de cores premium do projeto
   static const Color _greenLight = StartupColors.green;
 
-  // Mapa de filtros de tipo de transação (chave = valor técnico, valor = label amigável)
+  // Opções disponíveis no filtro de transações
   static const Map<String?, String> _filterOptions = {
     null: 'Todas',
     'deposito': 'Depósitos',
@@ -83,7 +80,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
     'rendimento': 'Rendimentos',
   };
 
-  // Lista de transações mockadas para demonstração
+  // Histórico de transações (Mock/Simulação para demonstração visual)
   final List<Map<String, dynamic>> _transactions = [
     {
       'icon': Icons.add_circle,
@@ -127,17 +124,16 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
     },
   ];
 
-  // Inicializa o estado com o modelo do usuário recebido
   _RechargeMoneyPageState({required this.userModel});
 
   @override
   void dispose() {
-    // Libera o controller quando a tela é destruída para evitar vazamento de memória
+    // Limpeza de recursos para evitar lentidão
     _customValueController.dispose();
     super.dispose();
   }
 
-  // Filtra a lista de transações pelo tipo selecionado
+  // Lógica de filtragem das transações em tempo real
   List<Map<String, dynamic>> get _filteredTransactions {
     if (_selectedFilter == null) return _transactions;
     return _transactions
@@ -150,16 +146,14 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
     final filtered = _filteredTransactions;
 
     return Scaffold(
-      // Cabeçalho personalizado com avatar e nome do usuário
+      // Cabeçalho customizado com avatar
       appBar: CustomHeader(userModel: userModel),
 
       body: ListView(
-        // Mesmo efeito de scroll elástico da tela de startups
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         children: [
-          // ── TÍTULO PRINCIPAL ─────────────────────────────────────────────
-          // Mesmo padrão de "Oportunidades Exclusivas" da tela de startups
+          // Título e Subtítulo da Página
           const Text(
             'Minha Carteira',
             style: TextStyle(
@@ -181,7 +175,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
 
           const SizedBox(height: 28),
 
-          // ── CARD DO SALDO ─────────────────────────────────────────────────
+          // Componente do Card de Saldo Principal
           SaldoCard(
             saldo: saldo,
             isVisible: _saldoVisible,
@@ -194,7 +188,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
 
           const SizedBox(height: 24),
 
-          // ── AÇÕES RÁPIDAS ─────────────────────────────────────────────────
+          // Barra de Ações Rápidas (Depósito, Pagamento, Transferência)
           QuickActions(
             onDepositar: () => _showRechargeDialog(),
             onPagar: () => _showPayDialog(),
@@ -203,7 +197,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
 
           const SizedBox(height: 28),
 
-          // ── RECARGA RÁPIDA ────────────────────────────────────────────────
+          // Seção de Recarga Rápida (Chips de valor e confirmação)
           QuickRecharge(
             selectedValue: _selectedQuickValue,
             customValueController: _customValueController,
@@ -225,8 +219,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
 
           const SizedBox(height: 32),
 
-          // ── EXTRATO: CABEÇALHO COM BADGE ──────────────────────────────────
-          // Mesmo padrão do "Em destaque" + badge de contagem da tela de startups
+          // Cabeçalho do Extrato com Filtro dinâmico
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -241,12 +234,9 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // Badge verde com a contagem de transações filtradas
+                  // Badge com a contagem de itens visíveis
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: _greenLight.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
@@ -262,7 +252,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
                   ),
                 ],
               ),
-              // Botão de filtro — mesma lógica do botão de "tune" da tela de startups
+              // Botão que expande os filtros
               GestureDetector(
                 onTap: () {
                   setState(() {
@@ -289,8 +279,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
             ],
           ),
 
-          // ── FILTROS DO EXTRATO ────────────────────────────────────────────
-          // Chips com animação — mesmo padrão AnimatedCrossFade da tela de startups
+          // Lista de Chips de Filtro (Animada)
           AnimatedCrossFade(
             duration: const Duration(milliseconds: 250),
             crossFadeState: _showFilters
@@ -306,16 +295,16 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
                   final label = entry.value;
                   final isSelected = _selectedFilter == key;
 
-                  // Cor temática por tipo de operação
+                  // Cores temáticas para cada tipo de transação
                   Color chipColor;
                   if (key == null) {
-                    chipColor = const Color(0xFF4A90E2); // Azul para "Todas"
+                    chipColor = const Color(0xFF4A90E2);
                   } else if (key == 'deposito') {
-                    chipColor = _greenLight; // Verde para depósitos
+                    chipColor = _greenLight;
                   } else if (key == 'investimento') {
-                    chipColor = const Color(0xFFF5A623); // Laranja para investimentos
+                    chipColor = const Color(0xFFF5A623);
                   } else {
-                    chipColor = const Color(0xFF00B4D8); // Ciano para rendimentos
+                    chipColor = const Color(0xFF00B4D8);
                   }
 
                   return GestureDetector(
@@ -326,10 +315,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
                     },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? chipColor.withOpacity(0.2)
@@ -345,27 +331,20 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Indicador circular quando selecionado
                           if (isSelected) ...[
                             Container(
                               width: 6,
                               height: 6,
-                              decoration: BoxDecoration(
-                                color: chipColor,
-                                shape: BoxShape.circle,
-                              ),
+                              decoration: BoxDecoration(color: chipColor, shape: BoxShape.circle),
                             ),
                             const SizedBox(width: 6),
                           ],
                           Text(
                             label,
                             style: TextStyle(
-                              color:
-                                  isSelected ? chipColor : Colors.white60,
+                              color: isSelected ? chipColor : Colors.white60,
                               fontSize: 13,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.w500,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                             ),
                           ),
                         ],
@@ -380,70 +359,46 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
 
           const SizedBox(height: 16),
 
-          // ── EXTRATO VAZIO ─────────────────────────────────────────────────
+          // Seção que exibe a lista ou aviso de "vazio"
           if (filtered.isEmpty)
             Padding(
               padding: const EdgeInsets.all(32),
               child: Center(
                 child: Column(
                   children: [
-                    const Icon(
-                      Icons.receipt_long_rounded,
-                      color: Colors.white24,
-                      size: 48,
-                    ),
+                    const Icon(Icons.receipt_long_rounded, color: Colors.white24, size: 48),
                     const SizedBox(height: 16),
                     const Text(
                       'Nenhuma transação encontrada.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.white54, fontSize: 16),
                     ),
-                    if (_selectedFilter != null) ...[
-                      const SizedBox(height: 12),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _selectedFilter = null;
-                          });
-                        },
-                        child: const Text(
-                          'Limpar filtro',
-                          style: TextStyle(
-                            color: _greenLight,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
             )
           else
-            // ── LISTA DE TRANSAÇÕES ─────────────────────────────────────────
+            // Componente que renderiza a lista de transações formatada
             TransactionHistory(
               transactions: filtered,
               onViewAll: () => _showSnackBar("Histórico completo em breve!"),
             ),
 
-          // Espaçamento inferior para não colar na barra de navegação
           const SizedBox(height: 30),
         ],
       ),
 
-      // Barra inferior com o ícone de Carteira destacado (index 3)
+      // Barra de navegação inferior com foco na Carteira (Índice 3)
       bottomNavigationBar: CustomNavBar(userModel: userModel, currentIndex: 3),
     );
   }
 
-  // =====================================================================
-  // LÓGICA DE NEGÓCIO — confirmação de recarga e diálogos
-  // =====================================================================
+  // ── LÓGICA DE NEGÓCIO E DIÁLOGOS ─────────────────────────────────────────
 
-  // Processa a confirmação de recarga: chip selecionado ou valor digitado
+  /// Valida e confirma a recarga feita pela área de QuickRecharge
   void _handleRechargeConfirm() {
     double? valor = _selectedQuickValue;
+    // Se não houver chip selecionado, tenta ler o que foi digitado
     if (valor == null && _customValueController.text.isNotEmpty) {
       valor = double.tryParse(_customValueController.text.replaceAll(',', '.'));
     }
@@ -459,7 +414,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
     }
   }
 
-  // Exibe o diálogo de depósito com campo de valor
+  /// Mostra um pop-up moderno para entrada de valor de depósito
   void _showRechargeDialog() {
     final controller = TextEditingController();
     showDialog(
@@ -467,10 +422,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E30),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          "Depositar",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: const Text("Depositar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
@@ -489,43 +441,25 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              "Cancelar",
-              style: TextStyle(color: Colors.white54),
-            ),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancelar", style: TextStyle(color: Colors.white54))),
           ElevatedButton(
             onPressed: () {
-              final valor = double.tryParse(
-                controller.text.replaceAll(',', '.'),
-              );
+              final valor = double.tryParse(controller.text.replaceAll(',', '.'));
               if (valor != null && valor > 0) {
                 setRecharge(valor);
                 Navigator.pop(ctx);
-                _showSnackBar(
-                  "Depósito de R\$ ${valor.toStringAsFixed(2)} realizado!",
-                );
+                _showSnackBar("Depósito de R\$ ${valor.toStringAsFixed(2)} realizado!");
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _greenAccent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text(
-              "Confirmar",
-              style: TextStyle(color: Colors.white),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: StartupColors.green, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            child: const Text("Confirmar", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
 
-  // Exibe o diálogo de pagamento com campo de valor e validação de saldo
+  /// Mostra um pop-up moderno para entrada de valor de pagamento com validação de saldo
   void _showPayDialog() {
     final controller = TextEditingController();
     showDialog(
@@ -533,10 +467,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E30),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          "Pagar",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: const Text("Pagar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
@@ -555,52 +486,31 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              "Cancelar",
-              style: TextStyle(color: Colors.white54),
-            ),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancelar", style: TextStyle(color: Colors.white54))),
           ElevatedButton(
             onPressed: () {
-              final valor = double.tryParse(
-                controller.text.replaceAll(',', '.'),
-              );
+              final valor = double.tryParse(controller.text.replaceAll(',', '.'));
               if (valor != null && valor > 0 && valor <= saldo) {
                 setPay(valor);
                 Navigator.pop(ctx);
-                _showSnackBar(
-                  "Pagamento de R\$ ${valor.toStringAsFixed(2)} realizado!",
-                );
+                _showSnackBar("Pagamento de R\$ ${valor.toStringAsFixed(2)} realizado!");
               } else if (valor != null && valor > saldo) {
                 _showSnackBar("Saldo insuficiente!");
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: StartupColors.green,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text(
-              "Confirmar",
-              style: TextStyle(color: Colors.white),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: StartupColors.green, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            child: const Text("Confirmar", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
 
-  // Exibe um SnackBar com mensagem informativa na parte inferior da tela
+  /// Exibe um feedback visual rápido para o usuário na base da tela
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        content: Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: StartupColors.green,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
