@@ -6,8 +6,8 @@
 import {HttpsError, onCall} from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";
 
-import {requireAuthenticatedUser} from "../shared/auth";
-import {normalizeString} from "../shared/validation";
+import {requireAuthenticatedUser} from "../../shared/auth";
+import {normalizeString} from "../../shared/validation";
 import {
   getStartupById,
   listComments,

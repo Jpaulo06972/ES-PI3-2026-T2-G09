@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:mesclainvest_f/dashboard/pages/home.dart';
 import 'package:mesclainvest_f/dashboard/pages/notification.dart';
 import 'package:mesclainvest_f/startups/pages/startupsList.dart';
+// Importa a tela de carteira/recarga para navegação
+import 'package:mesclainvest_f/counter/pages/rechargeMoney.dart';
 
 // Importa o modelo de usuário para passar os dados entre as telas
 import 'package:mesclainvest_f/model/userModel.dart';
@@ -112,7 +114,13 @@ class CustomNavBar extends StatelessWidget {
             activeIcon: Icons.account_balance_wallet,
             label: 'Carteira',
             onTap: () {
-              // TODO: Navegar para a tela de carteira
+              // Navega para a tela de carteira/recarga
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RechargeMoneyPage(user: userModel),
+                ),
+              );
             },
           ),
 

@@ -11,7 +11,7 @@ import {
   StartupListItem,
   StartupQuestionDocument,
 } from "../types";
-import {db} from "../shared/firebase";
+import {db} from "../../shared/firebase";
 
 const startupsCollection = db.collection("startups");
 /*

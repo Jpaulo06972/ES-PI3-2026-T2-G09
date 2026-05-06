@@ -31,7 +31,7 @@ class UserModel {
 
   final UserRole role;
 
-  final double saldo;
+  double saldo;
 
   // Construtor — uid e email são obrigatórios, o resto tem valor padrão vazio
   UserModel({

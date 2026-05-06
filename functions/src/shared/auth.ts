@@ -4,7 +4,7 @@
 // RA: 25000684
 
 import {CallableRequest, HttpsError} from "firebase-functions/https";
-import {AuthenticatedUser} from "../types";
+import {AuthenticatedUser} from "./types";
 
 export function requireAuthenticatedUser(
   request: CallableRequest

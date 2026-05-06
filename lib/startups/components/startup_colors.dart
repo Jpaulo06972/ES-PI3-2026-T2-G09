@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 
 abstract class StartupColors {
-  static const green = Color(0xFF1A9B5F);
+  static const green = Color(0xFF107649);
   static const cardBg = Color(0xFF262629);
   static const pageBg = Color(0xFF1A1A1E);
 
