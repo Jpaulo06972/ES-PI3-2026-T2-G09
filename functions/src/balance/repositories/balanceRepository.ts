@@ -32,6 +32,7 @@ function toOperationDocument(id: string, operation: OperationDocument) {
 export async function listOperations(uid: string): Promise<Array<OperationDocument & {id: string}>> {
   const snapshot = await operationsCollection
   .where("authorUid", "==", uid)
+  .orderBy("createdAt", "desc")
   .limit(100)
   .get();
 
@@ -48,25 +49,35 @@ export async function addOperation(
     return newRef.id;
 }
 
+export async function incrementUserBalance(uid: string, amount: number) {
+    const userRef = db.collection("users").doc(uid);
+    const userDoc = await userRef.get();
+    const currentBalance = Number(userDoc.data()?.balance ?? userDoc.data()?.saldo ?? 0);
+    
+    await userRef.set({
+        balance: currentBalance + amount
+    }, { merge: true });
+}
+
+export async function decrementUserBalance(uid: string, amount: number) {
+    const userRef = db.collection("users").doc(uid);
+    const userDoc = await userRef.get();
+    const currentBalance = Number(userDoc.data()?.balance ?? userDoc.data()?.saldo ?? 0);
+    
+    await userRef.set({
+        balance: currentBalance - amount
+    }, { merge: true });
+}
+
 export async function getUserBalance(uid: string): Promise<number> {
     const userDoc = await db.collection("users").doc(uid).get();
 
     if (!userDoc.exists) return 0;
 
-
-    return userDoc.data()?.saldo ?? 0;
-}
-
-export async function incrementUserBalance(uid: string, amountCents: number) {
-    await db.collection("users").doc(uid).update({
-        saldo: FieldValue.increment(amountCents),
-    });
-}
-
-export async function decrementUserBalance(uid: string, amountCents: number) {
-    await db.collection("users").doc(uid).update({
-        saldo: FieldValue.increment(-amountCents),
-    });
+    const data = userDoc.data();
+    const balance = data?.balance ?? data?.saldo ?? 0;
+    
+    return Number(balance);
 }
 
 export async function updateOperationStatus( 

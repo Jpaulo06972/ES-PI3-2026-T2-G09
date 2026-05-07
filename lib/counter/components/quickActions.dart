@@ -14,46 +14,40 @@ import 'package:mesclainvest_f/startups/components/startup_colors.dart';
 class QuickActions extends StatelessWidget {
   // Callbacks para cada ação — a página pai controla o comportamento
   final VoidCallback onDepositar;
-  final VoidCallback onPagar;
+  final VoidCallback onSacar;
   final VoidCallback onTransferir;
 
   const QuickActions({
     super.key,
     required this.onDepositar,
-    required this.onPagar,
+    required this.onSacar,
     required this.onTransferir,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center, // Centraliza os botões na tela
       children: [
-        // Cada ação ocupa um terço igual da largura disponível
-        Expanded(
-          child: _buildActionButton(
-            icon: Icons.add_circle_outline_rounded,
-            label: "Depositar",
-            color: StartupColors.green,
-            onTap: onDepositar,
-          ),
+        _buildActionButton(
+          icon: Icons.add_circle_outline_rounded,
+          label: "Depositar",
+          color: StartupColors.green,
+          onTap: onDepositar,
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildActionButton(
-            icon: Icons.payment_rounded,
-            label: "Pagar",
-            color: StartupColors.green,
-            onTap: onPagar,
-          ),
+        const SizedBox(width: 16),
+        _buildActionButton(
+          icon: Icons.account_balance_wallet_outlined,
+          label: "Sacar",
+          color: StartupColors.green,
+          onTap: onSacar,
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildActionButton(
-            icon: Icons.swap_horiz_rounded,
-            label: "Transferir",
-            color: StartupColors.green,
-            onTap: onTransferir,
-          ),
+        const SizedBox(width: 16),
+        _buildActionButton(
+          icon: Icons.swap_horiz_rounded,
+          label: "Transferir",
+          color: StartupColors.green,
+          onTap: onTransferir,
         ),
       ],
     );
@@ -69,6 +63,7 @@ class QuickActions extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        width: 100, // Largura fixa para caber no scroll horizontal
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           // Mesmo fundo cardBg das telas de startups

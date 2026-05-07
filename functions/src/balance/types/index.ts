@@ -1,7 +1,7 @@
 import {FieldValue, Timestamp} from "firebase-admin/firestore";
 
 
-export type TypeOfOperation = "deposito" | "pagar" | "transferencia";
+export type TypeOfOperation = "deposito" | "saque" | "pagar" | "transferencia" | "investimento";
 export type OperationStatus = "pendente" | "aprovada" | "recusada";
 
 export type OperationDocument = {
@@ -15,4 +15,3 @@ export type OperationDocument = {
     createdAt?: FieldValue;
     completedAt?: Timestamp;
 }
-
