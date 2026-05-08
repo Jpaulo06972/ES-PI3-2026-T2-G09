@@ -26,30 +26,31 @@ class QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center, // Centraliza os botões na tela
-      children: [
-        _buildActionButton(
-          icon: Icons.add_circle_outline_rounded,
-          label: "Depositar",
-          color: StartupColors.green,
-          onTap: onDepositar,
-        ),
-        const SizedBox(width: 16),
-        _buildActionButton(
-          icon: Icons.account_balance_wallet_outlined,
-          label: "Sacar",
-          color: StartupColors.green,
-          onTap: onSacar,
-        ),
-        const SizedBox(width: 16),
-        _buildActionButton(
-          icon: Icons.swap_horiz_rounded,
-          label: "Transferir",
-          color: StartupColors.green,
-          onTap: onTransferir,
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16), // Padding para não encostar nas bordas
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribui os botões
+        children: [
+          _buildActionButton(
+            icon: Icons.add_circle_outline_rounded,
+            label: "Depositar",
+            color: const Color(0xFF107649),
+            onTap: onDepositar,
+          ),
+          _buildActionButton(
+            icon: Icons.account_balance_wallet_outlined,
+            label: "Sacar",
+            color: const Color(0xFF107649),
+            onTap: onSacar,
+          ),
+          _buildActionButton(
+            icon: Icons.swap_horiz_rounded,
+            label: "Transferir",
+            color: const Color(0xFF107649),
+            onTap: onTransferir,
+          ),
+        ],
+      ),
     );
   }
 
@@ -82,9 +83,7 @@ class QuickActions extends StatelessWidget {
                 color: color.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
-              child: Center(
-                child: Icon(icon, color: color, size: 22),
-              ),
+              child: Center(child: Icon(icon, color: color, size: 22)),
             ),
             const SizedBox(height: 8),
             // Label abaixo do ícone — mesmo estilo de texto dos cards de startups

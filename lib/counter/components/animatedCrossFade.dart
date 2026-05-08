@@ -6,9 +6,6 @@
 // Importa o pacote básico de UI do Flutter
 import 'package:flutter/material.dart';
 
-// Importa a paleta de cores oficial do módulo de startups para manter consistência visual
-import 'package:mesclainvest_f/startups/components/startup_colors.dart';
-
 class FilterCrossFade extends StatelessWidget {
   final bool showFilters;
   final Map<String?, String> filterOptions;
@@ -45,7 +42,7 @@ class FilterCrossFade extends StatelessWidget {
             if (key == null) {
               chipColor = const Color(0xFF4A90E2);
             } else if (key == 'deposito') {
-              chipColor = StartupColors.green;
+              chipColor = const Color(0xFF107649);
             } else if (key == 'investimento') {
               chipColor = const Color(0xFFF5A623);
             } else {
@@ -56,7 +53,10 @@ class FilterCrossFade extends StatelessWidget {
               onTap: () => onFilterSelected(key),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? chipColor.withOpacity(0.2)
@@ -77,7 +77,9 @@ class FilterCrossFade extends StatelessWidget {
                         width: 6,
                         height: 6,
                         decoration: BoxDecoration(
-                            color: chipColor, shape: BoxShape.circle),
+                          color: chipColor,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                       const SizedBox(width: 6),
                     ],
@@ -86,8 +88,9 @@ class FilterCrossFade extends StatelessWidget {
                       style: TextStyle(
                         color: isSelected ? chipColor : Colors.white60,
                         fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w500,
                       ),
                     ),
                   ],

@@ -16,13 +16,11 @@ import 'package:mesclainvest_f/counter/components/animatedCrossFade.dart';
 import 'package:mesclainvest_f/counter/components/walletHeader.dart';
 import 'package:mesclainvest_f/counter/components/statementHeader.dart';
 import 'package:mesclainvest_f/counter/components/emptyTransactions.dart';
-import 'package:mesclainvest_f/startups/components/startup_colors.dart';
 import 'package:mesclainvest_f/counter/services/getListOperation.dart';
 import 'package:mesclainvest_f/model/operations.dart';
 import 'package:mesclainvest_f/enum/typeOfOperation.dart';
 import 'package:mesclainvest_f/counter/services/operationService.dart';
 import 'package:mesclainvest_f/counter/pages/transactionActionPage.dart';
-import 'package:intl/intl.dart';
 
 /// Tela principal da Carteira Digital.
 /// Permite gerenciar o saldo, realizar depósitos, pagamentos e visualizar o histórico.
@@ -96,7 +94,8 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
         final data = doc.data() as Map<String, dynamic>;
         setState(() {
           // Atualiza o saldo local baseado no campo 'balance' ou 'saldo' do banco
-          userModel.saldo = (data['balance'] ?? data['saldo'] ?? 0.0).toDouble();
+          userModel.saldo = (data['balance'] ?? data['saldo'] ?? 0.0)
+              .toDouble();
         });
       }
     } catch (e) {
@@ -108,10 +107,8 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TransactionActionPage(
-          user: userModel,
-          type: type,
-        ),
+        builder: (context) =>
+            TransactionActionPage(user: userModel, type: type),
       ),
     );
 
@@ -130,9 +127,6 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
 
   // Controle de exibição do painel de filtros
   bool _showFilters = false;
-
-  // Atalhos de cores premium do projeto
-  static const Color _greenLight = StartupColors.green;
 
   // Opções disponíveis no filtro de transações
   static const Map<String?, String> _filterOptions = {
@@ -164,40 +158,70 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
         userId: userModel.uid,
       );
 
+      // Debug para você ver no console se os dados estão chegando
+      debugPrint(
+        "Extrato carregado: ${rawData.length} operações encontradas para o UID: ${userModel.uid}",
+      );
+
+      // --- Ordenação Manual: Garante que o mais recente apareça primeiro ---
+      rawData.sort((a, b) {
+        final dateA = a['createdAt'];
+        final dateB = b['createdAt'];
+        int secA = (dateA is Map)
+            ? (dateA['_seconds'] ?? dateA['seconds'] ?? 0)
+            : 0;
+        int secB = (dateB is Map)
+            ? (dateB['_seconds'] ?? dateB['seconds'] ?? 0)
+            : 0;
+        return secB.compareTo(secA);
+      });
+
       final mapped = rawData.map((data) {
-        // Converte o mapa bruto do Firebase para o modelo OperationModel
         final op = OperationModel.fromMap(data['id'] ?? '', data);
 
-        IconData icon;
-        String title;
-        bool isCredit;
+        // Identificação de quem é quem na transação
+        bool souDestinatario = data['targetUserId'] == userModel.uid;
+        bool souAutor =
+            (data['authorUid'] ?? data['authorID']) == userModel.uid;
 
-        // Lógica dinâmica para definir ícone e título baseado no tipo de operação
-        switch (op.operation) {
-          case TypeOfOperation.deposito:
-            icon = Icons.add_circle;
-            title = op.text ?? 'Depósito Recebido';
-            isCredit = true;
-            break;
-          case TypeOfOperation.pagar:
-            icon = Icons.payment_rounded;
-            title = op.text ?? 'Pagamento Realizado';
-            isCredit = false;
-            break;
-          case TypeOfOperation.transferencia:
-            icon = Icons.swap_horiz_rounded;
-            title = op.text ?? 'Transferência Enviada';
-            isCredit = false;
-            break;
-          case TypeOfOperation.investimento:
-            icon = Icons.rocket_launch;
-            title = op.text ?? 'Investimento Efetuado';
-            isCredit = false;
-            break;
-          default:
-            icon = Icons.help_outline;
-            title = op.text ?? 'Operação';
-            isCredit = false;
+        IconData icon = Icons.help_outline;
+        String title = op.text ?? 'Operação';
+        bool isCredit = false;
+
+        // PRIORIDADE: Se eu sou o destinatário e não o autor, é um RECEBIMENTO (Crédito)
+        if (souDestinatario && !souAutor) {
+          isCredit = true;
+          icon = Icons.move_to_inbox_rounded;
+          title = op.text ?? 'Transferência Recebida';
+        } else {
+          // Lógica normal para operações que EU iniciei
+          switch (op.operation) {
+            case TypeOfOperation.deposito:
+              icon = Icons.add_circle;
+              title = op.text ?? 'Depósito Realizado';
+              isCredit = true;
+              break;
+            case TypeOfOperation.pagar:
+              icon = Icons.payment_rounded;
+              title = op.text ?? 'Pagamento Realizado';
+              isCredit = false;
+              break;
+            case TypeOfOperation.transferencia:
+              icon = Icons.swap_horiz_rounded;
+              title = op.text ?? 'Transferência Enviada';
+              isCredit = false;
+              break;
+            case TypeOfOperation.saque:
+              icon = Icons.account_balance_wallet_rounded;
+              title = op.text ?? 'Saque Realizado';
+              isCredit = false;
+              break;
+            case TypeOfOperation.investimento:
+              icon = Icons.rocket_launch;
+              title = op.text ?? 'Investimento Efetuado';
+              isCredit = false;
+              break;
+          }
         }
 
         return {
@@ -206,7 +230,9 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
           'date': op.createdAt ?? 'Data não informada',
           'value': op.amount,
           'isCredit': isCredit,
-          'type': op.operation.name,
+          // Se for crédito (recebimento), tratamos como 'deposito' para o filtro do extrato
+          'type': isCredit ? 'deposito' : op.operation.name,
+          'id': op.id,
         };
       }).toList();
 
@@ -241,7 +267,6 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
     final filtered = _filteredTransactions;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0F0F),
       // Cabeçalho customizado com avatar
       appBar: CustomHeader(userModel: userModel),
 
@@ -271,7 +296,8 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
           QuickActions(
             onDepositar: () => _navigateToTransaction(TypeOfOperation.deposito),
             onSacar: () => _navigateToTransaction(TypeOfOperation.saque),
-            onTransferir: () => _navigateToTransaction(TypeOfOperation.transferencia),
+            onTransferir: () =>
+                _navigateToTransaction(TypeOfOperation.transferencia),
           ),
 
           const SizedBox(height: 28),
@@ -329,7 +355,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
             const Padding(
               padding: EdgeInsets.all(40),
               child: Center(
-                child: CircularProgressIndicator(color: StartupColors.green),
+                child: CircularProgressIndicator(color: Color(0xFF107649)),
               ),
             )
           else if (filtered.isEmpty)
@@ -349,7 +375,6 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
       bottomNavigationBar: CustomNavBar(userModel: userModel, currentIndex: 3),
     );
   }
-
 
   // ── LÓGICA DE NEGÓCIO E DIÁLOGOS (LEGADOS) ─────────────────────────────────────────
 
@@ -373,140 +398,6 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
     }
   }
 
-  /// Mostra um pop-up moderno para entrada de valor de depósito
-  void _showRechargeDialog() {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D0F0F),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          "Depositar",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: "Valor (R\$)",
-            hintStyle: const TextStyle(color: Colors.white30),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.white24),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: StartupColors.green),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              "Cancelar",
-              style: TextStyle(color: Colors.white54),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final valor = double.tryParse(
-                controller.text.replaceAll(',', '.'),
-              );
-              if (valor != null && valor > 0) {
-                setRecharge(valor);
-                Navigator.pop(ctx);
-                _showSnackBar(
-                  "Depósito de R\$ ${valor.toStringAsFixed(2)} realizado!",
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: StartupColors.green,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text(
-              "Confirmar",
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Mostra um pop-up moderno para entrada de valor de pagamento com validação de saldo
-  void _showPayDialog() {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D0F0F),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          "Pagar",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: "Valor (R\$)",
-            hintStyle: const TextStyle(color: Colors.white30),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.white24),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: StartupColors.green),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              "Cancelar",
-              style: TextStyle(color: Colors.white54),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final valor = double.tryParse(
-                controller.text.replaceAll(',', '.'),
-              );
-              if (valor != null && valor > 0 && valor <= saldo) {
-                setPay(valor);
-                Navigator.pop(ctx);
-                _showSnackBar(
-                  "Pagamento de R\$ ${valor.toStringAsFixed(2)} realizado!",
-                );
-              } else if (valor != null && valor > saldo) {
-                _showSnackBar("Saldo insuficiente!");
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: StartupColors.green,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text(
-              "Confirmar",
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// Exibe um feedback visual rápido para o usuário na base da tela
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -518,7 +409,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: StartupColors.green,
+        backgroundColor: Color(0xFF107649),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),

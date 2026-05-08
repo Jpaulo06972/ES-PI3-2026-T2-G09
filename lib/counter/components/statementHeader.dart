@@ -4,7 +4,6 @@
 // RA: 25000684
 
 import 'package:flutter/material.dart';
-import 'package:mesclainvest_f/startups/components/startup_colors.dart';
 
 /// Cabeçalho da seção de extrato com contador de itens e botão de filtro.
 class StatementHeader extends StatelessWidget {
@@ -41,7 +40,7 @@ class StatementHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: StartupColors.green.withOpacity(0.2),
+                color: const Color(0xFF107649).withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -62,13 +61,15 @@ class StatementHeader extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: showFilters || hasActiveFilter
-                  ? StartupColors.green
+                  ? const Color(0xFF107649)
                   : const Color(0xFF3A3A3D),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               Icons.tune_rounded,
-              color: showFilters || hasActiveFilter ? Colors.white : Colors.white70,
+              color: showFilters || hasActiveFilter
+                  ? Colors.white
+                  : Colors.white70,
               size: 18,
             ),
           ),

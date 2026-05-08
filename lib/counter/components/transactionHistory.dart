@@ -5,7 +5,7 @@
 
 // Importa o pacote básico de UI do Flutter
 import 'package:flutter/material.dart';
-
+import 'package:intl/intl.dart';
 // Importa a paleta de cores oficial do módulo de startups para manter consistência visual
 import 'package:mesclainvest_f/startups/components/startup_colors.dart';
 
@@ -36,7 +36,7 @@ class TransactionHistory extends StatelessWidget {
             const Text(
               "ÚLTIMAS TRANSAÇÕES",
               style: TextStyle(
-                color: StartupColors.green,
+                color: Colors.white,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.5,
@@ -48,7 +48,7 @@ class TransactionHistory extends StatelessWidget {
                 "Ver tudo",
                 style: TextStyle(
                   fontSize: 13,
-                  color: StartupColors.green,
+                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -65,10 +65,15 @@ class TransactionHistory extends StatelessWidget {
 
   // Constrói um tile individual de transação no estilo cardBg das startups
   Widget _buildTransactionTile(Map<String, dynamic> tx) {
+    final NumberFormat moneyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
+
     final bool isCredit = tx['isCredit'] as bool;
     // Verde para créditos, vermelho para débitos — mesmo padrão de cores das startups
     final Color valueColor = isCredit
-        ? StartupColors.green
+        ? const Color(0xFF107649)
         : const Color(0xFFE74C3C);
 
     return Container(
@@ -92,11 +97,7 @@ class TransactionHistory extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Icon(
-                tx['icon'] as IconData,
-                color: valueColor,
-                size: 20,
-              ),
+              child: Icon(tx['icon'] as IconData, color: valueColor, size: 20),
             ),
           ),
           const SizedBox(width: 12),
@@ -118,17 +119,14 @@ class TransactionHistory extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   tx['date'] as String,
-                  style: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.white38, fontSize: 12),
                 ),
               ],
             ),
           ),
           // Valor com sinal de + ou - em verde/vermelho
           Text(
-            "${isCredit ? '+' : '-'} R\$ ${(tx['value'] as double).toStringAsFixed(2)}",
+            "${isCredit ? '+' : '-'} ${moneyFormatter.format(tx['value'] as double)}",
             style: TextStyle(
               color: valueColor,
               fontSize: 14,

@@ -1,16 +1,12 @@
-// Aluno: João Paulo Ferreira
-// Grupo: G09
-// Trabalho: PI3-2026-T2-G09
-// RA: 25000684
-// Feito originalmente por: Tomás Toniato RA: 25004211
+// Feito por: Tomás Toniato RA: 25004211
 
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'startup_colors.dart';
 
-/// Player de vídeo integrado para exibir o pitch da startup do YouTube.
 class InlineVideoPlayer extends StatefulWidget {
   final String videoUrl;
+
   const InlineVideoPlayer({super.key, required this.videoUrl});
 
   @override
@@ -54,7 +50,7 @@ class _InlineVideoPlayerState extends State<InlineVideoPlayer> {
         decoration: BoxDecoration(
           color: StartupColors.cardBg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: const Center(
           child: Column(
@@ -62,7 +58,8 @@ class _InlineVideoPlayerState extends State<InlineVideoPlayer> {
             children: [
               Icon(Icons.error_outline_rounded, color: Colors.white24, size: 36),
               SizedBox(height: 8),
-              Text('URL de vídeo inválida', style: TextStyle(color: Colors.white38, fontSize: 13)),
+              Text('URL de vídeo inválida',
+                  style: TextStyle(color: Colors.white38, fontSize: 13)),
             ],
           ),
         ),

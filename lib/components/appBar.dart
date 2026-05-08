@@ -18,8 +18,17 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
   // Dados do usuário logado, usados para exibir nome e iniciais
   final UserModel userModel;
 
-  // Construtor que recebe obrigatoriamente os dados do usuário
-  const CustomHeader({super.key, required this.userModel});
+  // Controla a visibilidade do saldo (olhinho)
+  final bool isVisible;
+  final VoidCallback? onToggleVisibility;
+
+  // Construtor que recebe os dados do usuário e controles de visibilidade
+  const CustomHeader({
+    super.key,
+    required this.userModel,
+    this.isVisible = true,
+    this.onToggleVisibility,
+  });
 
   // Função chamada ao clicar no ícone de notificação
   // Navega para a tela de notificações usando push (empilha na navegação)
@@ -99,8 +108,38 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
 
-          // Espaçamento entre o nome e o ícone de notificação
+          // Espaçamento entre o nome e os ícones de ação
           const SizedBox(width: 12),
+
+          // Botão de Visibilidade (Olhinho)
+          if (onToggleVisibility != null) ...[
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3A3A3A),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                clipBehavior: Clip.hardEdge,
+                child: InkWell(
+                  onTap: onToggleVisibility,
+                  child: Center(
+                    child: Icon(
+                      isVisible
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
 
           // Botão circular de notificações
           Container(

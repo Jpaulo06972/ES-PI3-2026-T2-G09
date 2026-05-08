@@ -85,11 +85,11 @@ export const createOperation = onCall({ invoker: "public" }, async (request) => 
 
     try {
         const currentBalance = await getUserBalance(user.uid);
-        console.log(`[createOperation] User: ${user.uid}, Type: ${type}, Current Balance: ${currentBalance}, Requested Amount: ${amount}`);
+        //console.log(`[createOperation] User: ${user.uid}, Type: ${type}, Current Balance: ${currentBalance}, Requested Amount: ${amount}`);
 
         if (type !== "deposito") {
             if (currentBalance < amount) {
-                console.warn(`[createOperation] Insufficient balance for user ${user.uid}. Required: ${amount}, Available: ${currentBalance}`);
+                //console.warn(`[createOperation] Insufficient balance for user ${user.uid}. Required: ${amount}, Available: ${currentBalance}`);
                 throw new HttpsError("failed-precondition", "Saldo insuficiente para realizar esta operação.");
             }
         }
@@ -100,12 +100,12 @@ export const createOperation = onCall({ invoker: "public" }, async (request) => 
         // 2. Lógica de atualização de saldo baseada no tipo
         switch (type) {
             case "deposito":
-                console.log(`[createOperation] Incrementing balance for ${user.uid} by ${amount}`);
+                //console.log(`[createOperation] Incrementing balance for ${user.uid} by ${amount}`);
                 await incrementUserBalance(user.uid, amount);
                 break;
             
             case "transferencia":
-                console.log(`[createOperation] Transfer from ${user.uid} to ${finalTargetUserId} of ${amount}`);
+                //console.log(`[createOperation] Transfer from ${user.uid} to ${finalTargetUserId} of ${amount}`);
                 await decrementUserBalance(user.uid, amount);
                 await incrementUserBalance(finalTargetUserId, amount);
                 break;
@@ -113,7 +113,7 @@ export const createOperation = onCall({ invoker: "public" }, async (request) => 
             case "saque":
             case "pagar":
             case "investimento":
-                console.log(`[createOperation] Decrementing balance for ${user.uid} by ${amount}`);
+                //console.log(`[createOperation] Decrementing balance for ${user.uid} by ${amount}`);
                 await decrementUserBalance(user.uid, amount);
                 break;
         }
@@ -124,7 +124,7 @@ export const createOperation = onCall({ invoker: "public" }, async (request) => 
             message: "Operação financeira processada com sucesso."
         };
     } catch (error) {
-        console.error("Erro ao processar createOperation:", error);
+        //console.error("Erro ao processar createOperation:", error);
         throw new HttpsError("internal", "Não foi possível completar a transação financeira.");
     }
 });

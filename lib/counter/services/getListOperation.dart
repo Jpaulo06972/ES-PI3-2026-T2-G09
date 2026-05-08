@@ -3,16 +3,8 @@
 // Trabalho: PI3-2026-T2-G09
 // RA: 25000684
 
-// Importa o Firebase Auth para criar conta com email/senha
-import 'package:firebase_auth/firebase_auth.dart';
 // Importa o Firestore para salvar os dados do perfil do usuário
 import 'package:cloud_functions/cloud_functions.dart';
-// Importa o Flutter foundation para usar debugPrint (logs no console)
-import 'package:flutter/foundation.dart';
-// Importa o modelo de dados de operação
-import 'package:mesclainvest_f/model/operations.dart';
-import 'package:mesclainvest_f/enum/operationStatus.dart';
-import 'package:mesclainvest_f/enum/typeOfOperation.dart';
 
 class GetListOperation {
   final FirebaseFunctions _functions = FirebaseFunctions.instance;

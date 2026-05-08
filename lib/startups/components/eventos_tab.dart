@@ -1,14 +1,9 @@
-// Aluno: João Paulo Ferreira
-// Grupo: G09
-// Trabalho: PI3-2026-T2-G09
-// RA: 25000684
-// Feito originalmente por: Tomás Toniato RA: 25004211
+// Feito por: Tomás Toniato RA: 25004211
 
 import 'package:flutter/material.dart';
 import 'package:mesclainvest_f/startups/services/getStartup.dart';
 import 'startup_colors.dart';
 
-/// Aba que exibe o histórico e próximos eventos da startup.
 class EventosTab extends StatefulWidget {
   final String startupName;
   final StartupService service;
@@ -89,6 +84,7 @@ class _EventosTabState extends State<EventosTab> {
 
 class _EventoCard extends StatelessWidget {
   final Map<String, dynamic> evento;
+
   const _EventoCard({required this.evento});
 
   @override
@@ -99,7 +95,7 @@ class _EventoCard extends StatelessWidget {
 
     switch (tipo) {
       case 'Pitch':
-        tipoColor = StartupColors.green;
+        tipoColor = const Color(0xFF1A9B5F);
         tipoIcon = Icons.mic_rounded;
         break;
       case 'Workshop':
@@ -116,7 +112,7 @@ class _EventoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: StartupColors.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,25 +121,37 @@ class _EventoCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: tipoColor.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(
+                  color: tipoColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 child: Icon(tipoIcon, color: tipoColor, size: 16),
               ),
               const SizedBox(width: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: tipoColor.withOpacity(0.1),
+                  color: tipoColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: tipoColor.withOpacity(0.3)),
+                  border: Border.all(color: tipoColor.withValues(alpha: 0.3)),
                 ),
-                child: Text(tipo, style: TextStyle(color: tipoColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                child: Text(
+                  tipo,
+                  style: TextStyle(color: tipoColor, fontSize: 11, fontWeight: FontWeight.w600),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 14),
-          Text(evento['titulo'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700, height: 1.3)),
+          Text(
+            evento['titulo'] ?? '',
+            style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700, height: 1.3),
+          ),
           const SizedBox(height: 8),
-          Text(evento['descricao'] ?? '', style: const TextStyle(color: Colors.white60, fontSize: 13, height: 1.5)),
+          Text(
+            evento['descricao'] ?? '',
+            style: const TextStyle(color: Colors.white60, fontSize: 13, height: 1.5),
+          ),
           const SizedBox(height: 14),
           const Divider(color: Colors.white10, height: 1),
           const SizedBox(height: 12),
@@ -151,7 +159,10 @@ class _EventoCard extends StatelessWidget {
             children: [
               const Icon(Icons.calendar_today_rounded, color: Colors.white38, size: 13),
               const SizedBox(width: 5),
-              Text('${evento['data']}  •  ${evento['horario']}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              Text(
+                '${evento['data']}  •  ${evento['horario']}',
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
             ],
           ),
           const SizedBox(height: 6),
@@ -159,7 +170,12 @@ class _EventoCard extends StatelessWidget {
             children: [
               const Icon(Icons.location_on_outlined, color: Colors.white38, size: 13),
               const SizedBox(width: 5),
-              Expanded(child: Text(evento['local'] ?? '', style: const TextStyle(color: Colors.white54, fontSize: 12))),
+              Expanded(
+                child: Text(
+                  evento['local'] ?? '',
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+              ),
             ],
           ),
         ],
@@ -170,10 +186,19 @@ class _EventoCard extends StatelessWidget {
 
 class _SectionTitle extends StatelessWidget {
   final String text;
+
   const _SectionTitle(this.text);
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(color: StartupColors.green, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.5));
+    return Text(
+      text,
+      style: const TextStyle(
+        color: StartupColors.green,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.5,
+      ),
+    );
   }
 }

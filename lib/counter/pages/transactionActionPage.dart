@@ -4,10 +4,11 @@
 // RA: 25000684
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mesclainvest_f/enum/typeOfOperation.dart';
 import 'package:mesclainvest_f/counter/services/operationService.dart';
 import 'package:mesclainvest_f/model/userModel.dart';
-import 'package:mesclainvest_f/startups/components/startup_colors.dart';
+import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 
 /// Tela de ação financeira inspirada no app da Nubank.
 /// Suporta Depósito, Saque e Transferência com validações de saldo e destinatário.
@@ -31,9 +32,15 @@ class _TransactionActionPageState extends State<TransactionActionPage> {
   final OperationService _operationService = OperationService();
   bool _isLoading = false;
 
+  final CurrencyTextInputFormatter _formatter =
+      CurrencyTextInputFormatter.currency(
+        locale: 'pt_BR',
+        decimalDigits: 2,
+        symbol: 'R\$ ',
+      );
+
   // Cor característica (Substituída pelo Verde MesclaInvest)
-  static const Color primaryGreen = StartupColors.green;
-  static const Color backgroundDark = Color(0xFF0D0F0F);
+  static const Color primaryGreen = Color(0xFF107649);
 
   String get _title {
     switch (widget.type) {
@@ -62,11 +69,10 @@ class _TransactionActionPageState extends State<TransactionActionPage> {
   }
 
   void _handleConfirm() async {
-    final amountText = _amountController.text.replaceAll(',', '.');
-    final amount = double.tryParse(amountText);
+    final double amount = _formatter.getUnformattedValue().toDouble();
 
-    if (amount == null || amount <= 0) {
-      _showSnackBar('Insira um valor válido maior que zero.');
+    if (amount <= 0) {
+      _showSnackBar('Insira um valor válido');
       return;
     }
 
@@ -77,7 +83,8 @@ class _TransactionActionPageState extends State<TransactionActionPage> {
     }
 
     // Validação de destinatário para transferências
-    if (widget.type == TypeOfOperation.transferencia && _targetController.text.trim().isEmpty) {
+    if (widget.type == TypeOfOperation.transferencia &&
+        _targetController.text.trim().isEmpty) {
       _showSnackBar('Informe o e-mail do destinatário.');
       return;
     }
@@ -88,15 +95,22 @@ class _TransactionActionPageState extends State<TransactionActionPage> {
       final success = await _operationService.createOperation(
         amount: amount,
         type: widget.type,
-        targetIdentifier: widget.type == TypeOfOperation.transferencia ? _targetController.text.trim() : null,
+        targetIdentifier: widget.type == TypeOfOperation.transferencia
+            ? _targetController.text.trim()
+            : null,
       );
 
       if (success) {
         if (mounted) {
-          Navigator.pop(context, true); // Retorna true para atualizar a lista na tela anterior
+          Navigator.pop(
+            context,
+            true,
+          ); // Retorna true para atualizar a lista na tela anterior
         }
       } else {
-        _showSnackBar('Não foi possível processar a operação. Verifique os dados.');
+        _showSnackBar(
+          'Não foi possível processar a operação. Verifique os dados.',
+        );
       }
     } catch (e) {
       _showSnackBar('Erro de conexão ou destinatário não encontrado.');
@@ -124,10 +138,13 @@ class _TransactionActionPageState extends State<TransactionActionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final NumberFormat moneyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
+
     return Scaffold(
-      backgroundColor: backgroundDark,
       appBar: AppBar(
-        backgroundColor: backgroundDark,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.white70, size: 28),
@@ -149,17 +166,20 @@ class _TransactionActionPageState extends State<TransactionActionPage> {
                   color: Colors.white,
                 ),
               ),
-              
+
               const Spacer(), // Empurra o conteúdo para o centro
-              
               // Conteúdo centralizado (Valor e Saldo)
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
+                    key: const ValueKey('amount_field'),
                     controller: _amountController,
+                    inputFormatters: [
+                      _formatter,
+                    ], // 3. Aplique o formatador aqui
                     textAlign: TextAlign.center,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: TextInputType.number,
                     autofocus: true,
                     style: const TextStyle(
                       fontSize: 64,
@@ -167,23 +187,29 @@ class _TransactionActionPageState extends State<TransactionActionPage> {
                       color: Colors.white,
                     ),
                     decoration: const InputDecoration(
-                      prefixText: 'R\$ ',
-                      prefixStyle: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-                      hintText: '0,00',
+                      // prefixText removido pois o formatter já coloca o R$
+                      hintText: 'R\$ 0,00',
                       hintStyle: TextStyle(color: Colors.white24),
                       border: InputBorder.none,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'Saldo disponível: R\$ ${widget.user.saldo.toStringAsFixed(2)}',
-                      style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600),
+                      'Saldo disponível: R\$ ${moneyFormatter.format(widget.user.saldo)}',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -208,7 +234,6 @@ class _TransactionActionPageState extends State<TransactionActionPage> {
               ],
 
               const Spacer(), // Empurra o botão para baixo
-
               // Botão de Confirmação na base
               SizedBox(
                 width: double.infinity,
@@ -228,11 +253,17 @@ class _TransactionActionPageState extends State<TransactionActionPage> {
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
                         )
                       : Text(
                           _buttonLabel,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
               ),

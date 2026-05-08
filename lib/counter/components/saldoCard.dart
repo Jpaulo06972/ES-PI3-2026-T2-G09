@@ -5,9 +5,7 @@
 
 // Importa o pacote básico de UI do Flutter
 import 'package:flutter/material.dart';
-
-// Importa a paleta de cores oficial para manter consistência visual
-import 'package:mesclainvest_f/startups/components/startup_colors.dart';
+import 'package:intl/intl.dart';
 
 /// Card que exibe o saldo disponível do usuário com opção de ocultar o valor.
 /// Usa verde sólido (sem degradê) no estilo premium das telas de startups.
@@ -30,17 +28,22 @@ class SaldoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final NumberFormat moneyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         // Verde sólido — cor principal da aplicação, sem degradê
-        color: StartupColors.green,
+        color: const Color(0xFF107649),
         borderRadius: BorderRadius.circular(20),
         // Sombra verde sutil para dar profundidade e destaque premium
         boxShadow: [
           BoxShadow(
-            color: StartupColors.green.withOpacity(0.25),
+            color: const Color(0xFF107649).withOpacity(0.25),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -76,7 +79,7 @@ class SaldoCard extends StatelessWidget {
                     "Saldo disponível",
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white70,
+                      color: Colors.white,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.3,
                     ),
@@ -112,7 +115,7 @@ class SaldoCard extends StatelessWidget {
           // ── Valor do saldo ────────────────────────────────────────────
           Text(
             isVisible
-                ? "R\$ ${saldo.toStringAsFixed(2)}"
+                ? moneyFormatter.format(saldo) // Agora exibe: R$ 1.250,00
                 : "R\$ ••••••",
             style: const TextStyle(
               fontSize: 36,
@@ -126,10 +129,7 @@ class SaldoCard extends StatelessWidget {
           const SizedBox(height: 16),
 
           // ── Separador sutil ────────────────────────────────────────────
-          Container(
-            height: 1,
-            color: Colors.white.withOpacity(0.15),
-          ),
+          Container(height: 1, color: Colors.white.withOpacity(0.15)),
 
           const SizedBox(height: 14),
 
@@ -139,7 +139,10 @@ class SaldoCard extends StatelessWidget {
             children: [
               // Rendimento CDI — badge translúcido
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
@@ -147,8 +150,14 @@ class SaldoCard extends StatelessWidget {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.trending_up_rounded, color: Colors.white, size: 14),
+                    Icon(
+                      Icons.trending_up_rounded,
+                      color: Colors.white,
+                      size: 14,
+                    ),
                     SizedBox(width: 5),
+
+                    // Esse cara adicionamos os rendimentos atuais do saldo
                     Text(
                       "102% do CDI",
                       style: TextStyle(
@@ -162,7 +171,10 @@ class SaldoCard extends StatelessWidget {
               ),
               // Indicador de variação positiva
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
@@ -170,8 +182,13 @@ class SaldoCard extends StatelessWidget {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 12),
+                    Icon(
+                      Icons.arrow_upward_rounded,
+                      color: Colors.white,
+                      size: 12,
+                    ),
                     SizedBox(width: 3),
+                    // Esse cara adicionamos os rendimentos atuais do saldo
                     Text(
                       "+0,84%",
                       style: TextStyle(

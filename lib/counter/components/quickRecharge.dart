@@ -49,7 +49,7 @@ class QuickRecharge extends StatelessWidget {
         const Text(
           "RECARGA RÁPIDA",
           style: TextStyle(
-            color: StartupColors.green,
+            color: Color(0xFF107649),
             fontSize: 12,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.5,
@@ -87,12 +87,12 @@ class QuickRecharge extends StatelessWidget {
                   decoration: BoxDecoration(
                     // Quando selecionado, usa o fundo verde translúcido igual aos chips de filtro das startups
                     color: isSelected
-                        ? StartupColors.green.withOpacity(0.2)
+                        ? const Color(0xFF107649).withOpacity(0.2)
                         : StartupColors.cardBg,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: isSelected
-                          ? StartupColors.green
+                          ? const Color(0xFF107649)
                           : Colors.white.withValues(alpha: 0.08),
                       width: 1.5,
                     ),
@@ -106,7 +106,7 @@ class QuickRecharge extends StatelessWidget {
                           width: 6,
                           height: 6,
                           decoration: const BoxDecoration(
-                            color: StartupColors.green,
+                            color: Color(0xFF107649),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -116,7 +116,7 @@ class QuickRecharge extends StatelessWidget {
                         "R\$ ${value.toInt()}",
                         style: TextStyle(
                           color: isSelected
-                              ? StartupColors.green
+                              ? const Color(0xFF107649)
                               : Colors.white60,
                           fontWeight: isSelected
                               ? FontWeight.bold
@@ -176,7 +176,7 @@ class QuickRecharge extends StatelessWidget {
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: StartupColors.green,
+              backgroundColor: const Color(0xFF107649),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),

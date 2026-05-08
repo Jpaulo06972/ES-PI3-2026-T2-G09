@@ -1,18 +1,12 @@
-// Aluno: João Paulo Ferreira
-// Grupo: G09
-// Trabalho: PI3-2026-T2-G09
-// RA: 25000684
-// Feito originalmente por: Tomás Toniato RA: 25004211
+// Feito por: Tomás Toniato RA: 25004211
 
-// Importações de UI, serviços e tokens de design
 import 'package:flutter/material.dart';
 import 'package:mesclainvest_f/startups/services/getStartup.dart';
 import 'startup_colors.dart';
 
-/// Aba de Q&A (Perguntas e Respostas) que permite interação entre investidores e startups.
 class QATab extends StatefulWidget {
-  final String startupId; // ID da startup para filtrar os comentários
-  final StartupService service; // Instância do serviço para chamadas de API
+  final String startupId;
+  final StartupService service;
 
   const QATab({super.key, required this.startupId, required this.service});
 
@@ -21,25 +15,19 @@ class QATab extends StatefulWidget {
 }
 
 class _QATabState extends State<QATab> {
-  // Future que armazenará a lista de comentários carregados do banco
   late Future<List<Map<String, dynamic>>> _commentsFuture;
-  // Controlador para o campo de texto da pergunta
   final TextEditingController _controller = TextEditingController();
-  // Estado para controlar se a pergunta atual é privada ou pública
   bool _isPrivate = false;
-  // Estado para controlar o loading do botão de envio
   bool _isSending = false;
 
   @override
   void initState() {
     super.initState();
-    // Inicia a busca dos comentários ao entrar na aba
     _commentsFuture = widget.service.listComments(widget.startupId);
   }
 
   @override
   void dispose() {
-    // Limpa o controlador ao sair para liberar memória
     _controller.dispose();
     super.dispose();
   }
@@ -49,11 +37,9 @@ class _QATabState extends State<QATab> {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _commentsFuture,
       builder: (context, snapshot) {
-        // Exibe loading circular enquanto aguarda os dados
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: StartupColors.green));
         }
-        // Exibe mensagem de erro caso ocorra falha na API
         if (snapshot.hasError) {
           return Center(
             child: Padding(
@@ -71,11 +57,9 @@ class _QATabState extends State<QATab> {
 
         return Column(
           children: [
-            // Área da lista de comentários
             Expanded(
               child: comments.isEmpty
                   ? const Center(
-                      // Placeholder visual quando não há perguntas
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -95,11 +79,10 @@ class _QATabState extends State<QATab> {
                       itemCount: comments.length,
                       itemBuilder: (context, i) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _QuestionCard(comment: comments[i]), // Card individual de pergunta
+                        child: _QuestionCard(comment: comments[i]),
                       ),
                     ),
             ),
-            // Barra inferior de entrada de texto (Input)
             _QuestionInput(
               controller: _controller,
               isPrivate: _isPrivate,
@@ -113,40 +96,32 @@ class _QATabState extends State<QATab> {
     );
   }
 
-  /// Lógica de envio de uma nova pergunta
   Future<void> _handleSend() async {
     final text = _controller.text.trim();
-    // Valida se o texto não está vazio e se já não está enviando
     if (text.isEmpty || _isSending) return;
-    
     setState(() => _isSending = true);
     try {
-      // Chama o serviço para criar o comentário no Firebase
       await widget.service.createComment(
         widget.startupId,
         text,
         _isPrivate ? 'privada' : 'publica',
       );
-      // Limpa o campo e recarrega a lista após o sucesso
       _controller.clear();
       setState(() {
         _commentsFuture = widget.service.listComments(widget.startupId);
       });
     } catch (e) {
-      // Mostra um aviso em caso de erro na rede ou permissão
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao enviar: $e')),
         );
       }
     } finally {
-      // Finaliza o estado de loading independente do resultado
       if (mounted) setState(() => _isSending = false);
     }
   }
 }
 
-/// Card que exibe uma pergunta individual com máscara no e-mail do autor.
 class _QuestionCard extends StatelessWidget {
   final Map<String, dynamic> comment;
 
@@ -158,7 +133,6 @@ class _QuestionCard extends StatelessWidget {
     final isPrivate = (comment['visibility'] as String?) == 'privada';
     final authorEmail = (comment['authorEmail'] as String?) ?? '';
 
-    // Lógica para mascarar o e-mail (ex: j***@email.com) para privacidade
     String maskedEmail = 'Usuário';
     if (authorEmail.contains('@')) {
       final parts = authorEmail.split('@');
@@ -170,7 +144,6 @@ class _QuestionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: StartupColors.cardBg,
         borderRadius: BorderRadius.circular(16),
-        // Se a pergunta for privada, ganha uma borda verde sutil para destacar
         border: Border.all(
           color: isPrivate
               ? StartupColors.green.withValues(alpha: 0.3)
@@ -199,7 +172,6 @@ class _QuestionCard extends StatelessWidget {
   }
 }
 
-/// Componente de entrada de texto com seletor de privacidade.
 class _QuestionInput extends StatelessWidget {
   final TextEditingController controller;
   final bool isPrivate;
@@ -231,7 +203,6 @@ class _QuestionInput extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Seletor de Privacidade (Pública/Privada)
           Row(
             children: [
               GestureDetector(
@@ -266,14 +237,13 @@ class _QuestionInput extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          // Campo de Texto e Botão de Envio
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: controller,
                   style: const TextStyle(color: Colors.white, fontSize: 14),
-                  maxLines: null, // Permite que o campo cresça conforme o texto
+                  maxLines: null,
                   textInputAction: TextInputAction.newline,
                   decoration: InputDecoration(
                     hintText: isPrivate
@@ -291,7 +261,6 @@ class _QuestionInput extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              // Botão de Envio Circular
               GestureDetector(
                 onTap: isSending ? null : onSend,
                 child: Container(

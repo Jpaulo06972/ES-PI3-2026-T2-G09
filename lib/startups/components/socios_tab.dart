@@ -1,13 +1,8 @@
-// Aluno: João Paulo Ferreira
-// Grupo: G09
-// Trabalho: PI3-2026-T2-G09
-// RA: 25000684
-// Feito originalmente por: Tomás Toniato RA: 25004211
+// Feito por: Tomás Toniato RA: 25004211
 
 import 'package:flutter/material.dart';
 import 'startup_colors.dart';
 
-/// Aba que exibe a composição societária e os fundadores da startup.
 class SociosTab extends StatelessWidget {
   final List<Map<String, dynamic>> founders;
 
@@ -49,6 +44,7 @@ class SociosTab extends StatelessWidget {
 
 class _EquityBar extends StatelessWidget {
   final List<Map<String, dynamic>> founders;
+
   const _EquityBar({required this.founders});
 
   @override
@@ -74,6 +70,7 @@ class _EquityBar extends StatelessWidget {
 
 class _EquityLegend extends StatelessWidget {
   final List<Map<String, dynamic>> founders;
+
   const _EquityLegend({required this.founders});
 
   @override
@@ -88,9 +85,16 @@ class _EquityLegend extends StatelessWidget {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
             const SizedBox(width: 6),
-            Text('$name • ${pct.toStringAsFixed(0)}%', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            Text(
+              '$name • ${pct.toStringAsFixed(0)}%',
+              style: const TextStyle(color: Colors.white54, fontSize: 12),
+            ),
           ],
         );
       }),
@@ -101,6 +105,7 @@ class _EquityLegend extends StatelessWidget {
 class _FounderCard extends StatelessWidget {
   final Map<String, dynamic> founder;
   final int colorIndex;
+
   const _FounderCard({required this.founder, required this.colorIndex});
 
   @override
@@ -111,14 +116,19 @@ class _FounderCard extends StatelessWidget {
     final bio = (founder['bio'] as String?)?.trim() ?? '';
     final color = StartupColors.chartColors[colorIndex % StartupColors.chartColors.length];
 
-    final initials = name.split(' ').where((w) => w.isNotEmpty).take(2).map((w) => w[0].toUpperCase()).join();
+    final initials = name
+        .split(' ')
+        .where((w) => w.isNotEmpty)
+        .take(2)
+        .map((w) => w[0].toUpperCase())
+        .join();
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: StartupColors.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,18 +139,24 @@ class _FounderCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
-                  border: Border.all(color: color.withOpacity(0.4)),
+                  border: Border.all(color: color.withValues(alpha: 0.4)),
                 ),
-                child: Center(child: Text(initials, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w700))),
+                child: Center(
+                  child: Text(
+                    initials,
+                    style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+                    Text(name,
+                        style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 3),
                     Text(role, style: const TextStyle(color: Colors.white54, fontSize: 12)),
                   ],
@@ -149,11 +165,14 @@ class _FounderCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: color.withOpacity(0.3)),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
                 ),
-                child: Text('${pct.toStringAsFixed(0)}%', style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700)),
+                child: Text(
+                  '${pct.toStringAsFixed(0)}%',
+                  style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700),
+                ),
               ),
             ],
           ),
@@ -169,7 +188,7 @@ class _FounderCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: pct / 100,
               minHeight: 4,
-              backgroundColor: Colors.white.withOpacity(0.06),
+              backgroundColor: Colors.white.withValues(alpha: 0.06),
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
@@ -181,10 +200,19 @@ class _FounderCard extends StatelessWidget {
 
 class _SectionTitle extends StatelessWidget {
   final String text;
+
   const _SectionTitle(this.text);
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(color: StartupColors.green, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.5));
+    return Text(
+      text,
+      style: const TextStyle(
+        color: StartupColors.green,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.5,
+      ),
+    );
   }
 }

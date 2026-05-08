@@ -10,7 +10,7 @@ import {
 } from "../types";
 
 import {db} from "../../shared/firebase";
-import {FieldValue} from "firebase-admin/firestore";
+import {FieldValue, Filter} from "firebase-admin/firestore";
 
 
 const operationsCollection = db.collection("operations");
@@ -30,15 +30,58 @@ function toOperationDocument(id: string, operation: OperationDocument) {
 }
 
 export async function listOperations(uid: string): Promise<Array<OperationDocument & {id: string}>> {
-  const snapshot = await operationsCollection
-  .where("authorUid", "==", uid)
-  .orderBy("createdAt", "desc")
-  .limit(100)
-  .get();
+  // Lista de variações do UID para busca (corrige inconsistência de I/l)
+  const uidsToSearch = [uid];
+  if (uid.includes("KTlZNT2")) uidsToSearch.push(uid.replace("KTlZNT2", "KTIZNT2"));
+  else if (uid.includes("KTIZNT2")) uidsToSearch.push(uid.replace("KTIZNT2", "KTlZNT2"));
 
-  return snapshot.docs.map((doc) =>
+  // Realiza a busca para todas as variações e todos os campos em paralelo
+  const allResults = await Promise.all(uidsToSearch.map(async (u) => {
+    return await Promise.all([
+      operationsCollection.where("authorUid", "==", u).get(),
+      operationsCollection.where("authorID", "==", u).get(),
+      operationsCollection.where("targetUserId", "==", u).get(),
+      operationsCollection.where("targetID", "==", u).get(),
+    ]);
+  }));
+
+  // Achata os resultados em uma única lista de documentos
+  const combinedDocs: any[] = [];
+  allResults.forEach(resultSet => {
+    resultSet.forEach(snap => combinedDocs.push(...snap.docs));
+  });
+
+  // Remove duplicatas baseadas no ID do documento
+  const uniqueDocs = Array.from(new Map(combinedDocs.map(doc => [doc.id, doc])).values());
+
+  // Mapeia para o formato de documento
+  const operations = uniqueDocs.map((doc) =>
     toOperationDocument(doc.id, doc.data() as OperationDocument)
   );
+
+  // Enriquecimento de dados: Busca o e-mail do autor para transferências recebidas
+  for (const op of operations) {
+    if (op.typeOfOperation === "transferencia" && op.targetUserId === uid) {
+      try {
+        const authorDoc = await db.collection("users").doc(op.authorUid).get();
+        if (authorDoc.exists) {
+          const authorData = authorDoc.data();
+          if (authorData && authorData.email) {
+            op.text = `Transferência recebida de: ${authorData.email}`;
+          }
+        }
+      } catch (e) {
+        // Se falhar a busca do user, mantém o texto original
+      }
+    }
+  }
+
+  // Ordena manualmente por data (createdAt) - Decrescente (mais novo primeiro)
+  return operations.sort((a, b) => {
+    const timeA = (a.createdAt as any)?._seconds || (a.createdAt as any)?.seconds || 0;
+    const timeB = (b.createdAt as any)?._seconds || (b.createdAt as any)?.seconds || 0;
+    return timeB - timeA;
+  });
 }
 
 export async function addOperation(

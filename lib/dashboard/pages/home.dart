@@ -5,6 +5,7 @@
 
 // Importa o pacote básico de UI do Flutter para usar widgets como Scaffold e Column
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 // Importa os componentes de cabeçalho e barra de navegação personalizados para manter a identidade visual
 import 'package:mesclainvest_f/components/appBar.dart';
@@ -32,7 +33,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   // Variável para armazenar os dados do usuário localmente no estado
   final UserModel userModel;
-  
+
+  // Controla se o valor do saldo está visível ou oculto (••••••)
+  bool _isVisible = false;
+
   // Usamos um getter em vez de uma variável direta para evitar o erro de inicialização e manter o saldo atualizado
   double get saldo => userModel.saldo;
 
@@ -42,10 +46,23 @@ class _HomePageState extends State<HomePage> {
   // Método principal que constrói a interface da tela
   @override
   Widget build(BuildContext context) {
+    final NumberFormat moneyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
+
     // Scaffold é a estrutura base da tela que organiza cabeçalho, corpo e rodapé
     return Scaffold(
       // Barra superior personalizada (CustomHeader) que exibe informações do usuário no topo
-      appBar: CustomHeader(userModel: userModel),
+      appBar: CustomHeader(
+        userModel: userModel,
+        isVisible: _isVisible,
+        onToggleVisibility: () {
+          setState(() {
+            _isVisible = !_isVisible;
+          });
+        },
+      ),
 
       // Corpo da tela envolto em um scroll para permitir navegação se o conteúdo for longo
       body: SingleChildScrollView(
@@ -65,21 +82,22 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Texto informativo que descreve o que o valor abaixo representa
-                  Text(
+                  const Text(
                     "Total investido + Conta investimento",
                     // Define o tamanho da fonte e uma cor branca suavizada (cinza)
-                    style: const TextStyle(fontSize: 14, color: Colors.white54),
+                    style: TextStyle(fontSize: 14, color: Colors.white54),
                   ),
                   // Um pequeno espaço vertical de 4 pixels entre os textos
                   const SizedBox(height: 4),
-                  // Exibe o valor real do saldo formatado com duas casas decimais
+
                   Text(
-                    "R\$ ${saldo.toStringAsFixed(2)}",
-                    // Estilo em negrito e tamanho grande para dar destaque ao patrimônio
+                    _isVisible ? moneyFormatter.format(saldo) : "R\$ ••••••",
                     style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                      fontSize:
+                          32, // Ajustei levemente para caber melhor na linha
+                      fontWeight: FontWeight.w800,
                       color: Colors.white,
+                      letterSpacing: -0.5,
                     ),
                   ),
                 ],
@@ -91,22 +109,20 @@ class _HomePageState extends State<HomePage> {
 
             // Espaçamento vertical generoso entre o gráfico e a próxima seção
             const SizedBox(height: 18),
-            
+
             // Título da seção "Minhas Startups" com distanciamento das bordas
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Text(
+              child: const Text(
                 "Minhas Startups",
                 // Estilo consistente com o restante do dashboard (negrito e grande)
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 28,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            // Aqui poderiam entrar outros widgets ou listas de startups no futuro
-            // Placeholder para manter a estrutura organizada
           ],
         ),
       ),

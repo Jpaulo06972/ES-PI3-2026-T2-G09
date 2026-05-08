@@ -101,15 +101,14 @@ class _StartupsListState extends State<StartupsList> {
       // Se houver texto na busca, verifica se o nome ou descrição da startup contém esse termo
       if (_searchQuery.isNotEmpty) {
         final name = (startup['name'] ?? '').toString().toLowerCase();
-        final desc = (startup['shortDescription'] ?? '')
-            .toString()
-            .toLowerCase();
+        final desc =
+            (startup['shortDescription'] ?? '').toString().toLowerCase();
         // Também permite buscar pelo nome formatado do estágio
         final stage = (startup['stage'] ?? '')
             .toString()
             .replaceAll('_', ' ')
             .toLowerCase();
-
+            
         // Se o termo não estiver em nenhum desses campos, a startup é ocultada
         if (!name.contains(_searchQuery) &&
             !desc.contains(_searchQuery) &&
@@ -130,7 +129,11 @@ class _StartupsListState extends State<StartupsList> {
     return Scaffold(
       // Header com logo e perfil do usuário
       appBar: CustomHeader(userModel: widget.userModel),
-
+      // Barra inferior com o ícone de catálogo destacado (index 1)
+      bottomNavigationBar: CustomNavBar(
+        userModel: widget.userModel,
+        currentIndex: 1,
+      ),
       // FutureBuilder lida automaticamente com os estados de carregamento (loading, erro, pronto)
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _startupsFuture,
@@ -303,19 +306,13 @@ class _StartupsListState extends State<StartupsList> {
                       // Lógica de cores temáticas para cada tipo de estágio
                       Color chipColor;
                       if (stageKey == null) {
-                        chipColor = const Color(
-                          0xFF4A90E2,
-                        ); // Azul para "Todas"
+                        chipColor = const Color(0xFF4A90E2); // Azul para "Todas"
                       } else if (stageKey == 'nova') {
                         chipColor = const Color(0xFF1A9B5F); // Verde para novas
                       } else if (stageKey == 'em_operacao') {
-                        chipColor = const Color(
-                          0xFF4A90E2,
-                        ); // Azul para operação
+                        chipColor = const Color(0xFF4A90E2); // Azul para operação
                       } else {
-                        chipColor = const Color(
-                          0xFFF5A623,
-                        ); // Laranja para expansão
+                        chipColor = const Color(0xFFF5A623); // Laranja para expansão
                       }
 
                       return GestureDetector(
@@ -406,7 +403,8 @@ class _StartupsListState extends State<StartupsList> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A9B5F).withValues(alpha: 0.2),
+                          color:
+                              const Color(0xFF1A9B5F).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -486,9 +484,7 @@ class _StartupsListState extends State<StartupsList> {
                               : 'Nenhuma startup encontrada.',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                            color: Colors.white54,
-                            fontSize: 16,
-                          ),
+                              color: Colors.white54, fontSize: 16),
                         ),
                         // Oferece o botão de limpar filtros como saída para o usuário
                         if (_searchQuery.isNotEmpty ||
@@ -528,47 +524,14 @@ class _StartupsListState extends State<StartupsList> {
                   final valorCents = startup['capitalRaisedCents'] ?? 0;
                   final valorReal = valorCents / 100;
 
-                  // Preço unitário de cada token em centavos (vem do backend)
-                  final tokenPriceCents = startup['currentTokenPriceCents'] ?? 0;
-
-                  // Calcula a meta total de captação: quantidade de tokens × preço unitário
-                  // Ex: 1000 tokens × 5000 cents = 5.000.000 cents (R$ 50.000)
-                  final goalCents = tokensInt * tokenPriceCents;
-
-                  // Calcula o progresso da captação como uma fração de 0.0 a 1.0
-                  // Se a meta for zero (sem dados), exibe 0% para evitar divisão por zero
-                  final double progress = goalCents > 0
-                      ? (valorCents / goalCents).clamp(0.0, 1.0).toDouble()
-                      : 0.0;
-
-                  // Define o ícone de acordo com o estágio de maturidade da startup
-                  // - nova: foguete (lançamento)
-                  // - em_operacao: prédio comercial (negócio rodando)
-                  // - em_expansao: gráfico de crescimento (escala)
-                  // - desconhecido: estrela genérica
-                  IconData stageIcon;
-                  switch (status) {
-                    case 'nova':
-                      stageIcon = Icons.rocket_launch_rounded;
-                      break;
-                    case 'em_operacao':
-                      stageIcon = Icons.business_rounded;
-                      break;
-                    case 'em_expansao':
-                      stageIcon = Icons.trending_up_rounded;
-                      break;
-                    default:
-                      stageIcon = Icons.auto_awesome_rounded;
-                  }
-
                   // Lógica para encontrar a imagem no Firebase Storage seguindo o padrão de nomes
                   // Ex: "AgriSense" -> "startups_images/agrisense.png"
                   final storageName = nome.toLowerCase().replaceAll(' ', '-');
                   final storagePath = 'startups_images/$storageName.png';
 
                   // Recupera o identificador único do documento no Firestore
-                  final startupId = (startup['id'] ?? startup['uid'] ?? '')
-                      .toString();
+                  final startupId =
+                      (startup['id'] ?? startup['uid'] ?? '').toString();
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
@@ -577,18 +540,18 @@ class _StartupsListState extends State<StartupsList> {
                       onTap: startupId.isEmpty
                           ? null
                           : () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                // Abre a tela de detalhes passando todo o contexto necessário
-                                builder: (_) => StartupsDetails(
-                                  startupId: startupId,
-                                  startupName: nome,
-                                  startupStage: status,
-                                  userModel: widget.userModel,
-                                  storagePath: storagePath,
+                                context,
+                                MaterialPageRoute(
+                                  // Abre a tela de detalhes passando todo o contexto necessário
+                                  builder: (_) => StartupsDetails(
+                                    startupId: startupId,
+                                    startupName: nome,
+                                    startupStage: status,
+                                    userModel: widget.userModel,
+                                    storagePath: storagePath,
+                                  ),
                                 ),
                               ),
-                            ),
                       // Renderiza o card visual da startup com todos os dados tratados
                       child: startupCard(
                         nome: nome,
@@ -597,29 +560,19 @@ class _StartupsListState extends State<StartupsList> {
                         status: status.replaceAll('_', ' ').toUpperCase(),
                         tokens: tokensInt.toString(),
                         valor: 'R\$ ${valorReal.toStringAsFixed(0)}',
-                        // Progresso calculado dinamicamente: capitalRaisedCents / (totalTokens × tokenPrice)
-                        progress: progress,
-                        // Ícone muda conforme o estágio da startup (foguete, prédio ou gráfico)
-                        icon: stageIcon,
-                        imageUrl:
-                            null, // Deixamos nulo pois buscamos via storagePath dentro do componente
+                        progress: 0.65, // Valor de progresso estático para demonstração
+                        icon: Icons.rocket_launch_rounded,
+                        imageUrl: null, // Deixamos nulo pois buscamos via storagePath dentro do componente
                         storagePath: storagePath,
                       ),
                     ),
                   );
                 }),
 
-              const SizedBox(
-                height: 30,
-              ), // Padding inferior para não colar na barra de navegação
+              const SizedBox(height: 30), // Padding inferior para não colar na barra de navegação
             ],
           );
         },
-      ),
-      // Barra inferior com o ícone de catálogo destacado (index 1)
-      bottomNavigationBar: CustomNavBar(
-        userModel: widget.userModel,
-        currentIndex: 1,
       ),
     );
   }

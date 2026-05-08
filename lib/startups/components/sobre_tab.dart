@@ -1,144 +1,113 @@
-// Aluno: João Paulo Ferreira
-// Grupo: G09
-// Trabalho: PI3-2026-T2-G09
-// RA: 25000684
-// Feito originalmente por: Tomás Toniato RA: 25004211
+// Feito por: Tomás Toniato RA: 25004211
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'startup_colors.dart';
+import 'inline_video_player.dart';
 
-/// Aba que exibe a tese de investimento, o problema e as métricas da startup.
 class SobreTab extends StatelessWidget {
-  // Mapa contendo os dados detalhados da startup
-  final Map<String, dynamic> details;
+  final Map<String, dynamic> data;
 
-  const SobreTab({super.key, required this.details});
+  const SobreTab({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
+    final rawTokens = data['totalTokensIssued'] ?? data['tokens'] ?? 0;
+    final rawCapital = data['capitalRaisedCents'] ?? data['capital'] ?? 0;
+    final rawTokenPrice = data['currentTokenPriceCents'] ?? 0;
+    final description =
+        (data['description'] ?? data['descricao'] ?? '').toString().trim();
+    final demoVideos = (data['demoVideos'] as List<dynamic>? ?? [])
+        .map((e) => e.toString().trim())
+        .where((url) => url.isNotEmpty)
+        .toList();
+
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       children: [
-        // Tese de Investimento
-        const _SectionTitle('TESE DE INVESTIMENTO'),
-        const SizedBox(height: 16),
-        Text(
-          (details['description'] ?? 'Sem descrição disponível.').toString(),
-          style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.6),
-        ),
-        
-        const SizedBox(height: 32),
-        
-        // O Problema
-        const _SectionTitle('O PROBLEMA'),
-        const SizedBox(height: 16),
-        _ProblemCard(text: (details['problemDescription'] ?? 'Informação não disponível.').toString()),
-        
-        const SizedBox(height: 32),
-        
-        // Métricas e Mercado
-        const _SectionTitle('MÉTRICAS E MERCADO'),
-        const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.5,
+        Row(
           children: [
-            _StatCard(
-              label: 'Mercado Total',
-              value: (details['marketSize'] ?? 'N/A').toString(),
-              icon: Icons.public_rounded,
-            ),
-            _StatCard(
-              label: 'Base de Clientes',
-              value: (details['clientBase'] ?? 'N/A').toString(),
-              icon: Icons.people_alt_rounded,
-            ),
-            _StatCard(
-              label: 'Receita Mensal',
-              value: (details['monthlyRevenue'] ?? 'N/A').toString(),
-              icon: Icons.payments_rounded,
-            ),
-            _StatCard(
-              label: 'Preço/Token',
-              value: 'R\$ ${((details['currentTokenPriceCents'] ?? 0) / 100).toStringAsFixed(2)}',
-              icon: Icons.token_rounded,
-            ),
+            Expanded(child: _StatCard(value: _formatTokenPrice(rawTokenPrice), label: 'Preço\ntoken')),
+            const SizedBox(width: 12),
+            Expanded(child: _StatCard(value: _formatTokens(rawTokens), label: 'Tokens\nemitidos')),
+            const SizedBox(width: 12),
+            Expanded(child: _StatCard(value: _formatCapital(rawCapital), label: 'Captado')),
           ],
         ),
+        const SizedBox(height: 28),
+        const _SectionTitle('SUMÁRIO EXECUTIVO'),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: StartupColors.cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          ),
+          child: Text(
+            description.isNotEmpty ? description : '--',
+            style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.6),
+          ),
+        ),
+        const SizedBox(height: 28),
+        const _SectionTitle('VÍDEO DEMO'),
+        const SizedBox(height: 12),
+        _DemoVideosSection(demoVideos: demoVideos),
         const SizedBox(height: 32),
       ],
     );
   }
-}
 
-/// Card para exibição do problema que a startup resolve.
-class _ProblemCard extends StatelessWidget {
-  final String text;
-  const _ProblemCard({required this.text});
+  String _formatTokens(dynamic value) {
+    final num v = num.tryParse(value.toString()) ?? 0;
+    if (v == 0) return '--';
+    return NumberFormat('#,##0', 'pt_BR').format(v);
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: StartupColors.cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.lightbulb_outline_rounded, color: StartupColors.green, size: 24),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
-            ),
-          ),
-        ],
-      ),
-    );
+  String _formatCapital(dynamic value) {
+    final num v = num.tryParse(value.toString()) ?? 0;
+    if (v == 0) return '--';
+    final double reais = v / 100;
+    if (reais >= 1000000) return 'R\$${(reais / 1000000).toStringAsFixed(1)}M';
+    if (reais >= 1000) return 'R\$${(reais / 1000).toStringAsFixed(0)}k';
+    return 'R\$${reais.toStringAsFixed(0)}';
+  }
+
+  String _formatTokenPrice(dynamic value) {
+    final num v = num.tryParse(value.toString()) ?? 0;
+    if (v == 0) return '--';
+    return 'R\$${(v / 100).toStringAsFixed(2).replaceAll('.', ',')}';
   }
 }
 
-/// Card para exibição de métricas individuais.
 class _StatCard extends StatelessWidget {
-  final String label;
   final String value;
-  final IconData icon;
+  final String label;
 
-  const _StatCard({required this.label, required this.value, required this.icon});
+  const _StatCard({required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
         color: StartupColors.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Icon(icon, color: StartupColors.green, size: 14),
-              const SizedBox(width: 6),
-              Text(label, style: const TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w600)),
-            ],
-          ),
-          const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white54, fontSize: 11, height: 1.3),
           ),
         ],
       ),
@@ -146,9 +115,9 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-/// Título de seção padronizado.
 class _SectionTitle extends StatelessWidget {
   final String text;
+
   const _SectionTitle(this.text);
 
   @override
@@ -161,6 +130,60 @@ class _SectionTitle extends StatelessWidget {
         fontWeight: FontWeight.w700,
         letterSpacing: 1.5,
       ),
+    );
+  }
+}
+
+class _DemoVideosSection extends StatelessWidget {
+  final List<String> demoVideos;
+
+  const _DemoVideosSection({required this.demoVideos});
+
+  @override
+  Widget build(BuildContext context) {
+    if (demoVideos.isEmpty) {
+      return Container(
+        height: 140,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: StartupColors.cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.videocam_off_rounded, color: Colors.white24, size: 36),
+              SizedBox(height: 8),
+              Text('Nenhum vídeo disponível',
+                  style: TextStyle(color: Colors.white38, fontSize: 13)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: List.generate(demoVideos.length, (i) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: i < demoVideos.length - 1 ? 16 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (demoVideos.length > 1)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Vídeo Demo ${i + 1}',
+                    style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              InlineVideoPlayer(videoUrl: demoVideos[i]),
+            ],
+          ),
+        );
+      }),
     );
   }
 }
