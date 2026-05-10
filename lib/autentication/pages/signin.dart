@@ -16,6 +16,7 @@ import '../components/socialButton.dart';
 import '../../dashboard/pages/home.dart';
 import 'passRecovery.dart';
 import 'signup.dart';
+import 'twoFactsAuth.dart';
 import '../services/SignInServices.dart';
 
 /// Tela de Login do app.
@@ -70,11 +71,14 @@ class _SignInPageState extends State<SignInPage> {
         );
 
         if (user != null) {
-          // Login deu certo — navega para a Home passando os dados do usuário
           if (mounted) {
+            final destination = user.twoFactorEnabled
+                ? TwoFactsAuthPage(userModel: user)
+                : HomePage(user: user);
+
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => HomePage(user: user)),
+              MaterialPageRoute(builder: (context) => destination),
             );
           }
         }

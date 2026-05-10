@@ -12,26 +12,28 @@ class UserModel {
   final String uid;
 
   // E-mail usado para login
-  final String email;
+  String email;
 
   // Primeiro nome do usuário (ex: "João")
-  final String firstName;
+  String firstName;
 
   // Sobrenome do usuário (ex: "Paulo")
-  final String lastName;
+  String lastName;
 
   // CPF do usuário (opcional, pode ficar vazio)
-  final String cpf;
+  String cpf;
 
   // Telefone do usuário (opcional, pode ficar vazio)
-  final String telefone;
+  String telefone;
 
   // Data de nascimento do usuário (opcional, pode ficar vazio)
-  final String dataNascimento;
+  String dataNascimento;
 
   final UserRole role;
 
   final double saldo;
+
+  bool twoFactorEnabled;
 
   // Construtor — uid e email são obrigatórios, o resto tem valor padrão vazio
   UserModel({
@@ -44,6 +46,7 @@ class UserModel {
     this.dataNascimento = '',
     required this.role,
     this.saldo = 0,
+    this.twoFactorEnabled = false,
   });
 
   // Junta o primeiro nome e sobrenome para ter o nome completo
@@ -68,6 +71,7 @@ class UserModel {
         orElse: () => UserRole.investidor,
       ),
       saldo: (map['saldo'] as num?)?.toDouble() ?? 0,
+      twoFactorEnabled: map['twoFactorEnabled'] as bool? ?? false,
     );
   }
 
@@ -83,6 +87,7 @@ class UserModel {
       'telefone': telefone,
       'dataNascimento': dataNascimento,
       'saldo': saldo,
+      'twoFactorEnabled': twoFactorEnabled,
     };
   }
 }

@@ -36,6 +36,26 @@ class PasswordResetService {
     }
   }
 
+  // Valida o código de recuperação sem redefinir a senha
+  // Deve ser chamado na tela de código antes de navegar para a nova senha
+  Future<void> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/verifyResetCode'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email, 'code': code}),
+    );
+
+    if (response.statusCode != 200) {
+      final body = json.decode(response.body) as Map<String, dynamic>;
+      throw PasswordResetException(
+        (body['error'] as String?) ?? 'Código inválido ou expirado.',
+      );
+    }
+  }
+
   // Redefine a senha do usuário usando o código de verificação
   // Chama a Cloud Function "resetPassword" com e-mail, código e nova senha
   Future<void> resetPassword({

@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:mesclainvest_f/dashboard/pages/home.dart';
 import 'package:mesclainvest_f/dashboard/pages/notification.dart';
 import 'package:mesclainvest_f/startups/pages/startupsList.dart';
+import 'package:mesclainvest_f/profile/profile.dart';
 
 // Importa o modelo de usuário para passar os dados entre as telas
 import 'package:mesclainvest_f/model/userModel.dart';
@@ -124,7 +125,12 @@ class CustomNavBar extends StatelessWidget {
             activeIcon: Icons.person,
             label: 'Perfil',
             onTap: () {
-              // TODO: Navegar para a tela de perfil
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfilePage(userModel: userModel),
+                ),
+              );
             },
           ),
         ],

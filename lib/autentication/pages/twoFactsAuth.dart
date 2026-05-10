@@ -1,56 +1,107 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../components/primaryButton.dart';
+import '../../model/userModel.dart';
+import '../../dashboard/pages/home.dart';
+import '../services/two_factor_service.dart';
 
 // Tela de autenticação de dois fatores (2FA)
 // O usuário digita o código de 6 dígitos recebido por e-mail
 class TwoFactsAuthPage extends StatefulWidget {
-  const TwoFactsAuthPage({super.key});
+  final UserModel userModel;
+
+  const TwoFactsAuthPage({super.key, required this.userModel});
 
   @override
   State<TwoFactsAuthPage> createState() => _TwoFactsAuthPageState();
 }
 
 class _TwoFactsAuthPageState extends State<TwoFactsAuthPage> {
-  // Um controller por quadradinho — são 6 campos independentes
   final List<TextEditingController> _controllers = List.generate(
     6,
     (_) => TextEditingController(),
   );
-
-  // FocusNodes controlam qual campo está "ativo" (com cursor) no momento
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+
+  final _service = TwoFactorService();
+  bool _isLoading = false;
+  bool _isSending = true;
+  String? _sendError;
+
+  @override
+  void initState() {
+    super.initState();
+    _sendCode();
+  }
 
   @override
   void dispose() {
-    // Libera todos os controllers e focusNodes da memória de uma vez
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    for (final f in _focusNodes) {
-      f.dispose();
-    }
+    for (final c in _controllers) { c.dispose(); }
+    for (final f in _focusNodes) { f.dispose(); }
     super.dispose();
   }
 
-  // Monta o código final juntando o dígito de cada campo
+  Future<void> _sendCode() async {
+    setState(() {
+      _isSending = true;
+      _sendError = null;
+    });
+    try {
+      await _service.sendCode(widget.userModel.uid, widget.userModel.email);
+    } on TwoFactorException catch (e) {
+      if (mounted) setState(() => _sendError = e.message);
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
+  }
+
   String get _code => _controllers.map((c) => c.text).join();
 
   Future<void> _onVerifyPressed() async {
     if (_code.length < 6) {
-      // Avisa se o usuário não preencheu todos os 6 campos
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Preencha todos os 6 dígitos')),
       );
       return;
     }
-    // TODO: integrar com backend para validar o código
-    debugPrint('Código informado: $_code');
+
+    setState(() => _isLoading = true);
+    try {
+      final valid = await _service.verifyCode(widget.userModel.uid, _code);
+      if (!mounted) return;
+
+      if (valid) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(user: widget.userModel),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Código inválido ou expirado.')),
+        );
+      }
+    } on TwoFactorException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
-  void _onResendPressed() {
-    // TODO: integrar com backend para reenviar o código por e-mail
-    debugPrint('Reenviar código');
+  Future<void> _onResendPressed() async {
+    for (final c in _controllers) { c.clear(); }
+    _focusNodes[0].requestFocus();
+    await _sendCode();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Novo código enviado!')),
+      );
+    }
   }
 
   // Constrói cada um dos 6 quadradinhos de dígito
@@ -104,7 +155,6 @@ class _TwoFactsAuthPageState extends State<TwoFactsAuthPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Ícone representando verificação / segurança
               Icon(
                 Icons.verified_user_outlined,
                 size: 72,
@@ -112,7 +162,6 @@ class _TwoFactsAuthPageState extends State<TwoFactsAuthPage> {
               ),
               const SizedBox(height: 16),
 
-              // Título
               const Text(
                 'Verificação em duas etapas',
                 textAlign: TextAlign.center,
@@ -120,30 +169,46 @@ class _TwoFactsAuthPageState extends State<TwoFactsAuthPage> {
               ),
               const SizedBox(height: 8),
 
-              // Instrução
-              const Text(
-                'Insira o código de 6 dígitos enviado para o seu e-mail.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14),
-              ),
+              if (_isSending)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_sendError != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    _sendError!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red, fontSize: 14),
+                  ),
+                )
+              else
+                Text(
+                  'Insira o código de 6 dígitos enviado para ${widget.userModel.email}.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade300),
+                ),
+
               const SizedBox(height: 40),
 
-              // Os 6 quadradinhos lado a lado com espaço uniforme entre eles
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(6, _buildDigitBox),
               ),
               const SizedBox(height: 32),
 
-              // Botão principal de verificação
-              PrimaryButton(label: 'Verificar', onPressed: _onVerifyPressed),
+              PrimaryButton(
+                label: 'Verificar',
+                onPressed: _onVerifyPressed,
+                isLoading: _isLoading,
+              ),
               const SizedBox(height: 20),
 
-              // Link "Não recebi o código" — aciona o reenvio
               Align(
                 alignment: Alignment.center,
                 child: GestureDetector(
-                  onTap: _onResendPressed,
+                  onTap: _isSending ? null : _onResendPressed,
                   child: Text(
                     'Não recebi o código',
                     style: TextStyle(
@@ -155,7 +220,6 @@ class _TwoFactsAuthPageState extends State<TwoFactsAuthPage> {
               ),
               const SizedBox(height: 12),
 
-              // Navigator.pop() desempilha a tela e volta para o SignIn
               Align(
                 alignment: Alignment.center,
                 child: GestureDetector(
