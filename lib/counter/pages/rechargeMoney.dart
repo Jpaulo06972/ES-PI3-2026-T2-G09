@@ -93,13 +93,13 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         setState(() {
-          // Atualiza o saldo local baseado no campo 'balance' ou 'saldo' do banco
-          userModel.saldo = (data['balance'] ?? data['saldo'] ?? 0.0)
+          // Atualiza o saldo local baseado no campo 'saldo' (prioritário) ou 'balance' do banco
+          userModel.saldo = (data['saldo'] ?? data['balance'] ?? 0.0)
               .toDouble();
         });
       }
     } catch (e) {
-      debugPrint("Erro ao atualizar saldo: $e");
+      //debugPrint("Erro ao atualizar saldo: $e");
     }
   }
 
@@ -132,8 +132,8 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
   static const Map<String?, String> _filterOptions = {
     null: 'Todas',
     'deposito': 'Depósitos',
-    'investimento': 'Investimentos',
-    'rendimento': 'Rendimentos',
+    'saque': 'Saques',
+    'transferencia': 'Transferências',
   };
 
   // Instância do serviço para buscar dados do backend
@@ -159,20 +159,27 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
       );
 
       // Debug para você ver no console se os dados estão chegando
-      debugPrint(
-        "Extrato carregado: ${rawData.length} operações encontradas para o UID: ${userModel.uid}",
-      );
+      //debugPrint(
+      //"Extrato carregado: ${rawData.length} operações encontradas para o UID: ${userModel.uid}",
+      //);
 
       // --- Ordenação Manual: Garante que o mais recente apareça primeiro ---
       rawData.sort((a, b) {
         final dateA = a['createdAt'];
         final dateB = b['createdAt'];
-        int secA = (dateA is Map)
-            ? (dateA['_seconds'] ?? dateA['seconds'] ?? 0)
-            : 0;
-        int secB = (dateB is Map)
-            ? (dateB['_seconds'] ?? dateB['seconds'] ?? 0)
-            : 0;
+
+        int secA = 0;
+        if (dateA is Timestamp)
+          secA = dateA.seconds;
+        else if (dateA is Map)
+          secA = (dateA['_seconds'] ?? dateA['seconds'] ?? 0);
+
+        int secB = 0;
+        if (dateB is Timestamp)
+          secB = dateB.seconds;
+        else if (dateB is Map)
+          secB = (dateB['_seconds'] ?? dateB['seconds'] ?? 0);
+
         return secB.compareTo(secA);
       });
 
@@ -224,14 +231,24 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
           }
         }
 
+        // Determina o tipo correto para filtro:
+        // - Transferências recebidas mantêm tipo 'transferencia' (antes forçava 'deposito')
+        // - Demais operações usam o tipo real da operação
+        String filterType;
+        if (souDestinatario && !souAutor) {
+          filterType =
+              'transferencia'; // Recebimento aparece no filtro de transferências
+        } else {
+          filterType = op.operation.name;
+        }
+
         return {
           'icon': icon,
           'title': title,
           'date': op.createdAt ?? 'Data não informada',
           'value': op.amount,
           'isCredit': isCredit,
-          // Se for crédito (recebimento), tratamos como 'deposito' para o filtro do extrato
-          'type': isCredit ? 'deposito' : op.operation.name,
+          'type': filterType,
           'id': op.id,
         };
       }).toList();
@@ -243,7 +260,7 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
     } catch (e) {
       setState(() => _isLoading = false);
       _showSnackBar("Erro ao carregar extrato dinâmico.");
-      debugPrint("Erro GetListOperation: $e");
+      //debugPrint("Erro GetListOperation: $e");
     }
   }
 

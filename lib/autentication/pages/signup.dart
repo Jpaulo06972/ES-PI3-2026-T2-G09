@@ -106,7 +106,10 @@ class _SignUpPageState extends State<SignUpPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(e.message),
+              content: Text(
+                e.message,
+                style: const TextStyle(color: Colors.white),
+              ),
               backgroundColor: Colors.red.shade600,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(

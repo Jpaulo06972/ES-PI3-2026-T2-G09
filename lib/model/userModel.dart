@@ -44,7 +44,7 @@ class UserModel {
       dataNascimento: data['dataNascimento'] ?? '',
       cpf: data['cpf'] ?? '',
       telefone: data['telefone'] ?? '',
-      saldo: (data['balance'] ?? data['saldo'] ?? 0.0).toDouble(),
+      saldo: (data['saldo'] ?? data['balance'] ?? 0.0).toDouble(),
       role: _parseRole(data['role']),
       profilePicUrl: data['profilePicUrl'],
     );
@@ -63,7 +63,7 @@ class UserModel {
       'dataNascimento': dataNascimento,
       'cpf': cpf,
       'telefone': telefone,
-      'balance': saldo,
+      'saldo': saldo,
       'role': role.name, // Salva o nome do enum como String
       'profilePicUrl': profilePicUrl,
     };

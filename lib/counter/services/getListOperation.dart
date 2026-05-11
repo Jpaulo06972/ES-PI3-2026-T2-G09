@@ -4,25 +4,36 @@
 // RA: 25000684
 
 // Importa o Firestore para salvar os dados do perfil do usuário
-import 'package:cloud_functions/cloud_functions.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GetListOperation {
-  final FirebaseFunctions _functions = FirebaseFunctions.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<List<Map<String, dynamic>>> getOperations({String? userId}) async {
     try {
-      final callable = _functions.httpsCallable("getListOperations");
+      if (userId == null) return [];
 
-      final response = await callable.call(<String, dynamic>{
-        if (userId != null) 'userId': userId,
-      });
+      // Fazemos as queries separadas para evitar a necessidade de índices compostos complexos no Firestore
+      final results = await Future.wait([
+        _firestore.collection('operations').where('authorUid', isEqualTo: userId).get(),
+        _firestore.collection('operations').where('authorID', isEqualTo: userId).get(),
+        _firestore.collection('operations').where('targetUserId', isEqualTo: userId).get(),
+      ]);
 
-      final resultData = response.data as Map<String, dynamic>;
-      final operations = resultData['data'] as List<dynamic>;
+      // Usamos um Map para garantir que não haja operações duplicadas (caso achem em mais de uma query)
+      final Map<String, Map<String, dynamic>> mergedOperations = {};
 
-      return operations
-          .map((e) => Map<String, dynamic>.from(e as Map))
-          .toList();
+      for (var snapshot in results) {
+        for (var doc in snapshot.docs) {
+          if (!mergedOperations.containsKey(doc.id)) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            mergedOperations[doc.id] = data;
+          }
+        }
+      }
+
+      return mergedOperations.values.toList();
     } catch (e) {
       throw Exception('Erro ao listar operações: $e');
     }

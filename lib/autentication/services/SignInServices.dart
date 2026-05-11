@@ -82,7 +82,7 @@ class SignInService {
       // Código moderno — email ou senha incorretos (Firebase não diz qual dos dois)
       case 'invalid-credential':
       case 'INVALID_LOGIN_CREDENTIALS':
-        return 'E-mail ou senha incorretos. Verifique e tente novamente.';
+        return 'E-mail ou senha incorretos ou usuário não existe.';
       // Códigos legados — mantidos para compatibilidade com versões mais antigas
       case 'wrong-password':
         return 'Senha incorreta. Verifique e tente novamente.';
@@ -111,8 +111,6 @@ class SignInService {
       case 'channel-error':
         return 'Preencha todos os campos antes de continuar.';
       default:
-        // Imprime o código desconhecido para podermos adicionar no futuro
-        debugPrint('Código de erro Auth não mapeado: $code');
         return 'Erro ao entrar ($code). Tente novamente.';
     }
   }

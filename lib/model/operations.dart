@@ -3,6 +3,7 @@
 // Trabalho: PI3-2026-T2-G09
 // RA: 25000684
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mesclainvest_f/enum/operationStatus.dart';
 import 'package:mesclainvest_f/enum/typeOfOperation.dart';
 
@@ -71,13 +72,21 @@ class OperationModel {
   static String? _parseDate(dynamic date) {
     if (date == null) return null;
     if (date is String) return date;
-    if (date is Map) {
+    
+    DateTime? dt;
+    if (date is Timestamp) {
+      dt = date.toDate();
+    } else if (date is Map) {
       final seconds = date['_seconds'] ?? date['seconds'];
       if (seconds != null) {
-        final dt = DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
-        return "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+        dt = DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
       }
     }
+    
+    if (dt != null) {
+      return "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+    }
+    
     return date.toString();
   }
 

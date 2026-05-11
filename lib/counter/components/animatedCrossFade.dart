@@ -43,10 +43,12 @@ class FilterCrossFade extends StatelessWidget {
               chipColor = const Color(0xFF4A90E2);
             } else if (key == 'deposito') {
               chipColor = const Color(0xFF107649);
-            } else if (key == 'investimento') {
+            } else if (key == 'saque') {
               chipColor = const Color(0xFFF5A623);
-            } else {
+            } else if (key == 'transferencia') {
               chipColor = const Color(0xFF00B4D8);
+            } else {
+              chipColor = const Color(0xFF9B59B6);
             }
 
             return GestureDetector(
