@@ -56,16 +56,21 @@ class SignInService {
   /// Converte códigos de erro do Firebase Auth em mensagens amigáveis.
   String _mapAuthError(String code) {
     switch (code) {
-      case 'email-already-in-use':
-        return 'Este e-mail já está cadastrado.';
-      case 'user-disabled':
-        return 'Este usuário está desativado.';
+      // Código moderno — email ou senha incorretos (Firebase não diz qual dos dois)
+      case 'invalid-credential':
+      case 'INVALID_LOGIN_CREDENTIALS':
+        return 'E-mail ou senha incorretos ou usuário não existe.';
+      // Códigos legados — mantidos para compatibilidade com versões mais antigas
+      case 'wrong-password':
+        return 'Senha incorreta. Verifique e tente novamente.';
+      case 'user-not-found':
+        return 'Nenhuma conta encontrada com este e-mail.';
       case 'invalid-email':
         return 'O e-mail informado é inválido.';
-      case 'user-not-found':
-        return 'Usuário não encontrado.';
-      case 'wrong-password':
-        return 'Senha incorreta.';
+      case 'user-disabled':
+        return 'Este usuário está desativado. Contate o suporte.';
+      case 'email-already-in-use':
+        return 'Este e-mail já está cadastrado.';
       case 'too-many-requests':
         return 'Muitas tentativas. Aguarde um momento e tente novamente.';
       case 'operation-not-allowed':
@@ -80,8 +85,10 @@ class SignInService {
         return 'Código de verificação expirado. Solicite um novo.';
       case 'invalid-action-code':
         return 'Código de verificação inválido. Solicite um novo.';
+      case 'channel-error':
+        return 'Preencha todos os campos antes de continuar.';
       default:
-        return 'Erro ao entrar. Tente novamente.';
+        return 'Erro ao entrar ($code). Tente novamente.';
     }
   }
 }

@@ -42,15 +42,16 @@ class PrimaryButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
 
         // Cor de fundo = pega a cor primária do tema do app (verde/azul)
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: const Color(0xFF107649),
 
         // Cor do texto = pega a cor que contrasta com o fundo
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        foregroundColor: Colors.white,
 
         // Cor quando o botão tá desabilitado (durante o loading)
         // Usa a mesma cor primária mas com opacidade pra parecer "meio apagado"
-        disabledBackgroundColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+        disabledBackgroundColor: Theme.of(
+          context,
+        ).colorScheme.primary.withValues(alpha: 0.6),
         disabledForegroundColor: Colors.white70,
       ),
 

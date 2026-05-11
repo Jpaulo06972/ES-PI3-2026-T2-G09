@@ -18,9 +18,7 @@ Future<void> showSuccessDialog({
     context: context,
     barrierDismissible: false,
     builder: (context) => Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
@@ -35,7 +33,7 @@ Future<void> showSuccessDialog({
               ),
               child: Icon(
                 Icons.check_circle_rounded,
-                color: Colors.green.shade600,
+                color: Color(0xFF107649),
                 size: 64,
               ),
             ),
@@ -44,10 +42,7 @@ Future<void> showSuccessDialog({
             // Título
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
 
@@ -55,10 +50,7 @@ Future<void> showSuccessDialog({
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white70,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.white70),
             ),
             const SizedBox(height: 24),
 
@@ -68,7 +60,7 @@ Future<void> showSuccessDialog({
               child: ElevatedButton(
                 onPressed: onPressed,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade600,
+                  backgroundColor: const Color(0xFF107649),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(

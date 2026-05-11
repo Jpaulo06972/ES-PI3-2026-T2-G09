@@ -19,7 +19,7 @@ class NavLink extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Pega a cor primária do tea (vermde/azul) pra usar no texto e na linha
-    final Color linkColor = Theme.of(context).colorScheme.primary;
+    final Color linkColor = Color(0xFF107649);
 
     // GestureDetector = detecta toques em qualquer widget
     // Usamos ele porque o Container sozinho não sabe responder a cliques
@@ -45,7 +45,7 @@ class NavLink extends StatelessWidget {
             border: Border(
               bottom: BorderSide(
                 color: linkColor, // Mesma cor do texto
-                width: 1,        // Espessura da linha
+                width: 1, // Espessura da linha
               ),
             ),
           ),
@@ -54,8 +54,9 @@ class NavLink extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: linkColor,         // Cor do texto (primária do tema)
-              fontWeight: FontWeight.bold, // Negrito pra destacar que é clicável
+              color: linkColor, // Cor do texto (primária do tema)
+              fontWeight:
+                  FontWeight.bold, // Negrito pra destacar que é clicável
               fontSize: 14,
             ),
           ),

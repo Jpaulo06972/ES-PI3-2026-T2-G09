@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 import 'package:flutter/material.dart';
 
 // Componentes visuais do projeto
@@ -68,7 +73,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
       try {
         // Chama o service de cadastro
-        await SignUpService().signUp(
+        final userModel = await SignUpService().signUp(
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
           dataNascimento: _dataNascimentoController.text.trim(),
@@ -79,7 +84,7 @@ class _SignUpPageState extends State<SignUpPage> {
         );
 
         // Cadastro deu certo — mostra o dialog de sucesso
-        if (mounted) {
+        if (mounted && userModel != null) {
           await showSuccessDialog(
             context: context,
             title: 'Cadastro realizado!',
@@ -90,7 +95,7 @@ class _SignUpPageState extends State<SignUpPage> {
               Navigator.of(context).pop(); // Fecha o dialog
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => const SignInPage()),
+                MaterialPageRoute(builder: (context) => SignInPage()),
                 (route) => false, // Remove todas as telas anteriores
               );
             },
@@ -101,7 +106,10 @@ class _SignUpPageState extends State<SignUpPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(e.message),
+              content: Text(
+                e.message,
+                style: const TextStyle(color: Colors.white),
+              ),
               backgroundColor: Colors.red.shade600,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -132,9 +140,8 @@ class _SignUpPageState extends State<SignUpPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Logo e cabeçalho
-                const SizedBox(height: 12),
+                const SizedBox(height: 42),
                 Image.asset('assets/images/Logo1.png', height: 45),
-                const SizedBox(height: 8),
                 const Text(
                   'Cadastre-se',
                   textAlign: TextAlign.center,
@@ -218,7 +225,10 @@ class _SignUpPageState extends State<SignUpPage> {
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
                         'cadastre com',
-                        style: TextStyle(color: Colors.grey.shade300, fontSize: 12),
+                        style: TextStyle(
+                          color: Colors.grey.shade300,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                     Expanded(child: Divider()),
