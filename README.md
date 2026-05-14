@@ -9,7 +9,7 @@
 ---
 
 ## 🚀 Sobre o Projeto
-Uma breve descrição (2 a 3 linhas) sobre o problema que o software resolve e qual a sua proposta de valor.
+O **Mesclainvest** é um aplicativo mobile focado em gestão de investimentos e controle financeiro. O objetivo do projeto é oferecer um frontend amigável e seguro, proporcionando um fluxo intuitivo desde a autenticação até a visualização de portfolios de investimento.
 
 ---
 
@@ -26,21 +26,81 @@ Utilizamos **Issues** para documentar requisitos, bugs e melhorias. Cada integra
 * [🔗 Visualizar Issues Ativas](https://github.com/Jpaulo06972/ES-PI3-2026-T2-G09/issues)
 
 ### 🌿 Estratégia de Versionamento
-Para garantir a integridade do código, seguimos o fluxo de [Branching Strategy, ex: GitFlow], com as seguintes divisões:
+Para garantir a integridade do código, seguimos o padrão, com as seguintes divisões principais e fluxos:
 * `main`: Código estável em produção.
-* `develop`: Ambiente de integração de novas funcionalidades.
-* `feature/`: Branches individuais para desenvolvimento de tarefas.
+* `dev`: Ambiente de integração de novas funcionalidades.
+* `feature/`: Branches individuais para desenvolvimento de tarefas (ex: `auth`, `dashboard`, `profile`).
+
+---
+
+## ✨ Funcionalidades do Aplicativo
+
+O Frontend do aplicativo atualmente está estruturado nos seguintes módulos:
+
+### 🔐 Autenticação (Fluxo de Entrada)
+- **Página de Login**: Acesso para usuários existentes.
+- **Página de Cadastro**: Fluxo para registro de novos usuários.
+- **Componentes de Entrada Seguros e Validados**:
+  - `CpfField`: Campo testado com máscara e validação de formato de CPF.
+  - `PasswordField`: Campo oculto com função para alternar a visibilidade (mostrar/esconder senha).
+  - `NameField`: Campo padrão para entradas de nome.
+- **Validação de Dados**: Uso robusto de formulários via `GlobalKey<FormState>`.
+
+### 📊 Dashboard Principal
+- Tela inicial pós-login com visão geral do portfólio.
+
+### 👤 Perfil
+- Gerenciamento de dados do usuário.
+
+### 📈 Startups
+- Listagem e detalhes de startups disponíveis para investimento.
+
+### 🔢 Counter / Trading
+- Funcionalidades de negociação de tokens.
 
 ---
 
 ## 💻 Tecnologias Utilizadas
-* **Linguagem:** [Dart/TypeScript]
-* **Banco de Dados:** [Firestore]
-* **Outros:** [Flutter/Node.js]
+* **Linguagem Frontend:** Dart
+* **Framework:** Flutter
+* **Linguagem Backend:** TypeScript/Node.js
+* **Banco de Dados:** Firestore
+
+---
+
+## 📂 Estrutura de Diretórios (Visão Geral)
+
+```text
+lib/
+ ├── autentication/      # Módulo de Autenticação
+ │   ├── components/     # Widgets reutilizáveis (CpfField, PasswordField, etc.)
+ │   └── pages/          # Telas de Login e Signup
+ ├── dashboard/          # Módulo da Tela Principal do usuário logado
+ │   └── home.dart       # Tela principal do Dashboard
+ ├── startups/           # Módulo de Startups
+ ├── tokens/             # Módulo de Tokens e Trading
+ └── main.dart           # Ponto de entrada do aplicativo
+```
 
 ---
 
 ## ⚙️ Como Executar o Projeto
+
+Certifique-se de ter o ambiente [Flutter instalado](https://docs.flutter.dev/get-started/install) na sua máquina.
+
 1. Clone o repositório:
    ```bash
    git clone https://github.com/Jpaulo06972/ES-PI3-2026-T2-G09.git
+   ```
+2. Navegue até a pasta do projeto:
+   ```bash
+   cd ES-PI3-2026-T2-G09
+   ```
+3. Baixe as dependências:
+   ```bash
+   flutter pub get
+   ```
+4. Execute o aplicativo (usando um emulador ou dispositivo físico conectado):
+   ```bash
+   flutter run
+   ```
