@@ -13,11 +13,11 @@ import '../components/primaryButton.dart';
 import '../components/socialButton.dart';
 
 // Telas que a gente navega a partir daqui
+import '../../dashboard/pages/home.dart';
 import 'passRecovery.dart';
 import 'signup.dart';
 import 'twoFactsAuth.dart';
 import '../services/SignInServices.dart';
-import '../services/two_factor_service.dart';
 
 /// Tela de Login do app.
 /// Aqui o usuário digita e-mail e senha pra entrar na conta dele.
@@ -71,16 +71,14 @@ class _SignInPageState extends State<SignInPage> {
         );
 
         if (user != null) {
-          final twoFactorService = TwoFactorService();
-          await twoFactorService.sendCode(email);
-
           if (mounted) {
+            final destination = user.twoFactorEnabled
+                ? TwoFactsAuthPage(userModel: user)
+                : HomePage(user: user);
+
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    TwoFactsAuthPage(email: email, user: user),
-              ),
+              MaterialPageRoute(builder: (context) => destination),
             );
           }
         }

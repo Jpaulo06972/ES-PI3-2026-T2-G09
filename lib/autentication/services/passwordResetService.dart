@@ -36,12 +36,22 @@ class PasswordResetService {
     }
   }
 
+<<<<<<< HEAD
   Future<void> verifyCode({
+=======
+  // Valida o código de recuperação sem redefinir a senha
+  // Deve ser chamado na tela de código antes de navegar para a nova senha
+  Future<void> verifyResetCode({
+>>>>>>> origin/profile
     required String email,
     required String code,
   }) async {
     final response = await http.post(
+<<<<<<< HEAD
       Uri.parse('$_baseUrl/verifyCode'),
+=======
+      Uri.parse('$_baseUrl/verifyResetCode'),
+>>>>>>> origin/profile
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': email, 'code': code}),
     );
@@ -49,7 +59,11 @@ class PasswordResetService {
     if (response.statusCode != 200) {
       final body = json.decode(response.body) as Map<String, dynamic>;
       throw PasswordResetException(
+<<<<<<< HEAD
         (body['error'] as String?) ?? 'Código inválido.',
+=======
+        (body['error'] as String?) ?? 'Código inválido ou expirado.',
+>>>>>>> origin/profile
       );
     }
   }

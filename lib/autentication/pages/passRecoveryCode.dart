@@ -42,7 +42,7 @@ class _PassRecoveryCodePageState extends State<PassRecoveryCodePage> {
   // Junta os 6 dígitos num código só (ex: "123456")
   String get _code => _controllers.map((c) => c.text).join();
 
-  // Ao pressionar "Continuar" — verifica e navega para nova senha
+  // Ao pressionar "Continuar" — valida o código no backend antes de navegar
   Future<void> _onVerifyPressed() async {
     if (_code.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(

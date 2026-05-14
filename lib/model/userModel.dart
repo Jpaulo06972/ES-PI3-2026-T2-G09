@@ -17,6 +17,7 @@ class UserModel {
   double saldo;
   UserRole role;
   String? profilePicUrl;
+  bool twoFactorEnabled;
 
   // Nome completo derivado (útil para exibição)
   String get nome => "$firstName $lastName".trim();
@@ -26,12 +27,13 @@ class UserModel {
     required this.email,
     required this.firstName,
     required this.lastName,
-    required this.dataNascimento,
-    required this.cpf,
-    required this.telefone,
+    this.dataNascimento = '',
+    this.cpf = '',
+    this.telefone = '',
     this.saldo = 0.0,
     this.role = UserRole.investidor,
     this.profilePicUrl,
+    this.twoFactorEnabled = false,
   });
 
   /// Construtor de fábrica para criar o modelo a partir de um mapa (Firestore/Auth)
@@ -47,11 +49,12 @@ class UserModel {
       saldo: (data['saldo'] ?? data['balance'] ?? 0.0).toDouble(),
       role: _parseRole(data['role']),
       profilePicUrl: data['profilePicUrl'],
+      twoFactorEnabled: data['twoFactorEnabled'] as bool? ?? false,
     );
   }
 
   /// Alias para manter compatibilidade com chamadas antigas que usavam fromFirestore
-  factory UserModel.fromFirestore(Map<String, dynamic> data, String uid) => 
+  factory UserModel.fromFirestore(Map<String, dynamic> data, String uid) =>
       UserModel.fromMap(data, uid);
 
   /// Transforma o objeto em um mapa para salvar no banco de dados
@@ -64,8 +67,9 @@ class UserModel {
       'cpf': cpf,
       'telefone': telefone,
       'saldo': saldo,
-      'role': role.name, // Salva o nome do enum como String
+      'role': role.name,
       'profilePicUrl': profilePicUrl,
+      'twoFactorEnabled': twoFactorEnabled,
     };
   }
 
