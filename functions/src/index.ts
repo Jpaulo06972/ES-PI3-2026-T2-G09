@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 import {setGlobalOptions} from "firebase-functions";
 import {onRequest} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
@@ -11,10 +16,18 @@ setGlobalOptions({maxInstances: 10});
 const corsHandler = cors({origin: true});
 const db = admin.firestore();
 
+/**
+ * Generates a 6-digit random code.
+ * @return {string} The generated code.
+ */
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+/**
+ * Creates a nodemailer transporter for sending emails.
+ * @return {nodemailer.Transporter} The created transporter.
+ */
 function createTransporter() {
   return nodemailer.createTransport({
     service: "gmail",
@@ -308,10 +321,15 @@ export const resetPassword = onRequest(
         return;
       }
 
-      await admin.auth().updateUser(data.uid as string, {password: newPassword});
+      await admin.auth().updateUser(data.uid as string, {
+        password: newPassword,
+      });
       await doc.ref.update({used: true});
 
       res.json({success: true});
     });
   }
 );
+
+export * from "./startups";
+export * from "./balance";

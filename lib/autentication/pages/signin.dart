@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 import 'package:flutter/material.dart';
 
 // Componentes visuais do nosso projeto
@@ -175,7 +180,10 @@ class _SignInPageState extends State<SignInPage> {
                       padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         'entre com',
-                        style: TextStyle(color: Colors.grey.shade300, fontSize: 13),
+                        style: TextStyle(
+                          color: Colors.grey.shade300,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     Expanded(child: Divider()),

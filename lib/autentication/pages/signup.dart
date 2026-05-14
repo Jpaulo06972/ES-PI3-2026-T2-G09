@@ -11,7 +11,7 @@ import '../components/emailField.dart';
 import '../components/passwordField.dart';
 import '../components/primaryButton.dart';
 import '../components/navLink.dart';
-import '../components/nameField.dart';
+import '../../components/textField.dart';
 import '../components/cpfField.dart';
 import '../components/phoneField.dart';
 import '../components/socialButton.dart';

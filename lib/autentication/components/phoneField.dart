@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 // Importa o pacote do Flutter pra montar a interface
 import 'package:flutter/material.dart';
 
@@ -98,7 +103,10 @@ class PhoneField extends StatelessWidget {
           TextSpan(
             children: [
               TextSpan(text: label ?? 'Telefone'),
-              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+              const TextSpan(
+                text: ' *',
+                style: TextStyle(color: Colors.red),
+              ),
             ],
           ),
         ),

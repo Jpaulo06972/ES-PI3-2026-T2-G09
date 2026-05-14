@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 // Importa o pacote do Flutter pra montar a interface
 import 'package:flutter/material.dart';
 
@@ -104,7 +109,10 @@ class _DateFieldState extends State<DateField> {
           TextSpan(
             children: [
               TextSpan(text: widget.label ?? 'Data de Nasc.'),
-              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+              const TextSpan(
+                text: ' *',
+                style: TextStyle(color: Colors.red),
+              ),
             ],
           ),
         ),
@@ -113,7 +121,10 @@ class _DateFieldState extends State<DateField> {
         prefixIcon: const Icon(Icons.calendar_today_outlined),
 
         // Reduz a área do ícone
-        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 40,
+          minHeight: 40,
+        ),
 
         // Borda retangular
         border: const OutlineInputBorder(),

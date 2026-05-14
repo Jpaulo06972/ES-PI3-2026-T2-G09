@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 // Importa o pacote do Flutter que tem tudo que a gente precisa pra montar telas
 import 'package:flutter/material.dart';
 
@@ -43,7 +48,10 @@ class EmailField extends StatelessWidget {
           TextSpan(
             children: [
               TextSpan(text: label ?? 'E-mail'),
-              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+              const TextSpan(
+                text: ' *',
+                style: TextStyle(color: Colors.red),
+              ),
             ],
           ),
         ),
@@ -52,7 +60,10 @@ class EmailField extends StatelessWidget {
         prefixIcon: const Icon(Icons.email_outlined),
 
         // Reduz a área do ícone pra alinhar o erro com a borda da caixa
-        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 40,
+          minHeight: 40,
+        ),
 
         // Borda retangular ao redor do campo
         border: const OutlineInputBorder(),

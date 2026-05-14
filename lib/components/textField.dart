@@ -1,3 +1,8 @@
+// Aluno: João Paulo Ferreira
+// Grupo: G09
+// Trabalho: PI3-2026-T2-G09
+// RA: 25000684
+
 // Importa o pacote do Flutter com os widgets visuais
 import 'package:flutter/material.dart';
 
@@ -39,8 +44,11 @@ class NameField extends StatelessWidget {
         label: Text.rich(
           TextSpan(
             children: [
-              TextSpan(text: label ?? 'Nome'),
-              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+              TextSpan(text: label ?? 'Campo'),
+              const TextSpan(
+                text: ' *',
+                style: TextStyle(color: Colors.red),
+              ),
             ],
           ),
         ),
@@ -49,7 +57,10 @@ class NameField extends StatelessWidget {
         prefixIcon: const Icon(Icons.person_outline),
 
         // Reduz a área do ícone pra alinhar o erro com a borda da caixa
-        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 40,
+          minHeight: 40,
+        ),
 
         // Borda retangular ao redor
         border: const OutlineInputBorder(),
