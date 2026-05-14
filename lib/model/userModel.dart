@@ -19,8 +19,8 @@ class UserModel {
   String? profilePicUrl;
   bool twoFactorEnabled;
 
-  // Nome completo derivado (útil para exibição)
   String get nome => "$firstName $lastName".trim();
+  String get fullName => nome;
 
   UserModel({
     required this.uid,
