@@ -5,9 +5,10 @@
 
 // Importa o pacote básico de UI do Flutter
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 // Importa a paleta de cores oficial do módulo de startups para manter consistência visual
 import 'package:mesclainvest_f/startups/components/startup_colors.dart';
+import 'package:mesclainvest_f/components/currencyInputFormatter.dart';
+import 'package:mesclainvest_f/wallet/pages/operationExtract.dart';
 
 /// Exibe o histórico de transações recentes no estilo das telas de startups.
 /// Cada transação é um card com fundo cardBg, bordas sutis e valores coloridos.
@@ -58,18 +59,13 @@ class TransactionHistory extends StatelessWidget {
         const SizedBox(height: 12),
 
         // Lista de transações renderizada dinamicamente
-        ...transactions.map((tx) => _buildTransactionTile(tx)),
+        ...transactions.map((tx) => _buildTransactionTile(context, tx)),
       ],
     );
   }
 
   // Constrói um tile individual de transação no estilo cardBg das startups
-  Widget _buildTransactionTile(Map<String, dynamic> tx) {
-    final NumberFormat moneyFormatter = NumberFormat.currency(
-      locale: 'pt_BR',
-      symbol: 'R\$',
-    );
-
+  Widget _buildTransactionTile(BuildContext context, Map<String, dynamic> tx) {
     final bool isCredit = tx['isCredit'] as bool;
     // Verde para créditos, vermelho para débitos — mesmo padrão de cores das startups
     final Color valueColor = isCredit
@@ -86,7 +82,17 @@ class TransactionHistory extends StatelessWidget {
         // Borda sutil igual às telas de detalhes
         border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
-      child: Row(
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OperationExtractPage(tx: tx),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Row(
         children: [
           // Ícone dentro de círculo com cor de fundo translúcida
           Container(
@@ -126,7 +132,7 @@ class TransactionHistory extends StatelessWidget {
           ),
           // Valor com sinal de + ou - em verde/vermelho
           Text(
-            "${isCredit ? '+' : '-'} ${moneyFormatter.format(tx['value'] as double)}",
+            "${isCredit ? '+' : '-'} ${CurrencyInputFormatter.formatValue(tx['value'] as double)}",
             style: TextStyle(
               color: valueColor,
               fontSize: 14,
@@ -135,6 +141,6 @@ class TransactionHistory extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 }

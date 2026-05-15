@@ -15,7 +15,7 @@ import '../../components/textField.dart';
 import '../components/cpfField.dart';
 import '../components/phoneField.dart';
 import '../components/socialButton.dart';
-import '../components/successDialog.dart';
+import '../../components/successDialog.dart';
 
 // Services
 import '../services/signUpService.dart';

@@ -5,7 +5,7 @@
 
 // Importa o pacote básico de UI do Flutter
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:mesclainvest_f/components/currencyInputFormatter.dart';
 
 /// Card que exibe o saldo disponível do usuário com opção de ocultar o valor.
 /// Usa verde sólido (sem degradê) no estilo premium das telas de startups.
@@ -28,11 +28,6 @@ class SaldoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final NumberFormat moneyFormatter = NumberFormat.currency(
-      locale: 'pt_BR',
-      symbol: 'R\$',
-    );
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -115,7 +110,7 @@ class SaldoCard extends StatelessWidget {
           // ── Valor do saldo ────────────────────────────────────────────
           Text(
             isVisible
-                ? moneyFormatter.format(saldo) // Agora exibe: R$ 1.250,00
+                ? CurrencyInputFormatter.formatValue(saldo) // Agora exibe: R$ 1.250,00
                 : "R\$ ••••••",
             style: const TextStyle(
               fontSize: 36,

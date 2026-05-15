@@ -5,12 +5,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mesclainvest_f/enum/typeOfOperation.dart';
-import 'package:mesclainvest_f/counter/services/operationService.dart';
+import 'package:mesclainvest_f/wallet/services/operationService.dart';
 import 'package:mesclainvest_f/model/userModel.dart';
-import 'package:flutter/foundation.dart';
+import 'package:mesclainvest_f/components/successDialog.dart';
+import 'package:mesclainvest_f/components/currencyInputFormatter.dart';
 
 /// Tela de ação financeira inspirada no app da Nubank.
 /// Suporta Depósito, Saque e Transferência com validações de saldo e destinatário.
@@ -212,136 +212,35 @@ class _TransactionActionPageState extends State<TransactionActionPage>
 
   /// Exibe um diálogo de sucesso animado no estilo Nubank
   Future<void> _showSuccessDialog(double amount) async {
-    final NumberFormat moneyFormatter = NumberFormat.currency(
-      locale: 'pt_BR',
-      symbol: 'R\$',
-    );
-
     String successTitle;
     String successMessage;
     switch (widget.type) {
       case TypeOfOperation.deposito:
         successTitle = 'Depósito realizado!';
-        successMessage = 'Você depositou ${moneyFormatter.format(amount)}';
+        successMessage =
+            'Você depositou ${CurrencyInputFormatter.formatValue(amount)}';
         break;
       case TypeOfOperation.saque:
         successTitle = 'Saque realizado!';
-        successMessage = 'Você sacou ${moneyFormatter.format(amount)}';
+        successMessage =
+            'Você sacou ${CurrencyInputFormatter.formatValue(amount)}';
         break;
       case TypeOfOperation.transferencia:
         successTitle = 'Transferência enviada!';
         successMessage =
-            '${moneyFormatter.format(amount)} enviado para\n${_targetController.text.trim()}';
+            '${CurrencyInputFormatter.formatValue(amount)} enviado para\n${_targetController.text.trim()}';
         break;
       default:
         successTitle = 'Operação realizada!';
-        successMessage = 'Valor: ${moneyFormatter.format(amount)}';
+        successMessage = 'Valor: ${CurrencyInputFormatter.formatValue(amount)}';
     }
 
-    await showGeneralDialog(
+    await showSuccessDialog(
       context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black87,
-      transitionDuration: const Duration(milliseconds: 400),
-      pageBuilder: (context, anim1, anim2) {
-        return ScaleTransition(
-          scale: CurvedAnimation(parent: anim1, curve: Curves.elasticOut),
-          child: Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 32),
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: primaryGreen.withOpacity(0.3),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: primaryGreen.withOpacity(0.15),
-                    blurRadius: 40,
-                    spreadRadius: 5,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Ícone de sucesso com círculo verde
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: primaryGreen.withOpacity(0.15),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: primaryGreen.withOpacity(0.4),
-                        width: 2,
-                      ),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.check_rounded,
-                        color: primaryGreen,
-                        size: 36,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Título de sucesso
-                  Text(
-                    successTitle,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Descrição da operação
-                  Text(
-                    successMessage,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w400,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  // Botão de fechar
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryGreen,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Voltar para a Carteira',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+      title: successTitle,
+      message: successMessage,
+      buttonLabel: 'Voltar para a Carteira',
+      onPressed: () => Navigator.pop(context),
     );
   }
 
@@ -450,7 +349,7 @@ class _TransactionActionPageState extends State<TransactionActionPage>
                         const SizedBox(height: 8),
                         // Saldo atual do usuário
                         Text(
-                          'Saldo disponível: ${NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(widget.user.saldo)}',
+                          'Saldo disponível: ${CurrencyInputFormatter.formatValue(widget.user.saldo)}',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.white.withOpacity(0.5),
@@ -718,33 +617,6 @@ class _TransactionActionPageState extends State<TransactionActionPage>
           ),
         ),
       ),
-    );
-  }
-}
-
-class CurrencyInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    if (newValue.text.isEmpty) {
-      return newValue.copyWith(text: '');
-    }
-
-    // Remove tudo que não for número
-    String digits = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
-    if (digits.isEmpty) digits = '0';
-
-    double value = double.parse(digits) / 100;
-
-    // Formata o valor
-    final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-    String newText = formatter.format(value);
-
-    return TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: newText.length),
     );
   }
 }

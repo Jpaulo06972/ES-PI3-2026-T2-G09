@@ -8,19 +8,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mesclainvest_f/components/appBar.dart';
 import 'package:mesclainvest_f/components/navBar.dart';
 import 'package:mesclainvest_f/model/userModel.dart';
-import 'package:mesclainvest_f/counter/components/saldoCard.dart';
-import 'package:mesclainvest_f/counter/components/quickActions.dart';
-import 'package:mesclainvest_f/counter/components/quickRecharge.dart';
-import 'package:mesclainvest_f/counter/components/transactionHistory.dart';
-import 'package:mesclainvest_f/counter/components/animatedCrossFade.dart';
-import 'package:mesclainvest_f/counter/components/walletHeader.dart';
-import 'package:mesclainvest_f/counter/components/statementHeader.dart';
-import 'package:mesclainvest_f/counter/components/emptyTransactions.dart';
-import 'package:mesclainvest_f/counter/services/getListOperation.dart';
+import 'package:mesclainvest_f/wallet/components/saldoCard.dart';
+import 'package:mesclainvest_f/wallet/components/quickActions.dart';
+import 'package:mesclainvest_f/wallet/components/quickRecharge.dart';
+import 'package:mesclainvest_f/wallet/components/transactionHistory.dart';
+import 'package:mesclainvest_f/wallet/components/animatedCrossFade.dart';
+import 'package:mesclainvest_f/wallet/components/walletHeader.dart';
+import 'package:mesclainvest_f/wallet/components/statementHeader.dart';
+import 'package:mesclainvest_f/wallet/components/emptyTransactions.dart';
+import 'package:mesclainvest_f/wallet/services/getListOperation.dart';
 import 'package:mesclainvest_f/model/operations.dart';
 import 'package:mesclainvest_f/enum/typeOfOperation.dart';
-import 'package:mesclainvest_f/counter/services/operationService.dart';
-import 'package:mesclainvest_f/counter/pages/transactionActionPage.dart';
+import 'package:mesclainvest_f/wallet/services/operationService.dart';
+import 'package:mesclainvest_f/wallet/pages/transactionActionPage.dart';
+import 'package:mesclainvest_f/wallet/pages/statementPage.dart';
 
 /// Tela principal da Carteira Digital.
 /// Permite gerenciar o saldo, realizar depósitos, pagamentos e visualizar o histórico.
@@ -381,7 +382,17 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
             // Componente que renderiza a lista de transações formatada
             TransactionHistory(
               transactions: filtered,
-              onViewAll: () => _showSnackBar("Histórico completo em breve!"),
+              onViewAll: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StatementPage(user: userModel),
+                  ),
+                ).then((_) {
+                  _fetchOperations();
+                  _refreshUserBalance();
+                });
+              },
             ),
 
           const SizedBox(height: 30),

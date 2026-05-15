@@ -5,7 +5,6 @@
 
 // Importa o pacote básico de UI do Flutter para usar widgets como Scaffold e Column
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 // Importa os componentes de cabeçalho e barra de navegação personalizados para manter a identidade visual
 import 'package:mesclainvest_f/components/appBar.dart';
@@ -15,6 +14,7 @@ import 'package:mesclainvest_f/dashboard/components/dashboardPainel.dart';
 
 // Importa o modelo de usuário para acessar os dados do usuário logado, como nome e saldo
 import 'package:mesclainvest_f/model/userModel.dart';
+import 'package:mesclainvest_f/components/currencyInputFormatter.dart';
 
 // Tela principal (Home) do aplicativo, exibida após o login com sucesso
 class HomePage extends StatefulWidget {
@@ -46,11 +46,6 @@ class _HomePageState extends State<HomePage> {
   // Método principal que constrói a interface da tela
   @override
   Widget build(BuildContext context) {
-    final NumberFormat moneyFormatter = NumberFormat.currency(
-      locale: 'pt_BR',
-      symbol: 'R\$',
-    );
-
     // Scaffold é a estrutura base da tela que organiza cabeçalho, corpo e rodapé
     return Scaffold(
       // Barra superior personalizada (CustomHeader) que exibe informações do usuário no topo
@@ -91,7 +86,7 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 4),
 
                   Text(
-                    _isVisible ? moneyFormatter.format(saldo) : "R\$ ••••••",
+                    _isVisible ? CurrencyInputFormatter.formatValue(saldo) : "R\$ ••••••",
                     style: const TextStyle(
                       fontSize:
                           32, // Ajustei levemente para caber melhor na linha

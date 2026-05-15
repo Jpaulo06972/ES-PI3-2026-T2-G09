@@ -50,7 +50,9 @@ class _StartupsDetailsState extends State<StartupsDetails>
   Future<void> _loadCoverImage() async {
     if (widget.storagePath == null || widget.storagePath!.isEmpty) return;
     try {
-      final url = await FirebaseStorage.instance.ref(widget.storagePath!).getDownloadURL();
+      final url = await FirebaseStorage.instance
+          .ref(widget.storagePath!)
+          .getDownloadURL();
       if (mounted) setState(() => _coverImageUrl = url);
     } catch (e) {
       debugPrint('Erro ao carregar imagem de capa: $e');
@@ -66,8 +68,10 @@ class _StartupsDetailsState extends State<StartupsDetails>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: StartupColors.pageBg,
-      bottomNavigationBar: CustomNavBar(userModel: widget.userModel, currentIndex: 1),
+      bottomNavigationBar: CustomNavBar(
+        userModel: widget.userModel,
+        currentIndex: 1,
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -91,7 +95,10 @@ class _StartupsDetailsState extends State<StartupsDetails>
                     return SociosTab(founders: founders);
                   }),
                   QATab(startupId: widget.startupId, service: _service),
-                  EventosTab(startupName: widget.startupName, service: _service),
+                  EventosTab(
+                    startupName: widget.startupName,
+                    service: _service,
+                  ),
                 ],
               ),
             ),
@@ -106,7 +113,9 @@ class _StartupsDetailsState extends State<StartupsDetails>
       future: _detailsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: StartupColors.green));
+          return const Center(
+            child: CircularProgressIndicator(color: StartupColors.green),
+          );
         }
         if (snapshot.hasError) {
           return Center(
@@ -143,7 +152,10 @@ class _StartupsDetailsState extends State<StartupsDetails>
         labelColor: Colors.white,
         unselectedLabelColor: Colors.white38,
         labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+        ),
         dividerColor: Colors.transparent,
         tabs: const [
           Tab(text: 'Sobre'),
