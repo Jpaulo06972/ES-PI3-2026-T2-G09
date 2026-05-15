@@ -11,7 +11,7 @@ import 'package:mesclainvest_f/dashboard/pages/home.dart';
 import 'package:mesclainvest_f/dashboard/pages/notification.dart';
 import 'package:mesclainvest_f/startups/pages/startupsList.dart';
 // Importa a tela de carteira/recarga para navegação
-import 'package:mesclainvest_f/counter/pages/rechargeMoney.dart';
+import 'package:mesclainvest_f/wallet/pages/rechargeMoney.dart';
 import 'package:mesclainvest_f/profile/profile.dart';
 
 // Importa o modelo de usuário para passar os dados entre as telas
