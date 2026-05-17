@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter run:*)",
+      "Bash(flutter devices:*)",
+      "Bash(flutter emulators:*)",
+      "Bash(flutter doctor:*)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(flutter pub *)",
+      "Bash(firebase functions:delete sendPasswordResetCode resetPassword --region us-central1 --force)",
+      "Bash(firebase deploy *)",
+      "Bash(xargs cat *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Microsoft\\\\Desktop\\\\mesclainvest_f\\\\ES-PI3-2026-T2-G09\\\\lib\\\\startups\\\\\" -Recurse -File | Select-Object FullName)",
+      "Bash(dart analyze *)"
+    ]
+  }
+}
