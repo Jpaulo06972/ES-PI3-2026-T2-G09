@@ -11,6 +11,8 @@ import 'package:mesclainvest_f/wallet/services/operationService.dart';
 import 'package:mesclainvest_f/model/userModel.dart';
 import 'package:mesclainvest_f/components/successDialog.dart';
 import 'package:mesclainvest_f/components/currencyInputFormatter.dart';
+import 'package:mesclainvest_f/wallet/components/transactionBottomBar.dart';
+import 'package:mesclainvest_f/wallet/components/transactionDetailRow.dart';
 
 /// Tela de ação financeira inspirada no app da Nubank.
 /// Suporta Depósito, Saque e Transferência com validações de saldo e destinatário.
@@ -119,7 +121,6 @@ class _TransactionActionPageState extends State<TransactionActionPage>
       '',
     );
     final double amount = digits.isEmpty ? 0.0 : double.parse(digits) / 100;
-    //debugPrint('[TransactionAction] Valor parseado: $amount (digits: $digits, text: ${_amountController.text})');
 
     if (amount <= 0) {
       _showSnackBar('Insira um valor válido', isError: true);
@@ -163,9 +164,6 @@ class _TransactionActionPageState extends State<TransactionActionPage>
             widget.user.saldo += amount;
           } else {
             widget.user.saldo -= amount;
-            // Em caso de transferência, poderíamos atualizar o saldo do destinatário
-            // Mas assumimos que se a function não faz, ou faz em background,
-            // garantimos pelo menos o nosso saldo aqui.
           }
 
           // Atualiza o saldo no banco de dados (Firestore)
@@ -175,17 +173,10 @@ class _TransactionActionPageState extends State<TransactionActionPage>
                 .doc(widget.user.uid)
                 .update({
                   'balance': widget.user.saldo,
-                  'saldo': widget
-                      .user
-                      .saldo, // garantindo atualização nas chaves usadas
+                  'saldo': widget.user.saldo,
                 });
-            //debugPrint(
-            //'[TransactionAction] Saldo atualizado no Firestore para: ${widget.user.saldo}',
-            //);
           } catch (e) {
-            //debugPrint(
-            //'[TransactionAction] Erro ao atualizar saldo no Firestore: $e',
-            //);
+            // Erro silencioso na atualização do Firestore
           }
 
           // Mostra a tela de sucesso antes de voltar
@@ -275,33 +266,6 @@ class _TransactionActionPageState extends State<TransactionActionPage>
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         duration: const Duration(seconds: 3),
       ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value, IconData icon) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white54, fontSize: 14),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        Icon(icon, color: Colors.white54, size: 22),
-      ],
     );
   }
 
@@ -503,27 +467,27 @@ class _TransactionActionPageState extends State<TransactionActionPage>
                         ],
 
                         // ── Detalhes adicionais ──────────────────────────────────
-                        _buildDetailRow(
-                          'Quando',
-                          'Agora, sem repetir',
-                          Icons.calendar_today_outlined,
+                        TransactionDetailRow(
+                          label: 'Quando',
+                          value: 'Agora, sem repetir',
+                          icon: Icons.calendar_today_outlined,
                         ),
                         const SizedBox(height: 24),
-                        _buildDetailRow(
-                          'Via',
-                          widget.type == TypeOfOperation.transferencia
+                        TransactionDetailRow(
+                          label: 'Via',
+                          value: widget.type == TypeOfOperation.transferencia
                               ? 'Transferência interna'
                               : 'Saldo do app',
-                          Icons.account_balance_wallet_outlined,
+                          icon: Icons.account_balance_wallet_outlined,
                         ),
                         const SizedBox(height: 24),
 
                         // "Detalhes" expandable or just message
                         if (widget.type == TypeOfOperation.transferencia) ...[
-                          _buildDetailRow(
-                            'Mensagem',
-                            'Adicionar mensagem',
-                            Icons.chat_bubble_outline_rounded,
+                          TransactionDetailRow(
+                            label: 'Mensagem',
+                            value: 'Adicionar mensagem',
+                            icon: Icons.chat_bubble_outline_rounded,
                           ),
                           const SizedBox(height: 24),
                         ],
@@ -533,84 +497,12 @@ class _TransactionActionPageState extends State<TransactionActionPage>
                 ),
 
                 // ── Bottom Bar ────────────────────────────────────────────────
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
-                  ),
-                  decoration: const BoxDecoration(
-                    border: Border(top: BorderSide(color: Colors.white12)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ValueListenableBuilder<TextEditingValue>(
-                            valueListenable: _amountController,
-                            builder: (context, value, child) {
-                              return Text(
-                                value.text.isEmpty ? 'R\$ 0,00' : value.text,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Valor Total',
-                            style: TextStyle(
-                              color: Colors.white54,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                      ScaleTransition(
-                        scale: _buttonScale,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleConfirm,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryGreen,
-                            foregroundColor: Colors.white,
-                            disabledBackgroundColor: primaryGreen.withOpacity(
-                              0.25,
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32,
-                              vertical: 16,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                30,
-                              ), // pill shape
-                            ),
-                            elevation: 0,
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(
-                                  _buttonLabel,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
+                TransactionBottomBar(
+                  amountController: _amountController,
+                  buttonScale: _buttonScale,
+                  isLoading: _isLoading,
+                  buttonLabel: _buttonLabel,
+                  onConfirm: _handleConfirm,
                 ),
               ],
             ),
