@@ -8,10 +8,7 @@ import 'package:mesclainvest_f/model/userModel.dart';
 class ProfilePage extends StatefulWidget {
   final UserModel userModel;
 
-  const ProfilePage({
-    super.key,
-    required this.userModel,
-  });
+  const ProfilePage({super.key, required this.userModel});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -43,18 +40,10 @@ class _ProfilePageState extends State<ProfilePage> {
     firstNameController = TextEditingController(
       text: widget.userModel.firstName,
     );
-    lastNameController = TextEditingController(
-      text: widget.userModel.lastName,
-    );
-    cpfController = TextEditingController(
-      text: widget.userModel.cpf,
-    );
-    telefoneController = TextEditingController(
-      text: widget.userModel.telefone,
-    );
-    emailController = TextEditingController(
-      text: widget.userModel.email,
-    );
+    lastNameController = TextEditingController(text: widget.userModel.lastName);
+    cpfController = TextEditingController(text: widget.userModel.cpf);
+    telefoneController = TextEditingController(text: widget.userModel.telefone);
+    emailController = TextEditingController(text: widget.userModel.email);
     dataNascimentoController = TextEditingController(
       text: widget.userModel.dataNascimento,
     );
@@ -215,9 +204,7 @@ class _ProfilePageState extends State<ProfilePage> {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.08),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
       ),
       child: Row(
         children: [
@@ -255,10 +242,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 Text(
                   widget.userModel.email,
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.white60, fontSize: 14),
                 ),
 
                 const SizedBox(height: 10),
@@ -301,79 +285,15 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildInfoCard({
-    required List<Widget> children,
-  }) {
+  Widget _buildInfoCard({required List<Widget> children}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.08),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
       ),
-      child: Column(
-        children: children,
-      ),
-    );
-  }
-
-  Widget _buildInfoField({
-    required String label,
-    required String value,
-    required IconData icon,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(
-          color: inputColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.06),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: Colors.white54,
-              size: 21,
-            ),
-
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      color: Colors.white38,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    value.isEmpty ? 'Não informado' : value,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: Column(children: children),
     );
   }
 
@@ -398,10 +318,7 @@ class _ProfilePageState extends State<ProfilePage> {
               color: primaryGreen.withOpacity(0.15),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
-              Icons.security_outlined,
-              color: primaryGreen,
-            ),
+            child: const Icon(Icons.security_outlined, color: primaryGreen),
           ),
 
           const SizedBox(width: 14),
@@ -453,6 +370,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
   void _saveProfileChanges() {
     setState(() {
       widget.userModel.firstName = firstNameController.text.trim();
@@ -473,9 +391,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         backgroundColor: primaryGreen,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -503,7 +419,9 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           backgroundColor: Colors.red[700],
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     } finally {
@@ -543,47 +461,47 @@ class _ProfilePageState extends State<ProfilePage> {
             Expanded(
               child: isEditing
                   ? TextField(
-                controller: controller,
-                keyboardType: keyboardType,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-                decoration: InputDecoration(
-                  labelText: label,
-                  labelStyle: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 12,
-                  ),
-                  border: InputBorder.none,
-                  isDense: true,
-                ),
-              )
+                      controller: controller,
+                      keyboardType: keyboardType,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: label,
+                        labelStyle: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 12,
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                      ),
+                    )
                   : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      color: Colors.white38,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white38,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          controller.text.isEmpty
+                              ? 'Não informado'
+                              : controller.text,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    controller.text.isEmpty
-                        ? 'Não informado'
-                        : controller.text,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
