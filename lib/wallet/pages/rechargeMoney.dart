@@ -16,8 +16,8 @@ import 'package:mesclainvest_f/wallet/components/animatedCrossFade.dart';
 import 'package:mesclainvest_f/wallet/components/walletHeader.dart';
 import 'package:mesclainvest_f/wallet/components/statementHeader.dart';
 import 'package:mesclainvest_f/wallet/components/emptyTransactions.dart';
+import 'package:mesclainvest_f/wallet/components/operationMapper.dart';
 import 'package:mesclainvest_f/wallet/services/getListOperation.dart';
-import 'package:mesclainvest_f/model/operations.dart';
 import 'package:mesclainvest_f/enum/typeOfOperation.dart';
 import 'package:mesclainvest_f/wallet/services/operationService.dart';
 import 'package:mesclainvest_f/wallet/pages/transactionActionPage.dart';
@@ -159,100 +159,15 @@ class _RechargeMoneyPageState extends State<RechargeMoneyPage> {
         userId: userModel.uid,
       );
 
-      // Debug para você ver no console se os dados estão chegando
-      //debugPrint(
-      //"Extrato carregado: ${rawData.length} operações encontradas para o UID: ${userModel.uid}",
-      //);
+      // Ordena por data: mais recente primeiro
+      OperationMapper.sortByDateDesc(rawData);
 
-      // --- Ordenação Manual: Garante que o mais recente apareça primeiro ---
-      rawData.sort((a, b) {
-        final dateA = a['createdAt'];
-        final dateB = b['createdAt'];
-
-        int secA = 0;
-        if (dateA is Timestamp)
-          secA = dateA.seconds;
-        else if (dateA is Map)
-          secA = (dateA['_seconds'] ?? dateA['seconds'] ?? 0);
-
-        int secB = 0;
-        if (dateB is Timestamp)
-          secB = dateB.seconds;
-        else if (dateB is Map)
-          secB = (dateB['_seconds'] ?? dateB['seconds'] ?? 0);
-
-        return secB.compareTo(secA);
-      });
-
-      final mapped = rawData.map((data) {
-        final op = OperationModel.fromMap(data['id'] ?? '', data);
-
-        // Identificação de quem é quem na transação
-        bool souDestinatario = data['targetUserId'] == userModel.uid;
-        bool souAutor =
-            (data['authorUid'] ?? data['authorID']) == userModel.uid;
-
-        IconData icon = Icons.help_outline;
-        String title = op.text ?? 'Operação';
-        bool isCredit = false;
-
-        // PRIORIDADE: Se eu sou o destinatário e não o autor, é um RECEBIMENTO (Crédito)
-        if (souDestinatario && !souAutor) {
-          isCredit = true;
-          icon = Icons.move_to_inbox_rounded;
-          title = op.text ?? 'Transferência Recebida';
-        } else {
-          // Lógica normal para operações que EU iniciei
-          switch (op.operation) {
-            case TypeOfOperation.deposito:
-              icon = Icons.add_circle;
-              title = op.text ?? 'Depósito Realizado';
-              isCredit = true;
-              break;
-            case TypeOfOperation.pagar:
-              icon = Icons.payment_rounded;
-              title = op.text ?? 'Pagamento Realizado';
-              isCredit = false;
-              break;
-            case TypeOfOperation.transferencia:
-              icon = Icons.swap_horiz_rounded;
-              title = op.text ?? 'Transferência Enviada';
-              isCredit = false;
-              break;
-            case TypeOfOperation.saque:
-              icon = Icons.account_balance_wallet_rounded;
-              title = op.text ?? 'Saque Realizado';
-              isCredit = false;
-              break;
-            case TypeOfOperation.investimento:
-              icon = Icons.rocket_launch;
-              title = op.text ?? 'Investimento Efetuado';
-              isCredit = false;
-              break;
-          }
-        }
-
-        // Determina o tipo correto para filtro:
-        // - Transferências recebidas mantêm tipo 'transferencia' (antes forçava 'deposito')
-        // - Demais operações usam o tipo real da operação
-        String filterType;
-        if (souDestinatario && !souAutor) {
-          filterType =
-              'transferencia'; // Recebimento aparece no filtro de transferências
-        } else {
-          filterType = op.operation.name;
-        }
-
-        return {
-          'icon': icon,
-          'title': title,
-          'date': op.createdAt ?? 'Data não informada',
-          'value': op.amount,
-          'isCredit': isCredit,
-          'type': filterType,
-          'id': op.id,
-        };
-      }).toList();
+      // Mapeia os dados brutos para o formato visual usando ícones da carteira principal
+      final mapped = OperationMapper.mapOperations(
+        rawData: rawData,
+        currentUserId: userModel.uid,
+        useStatementIcons: false,
+      );
 
       setState(() {
         _transactions = mapped;
