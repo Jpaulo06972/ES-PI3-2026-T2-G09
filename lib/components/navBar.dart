@@ -7,8 +7,8 @@
 import 'package:flutter/material.dart';
 
 // Importa as páginas que serão navegadas pela barra inferior
+import 'package:mesclainvest_f/counter/pages/counterPage.dart';
 import 'package:mesclainvest_f/dashboard/pages/home.dart';
-import 'package:mesclainvest_f/dashboard/pages/notification.dart';
 import 'package:mesclainvest_f/startups/pages/startupsList.dart';
 // Importa a tela de carteira/recarga para navegação
 import 'package:mesclainvest_f/wallet/pages/rechargeMoney.dart';
@@ -89,19 +89,18 @@ class CustomNavBar extends StatelessWidget {
             },
           ),
 
-          // Item 3: Balcão (tela de compra e venda)
+          // Item 3: Negociar (balcão de compra e venda de tokens)
           _buildNavItem(
             context,
             index: 2,
             icon: Icons.candlestick_chart_outlined,
             activeIcon: Icons.candlestick_chart,
-            label: 'Balcão',
+            label: 'Negociar',
             onTap: () {
-              // Navega para a tela de balcão (temporariamente usa NotificationPage)
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const NotificationPage(),
+                  builder: (context) => CounterPage(user: userModel),
                 ),
               );
             },
