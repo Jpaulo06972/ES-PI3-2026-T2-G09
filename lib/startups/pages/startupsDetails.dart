@@ -59,6 +59,12 @@ class _StartupsDetailsState extends State<StartupsDetails>
     }
   }
 
+  void _refreshDetails() {
+    setState(() {
+      _detailsFuture = _service.getStartupDetails(widget.startupId);
+    });
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -87,7 +93,11 @@ class _StartupsDetailsState extends State<StartupsDetails>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _detailsBuilder((data) => SobreTab(data: data)),
+                  _detailsBuilder((data) => SobreTab(
+                        data: data,
+                        userModel: widget.userModel,
+                        onRefresh: _refreshDetails,
+                      )),
                   _detailsBuilder((data) {
                     final founders = (data['founders'] as List<dynamic>? ?? [])
                         .map((e) => Map<String, dynamic>.from(e as Map))

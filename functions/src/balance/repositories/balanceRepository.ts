@@ -10,7 +10,7 @@ import {
 } from "../types";
 
 import {db} from "../../shared/firebase";
-import {FieldValue, Filter} from "firebase-admin/firestore";
+import {FieldValue} from "firebase-admin/firestore";
 
 
 const operationsCollection = db.collection("operations");

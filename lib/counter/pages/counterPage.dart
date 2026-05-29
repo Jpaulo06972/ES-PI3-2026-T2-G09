@@ -9,6 +9,8 @@ import 'package:mesclainvest_f/counter/services/counterService.dart';
 import 'package:mesclainvest_f/model/offerModel.dart';
 import 'package:mesclainvest_f/model/userModel.dart';
 import 'package:mesclainvest_f/startups/components/startup_colors.dart';
+import 'package:mesclainvest_f/startups/services/getStartup.dart';
+
 
 class CounterPage extends StatefulWidget {
   final UserModel user;
@@ -21,6 +23,13 @@ class CounterPage extends StatefulWidget {
 class _CounterPageState extends State<CounterPage> {
   int _tabIndex = 0; // 0=Comprar 1=Vender 2=Minhas Ordens
   final CounterService _service = CounterService();
+
+  // ── Estado assíncrono do Balcão ─────────────────────────────────────────
+  List<Map<String, String>> _startupsList = [];
+  List<Map<String, String>> _sellStartups = [];
+  List<OfferModel> _myOffers = [];
+  double _userTokensBalance = 0.0;
+  bool _isLoadingOffers = false;
 
   // ── Estado da aba Comprar ──────────────────────────────────────────────
   String? _buyStartupId;
@@ -40,7 +49,9 @@ class _CounterPageState extends State<CounterPage> {
   @override
   void initState() {
     super.initState();
+    _loadStartups();
   }
+
 
   @override
   void dispose() {
@@ -50,40 +61,93 @@ class _CounterPageState extends State<CounterPage> {
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
+  Future<void> _loadStartups() async {
+    try {
+      final list = await StartupService().listStartups();
+      if (mounted) {
+        setState(() {
+          _startupsList = list.map((s) => {
+            'id': (s['id'] ?? '').toString(),
+            'nome': (s['name'] ?? '').toString(),
+          }).toList();
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _startupsList = CounterService.allStartups;
+        });
+      }
+    }
+  }
+
+  void _loadSellStartups() async {
+    final list = await _service.getStartupsWithUserTokens();
+    if (mounted) {
+      setState(() {
+        _sellStartups = list;
+      });
+    }
+  }
+
+  void _loadUserOffers() async {
+    setState(() => _isLoadingOffers = true);
+    final list = await _service.getUserOffers(widget.user.uid);
+    if (mounted) {
+      setState(() {
+        _myOffers = list;
+        _isLoadingOffers = false;
+      });
+    }
+  }
+
   void _onBuyStartupSelected(String id, String nome) {
     setState(() {
       _buyStartupId = id;
       _buyStartupNome = nome;
-      _buyVendaOffers = _service.getVendaForStartup(id);
-      _buyCompraOffers = _service.getCompraForStartup(id);
     });
+    _refreshBuyBook();
   }
 
-  void _onSellStartupSelected(String id, String nome) {
+  void _onSellStartupSelected(String id, String nome) async {
     _sellPrecoCtrl.text = '1,00';
     setState(() {
       _sellStartupId = id;
       _sellStartupNome = nome;
       _sellQtd = 1;
-      _sellVendaOffers = _service.getVendaForStartup(id);
-      _sellCompraOffers = _service.getCompraForStartup(id);
     });
+
+    final tokens = await _service.getUserTokens(id);
+    if (mounted) {
+      setState(() {
+        _userTokensBalance = tokens;
+      });
+    }
+    _refreshSellBook();
   }
 
-  void _refreshBuyBook() {
+  void _refreshBuyBook() async {
     if (_buyStartupId == null) return;
-    setState(() {
-      _buyVendaOffers = _service.getVendaForStartup(_buyStartupId!);
-      _buyCompraOffers = _service.getCompraForStartup(_buyStartupId!);
-    });
+    final venda = await _service.getVendaForStartup(_buyStartupId!);
+    final compra = await _service.getCompraForStartup(_buyStartupId!);
+    if (mounted) {
+      setState(() {
+        _buyVendaOffers = venda;
+        _buyCompraOffers = compra;
+      });
+    }
   }
 
-  void _refreshSellBook() {
+  void _refreshSellBook() async {
     if (_sellStartupId == null) return;
-    setState(() {
-      _sellVendaOffers = _service.getVendaForStartup(_sellStartupId!);
-      _sellCompraOffers = _service.getCompraForStartup(_sellStartupId!);
-    });
+    final venda = await _service.getVendaForStartup(_sellStartupId!);
+    final compra = await _service.getCompraForStartup(_sellStartupId!);
+    if (mounted) {
+      setState(() {
+        _sellVendaOffers = venda;
+        _sellCompraOffers = compra;
+      });
+    }
   }
 
   double get _sellPreco {
@@ -109,7 +173,14 @@ class _CounterPageState extends State<CounterPage> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: CounterToggle(
                 selectedIndex: _tabIndex,
-                onChanged: (i) => setState(() => _tabIndex = i),
+                onChanged: (i) {
+                  setState(() => _tabIndex = i);
+                  if (i == 1) {
+                    _loadSellStartups();
+                  } else if (i == 2) {
+                    _loadUserOffers();
+                  }
+                },
                 tabs: const ['Comprar', 'Vender', 'Minhas Ordens'],
               ),
             ),
@@ -176,7 +247,7 @@ class _CounterPageState extends State<CounterPage> {
         const _FieldLabel(text: 'Selecione a startup'),
         const SizedBox(height: 8),
         _buildStartupDropdown(
-          startups: CounterService.allStartups,
+          startups: _startupsList.isEmpty ? CounterService.allStartups : _startupsList,
           selectedId: _buyStartupId,
           onSelected: _onBuyStartupSelected,
         ),
@@ -408,13 +479,21 @@ class _CounterPageState extends State<CounterPage> {
                         elevation: 0,
                       ),
                       onPressed: hasSaldo
-                          ? () {
+                          ? () async {
                               Navigator.pop(ctx);
-                              _service.addUserTokens(
-                                  offer.startupId, qty);
-                              _refreshBuyBook();
-                              _showSnackBar(
-                                  'Compra de ${qty.toInt()} tokens de ${offer.startupNome} realizada!');
+                              final result = await _service.buyTokens(offer.startupId, qty);
+                              if (result['success'] == true) {
+                                if (mounted) {
+                                  setState(() {
+                                    widget.user.saldo = result['updatedBalance'];
+                                  });
+                                }
+                                _refreshBuyBook();
+                                _showSnackBar(
+                                    'Compra de ${qty.toInt()} tokens de ${offer.startupNome} realizada!');
+                              } else {
+                                _showSnackBar(result['error'] ?? 'Erro ao processar compra.', isError: true);
+                              }
                             }
                           : null,
                       child: Text(
@@ -441,7 +520,6 @@ class _CounterPageState extends State<CounterPage> {
   // Fluxo: seleciona startup (onde tem tokens) → vê tabela → define qtd + preço → publica
 
   Widget _buildVenderTab() {
-    final startupsComTokens = _service.getStartupsWithUserTokens();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
@@ -450,10 +528,10 @@ class _CounterPageState extends State<CounterPage> {
         const _FieldLabel(text: 'Startup onde você possui tokens'),
         const SizedBox(height: 8),
         _buildStartupDropdown(
-          startups: startupsComTokens,
+          startups: _sellStartups,
           selectedId: _sellStartupId,
           onSelected: _onSellStartupSelected,
-          hint: startupsComTokens.isEmpty
+          hint: _sellStartups.isEmpty
               ? 'Você não possui tokens'
               : 'Selecione a startup',
         ),
@@ -482,7 +560,7 @@ class _CounterPageState extends State<CounterPage> {
                     color: Color(0xFF1A9B5F), size: 16),
                 const SizedBox(width: 6),
                 Text(
-                  'Seus tokens: ${_service.getUserTokens(_sellStartupId!).toInt()} $_sellStartupNome',
+                  'Seus tokens: $_userTokensBalance $_sellStartupNome',
                   style: const TextStyle(
                     color: Color(0xFF1A9B5F),
                     fontSize: 13,
@@ -512,7 +590,7 @@ class _CounterPageState extends State<CounterPage> {
   }
 
   Widget _buildSellForm() {
-    final userTokens = _service.getUserTokens(_sellStartupId!);
+    final userTokens = _userTokensBalance;
     final total = _sellQtd * _sellPreco;
     final enoughTokens = _sellQtd <= userTokens;
 
@@ -668,9 +746,9 @@ class _CounterPageState extends State<CounterPage> {
     );
   }
 
-  void _publishSellOffer() {
+  void _publishSellOffer() async {
     final offer = OfferModel(
-      id: 'sell_${DateTime.now().millisecondsSinceEpoch}',
+      id: '',
       startupId: _sellStartupId!,
       startupNome: _sellStartupNome!,
       vendedorId: widget.user.uid,
@@ -681,31 +759,47 @@ class _CounterPageState extends State<CounterPage> {
       criadoEm: DateTime.now(),
     );
 
-    _service.addOffer(offer);
-    _refreshSellBook();
-    _sellPrecoCtrl.text = '1,00';
-    setState(() {
-      _sellQtd = 1;
-    });
+    final success = await _service.addOffer(offer);
 
-    _showSnackBar(
-        'Oferta de ${offer.quantidade.toInt()} tokens publicada na tabela!');
+    if (success) {
+      _refreshSellBook();
+      _sellPrecoCtrl.text = '1,00';
+      final publishedQty = _sellQtd; // Guarda a quantidade publicada antes de resetar
+      setState(() {
+        _sellQtd = 1;
+      });
+      _showSnackBar(
+          'Oferta de ${publishedQty.toInt()} tokens publicada na tabela!');
+    } else {
+      _showSnackBar('Erro ao publicar oferta de venda.', isError: true);
+    }
   }
 
   // ── Aba MINHAS ORDENS ────────────────────────────────────────────────────
 
   Widget _buildMinhasOrdensTab() {
-    final ordens = _service.getUserOffers(widget.user.uid);
-
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       physics: const BouncingScrollPhysics(),
       children: [
         const _SectionLabel(text: 'MINHAS ORDENS'),
         const SizedBox(height: 12),
-        if (ordens.isEmpty)
-          const _EmptyPrompt(message: 'Você ainda não tem ordens publicadas'),
-        ...ordens.map((o) => _MyOrderCard(offer: o)),
+        if (_isLoadingOffers)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: CircularProgressIndicator(color: Color(0xFF107649)),
+            ),
+          )
+        else if (_myOffers.isEmpty)
+          const _EmptyPrompt(message: 'Você ainda não tem ordens publicadas')
+        else
+          ..._myOffers.map((o) => GestureDetector(
+                onTap: o.status == OrderStatus.aberta
+                    ? () => _showCancelDialog(o)
+                    : null,
+                child: _MyOrderCard(offer: o),
+              )),
       ],
     );
   }
@@ -760,13 +854,47 @@ class _CounterPageState extends State<CounterPage> {
     );
   }
 
-  void _showSnackBar(String message) {
+  void _showCancelDialog(OfferModel offer) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF262629),
+        title: const Text('Cancelar Oferta', style: TextStyle(color: Colors.white)),
+        content: Text(
+            'Deseja realmente cancelar sua oferta de ${offer.quantidade.toInt()} tokens de ${offer.startupNome}?',
+            style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Voltar', style: TextStyle(color: Colors.white38)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE74C3C)),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await _service.cancelOffer(offer.id);
+              if (success) {
+                _loadUserOffers();
+                _showSnackBar('Oferta cancelada com sucesso!');
+              } else {
+                _showSnackBar('Erro ao cancelar oferta.', isError: true);
+              }
+            },
+            child: const Text('Confirmar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message,
             style: const TextStyle(
                 color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFF107649),
+        backgroundColor: isError ? const Color(0xFFE74C3C) : const Color(0xFF107649),
         behavior: SnackBarBehavior.floating,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

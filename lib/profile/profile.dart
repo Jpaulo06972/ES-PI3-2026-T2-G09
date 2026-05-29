@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mesclainvest_f/components/appBar.dart';
 import 'package:mesclainvest_f/components/navBar.dart';
 import 'package:mesclainvest_f/model/userModel.dart';
+import 'package:mesclainvest_f/profile/pages/seller_approval_screen.dart';
 
 class ProfilePage extends StatefulWidget {
   final UserModel userModel;
@@ -179,6 +180,14 @@ class _ProfilePageState extends State<ProfilePage> {
 
             const SizedBox(height: 24),
 
+            _buildSectionTitle('NEGOCIAÇÕES'),
+
+            const SizedBox(height: 12),
+
+            _buildPendingApprovalsCard(),
+
+            const SizedBox(height: 24),
+
             _buildSectionTitle('SEGURANÇA'),
 
             const SizedBox(height: 12),
@@ -294,6 +303,67 @@ class _ProfilePageState extends State<ProfilePage> {
         border: Border.all(color: Colors.white.withOpacity(0.08)),
       ),
       child: Column(children: children),
+    );
+  }
+
+  Widget _buildPendingApprovalsCard() {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SellerApprovalScreen(userModel: widget.userModel),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: primaryGreen.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.pending_actions_rounded, color: primaryGreen),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Aprovações Pendentes',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Gerencie propostas de lances de compra abaixo do mercado.',
+                    style: TextStyle(
+                      color: Colors.white60,
+                      fontSize: 13,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: primaryGreen),
+          ],
+        ),
+      ),
     );
   }
 

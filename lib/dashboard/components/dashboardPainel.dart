@@ -1,45 +1,88 @@
-// Aluno: João Paulo Ferreira
-// Grupo: G09
-// Trabalho: PI3-2026-T2-G09
-// RA: 25000684
-
-// Importa a biblioteca fl_chart que permite criar gráficos bonitos no Flutter
 import 'package:fl_chart/fl_chart.dart';
-
-// Importa o pacote básico de UI do Flutter
 import 'package:flutter/material.dart';
+import 'package:mesclainvest_f/counter/services/counterService.dart';
+import 'package:mesclainvest_f/startups/services/getStartup.dart';
 
-// Widget que mostra o gráfico de evolução da carteira de investimentos do usuário
-// Ele tem um seletor de período (1M, 6M, 1A, Tudo) e uma linha de benchmark
-// para comparar o desempenho da carteira com uma referência de mercado
 class DashboardChart extends StatefulWidget {
   const DashboardChart({super.key});
 
-  // Cria o estado do widget — precisa ser StatefulWidget porque o período muda
   @override
   State<DashboardChart> createState() => _DashboardChartState();
 }
 
-// Estado do gráfico — controla qual período está selecionado e renderiza os dados
 class _DashboardChartState extends State<DashboardChart> {
-  // Guarda qual período o usuário escolheu. Começa com "1A" (1 Ano)
   String _selectedPeriod = '1A';
-
-  // As opções de período que aparecem nos botões
   final List<String> _periods = ['1M', '6M', '1A', 'Tudo'];
 
-  // Cor verde principal do app MesclaInvest — usada nos botões selecionados
   static const Color _greenAccent = Color(0xFF107649);
-
-  // Verde um pouco mais claro — usada na linha do gráfico e na bolinha do final
   static const Color _greenLight = Color(0xFF1A9B5F);
 
-  // Retorna os pontos (x, y) da linha principal do gráfico
-  // Cada período tem dados diferentes para simular a evolução do investimento
+  List<FlSpot> _apiSpots = [];
+  List<String> _apiDates = [];
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPriceHistory();
+  }
+
+  void _loadPriceHistory() async {
+    setState(() => _isLoading = true);
+    try {
+      final startups = await StartupService().listStartups();
+      if (startups.isEmpty) {
+        setState(() => _isLoading = false);
+        return;
+      }
+      final startupId = startups.first['id'];
+
+      String apiPeriod = 'monthly';
+      if (_selectedPeriod == '1M') {
+        apiPeriod = 'monthly';
+      } else if (_selectedPeriod == '6M') {
+        apiPeriod = '6months';
+      } else if (_selectedPeriod == '1A') {
+        apiPeriod = 'ytd';
+      } else if (_selectedPeriod == 'Tudo') {
+        apiPeriod = 'all';
+      }
+
+      final history = await CounterService().getPriceHistory(startupId, apiPeriod);
+
+      if (mounted) {
+        setState(() {
+          _apiSpots = List.generate(history.length, (i) {
+            final double price = (history[i]['price'] as num).toDouble();
+            // Multiplica por 1000 se for para se adequar à escala do tooltip legada (opc. spot.y * 1000)
+            // Mantemos a escala real dividida por 1000 no Spot para alinhar com o "getTooltipItems: spot.y * 1000" do João Paulo!
+            return FlSpot(i.toDouble(), price / 1000);
+          });
+
+          _apiDates = history.map((h) {
+            try {
+              final dt = DateTime.parse(h['timestamp']);
+              return "${dt.day}/${dt.month}";
+            } catch (e) {
+              return "Data";
+            }
+          }).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   List<FlSpot> _getMainSpots() {
+    if (_apiSpots.isNotEmpty) {
+      return _apiSpots;
+    }
     switch (_selectedPeriod) {
       case '1M':
-        // Último mês: mostra 5 pontos representando as semanas
         return const [
           FlSpot(0, 14.2),
           FlSpot(1, 14.5),
@@ -48,7 +91,6 @@ class _DashboardChartState extends State<DashboardChart> {
           FlSpot(4, 15.0),
         ];
       case '6M':
-        // Últimos 6 meses: 7 pontos, um para cada mês
         return const [
           FlSpot(0, 12.0),
           FlSpot(1, 12.5),
@@ -59,7 +101,6 @@ class _DashboardChartState extends State<DashboardChart> {
           FlSpot(6, 15.0),
         ];
       case '1A':
-        // Último ano: 13 pontos, um para cada mês (maio/25 até abr/26)
         return const [
           FlSpot(0, 8.0),
           FlSpot(1, 8.5),
@@ -76,7 +117,6 @@ class _DashboardChartState extends State<DashboardChart> {
           FlSpot(12, 15.0),
         ];
       case 'Tudo':
-        // Histórico completo desde o início: 16 pontos
         return const [
           FlSpot(0, 2.0),
           FlSpot(1, 3.5),
@@ -96,34 +136,24 @@ class _DashboardChartState extends State<DashboardChart> {
           FlSpot(15, 15.0),
         ];
       default:
-        // Caso não reconheça o período, retorna lista vazia
         return const [];
     }
   }
 
-  // Gera a linha tracejada de benchmark (referência de mercado)
-  // É uma linha reta que vai do primeiro ao último ponto, um pouco abaixo
-  // Serve para o usuário comparar se seu investimento está acima ou abaixo do mercado
   List<FlSpot> _getBenchmarkSpots() {
     final mainSpots = _getMainSpots();
-    // Se não tem dados, retorna vazio
     if (mainSpots.isEmpty) return [];
-
-    // Pega as coordenadas do primeiro e último ponto
     final firstX = mainSpots.first.x;
     final lastX = mainSpots.last.x;
-
-    // O benchmark começa em 90% do primeiro valor e termina em 85% do último
-    // Isso cria uma linha de referência ligeiramente abaixo da carteira
     final firstY = mainSpots.first.y * 0.9;
     final lastY = mainSpots.last.y * 0.85;
-
     return [FlSpot(firstX, firstY), FlSpot(lastX, lastY)];
   }
 
-  // Retorna as datas que aparecem abaixo do gráfico como legenda
-  // Cada período mostra datas diferentes e com espaçamento adequado
   List<String> _getDateLabels() {
+    if (_apiDates.isNotEmpty) {
+      return _apiDates;
+    }
     switch (_selectedPeriod) {
       case '1M':
         return ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Hoje'];
@@ -137,6 +167,7 @@ class _DashboardChartState extends State<DashboardChart> {
         return [];
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +193,10 @@ class _DashboardChartState extends State<DashboardChart> {
               // GestureDetector detecta o toque no botão
               return GestureDetector(
                 // Ao tocar, atualiza o estado com o novo período (redesenha o gráfico)
-                onTap: () => setState(() => _selectedPeriod = period),
+                onTap: () {
+                  setState(() => _selectedPeriod = period);
+                  _loadPriceHistory();
+                },
                 child: Container(
                   // Margem horizontal entre cada botão
                   margin: const EdgeInsets.symmetric(horizontal: 4),

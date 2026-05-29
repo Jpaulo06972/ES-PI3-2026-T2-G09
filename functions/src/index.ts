@@ -333,3 +333,5 @@ export const resetPassword = onRequest(
 
 export * from "./startups";
 export * from "./balance";
+export * from "./balcao";
+

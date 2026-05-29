@@ -49,7 +49,12 @@ export const getStartupDetails = onCall({invoker: "public"}, async (request) => 
   return {
     data: {
       id: startupId,
+      startupId: startupId,
       ...startup,
+      availableTokens: startup.availableTokens !== undefined ? startup.availableTokens : startup.totalTokensIssued,
+      tokensSold: startup.tokensSold !== undefined ? startup.tokensSold : Math.max(0, startup.totalTokensIssued - (startup.availableTokens !== undefined ? startup.availableTokens : startup.totalTokensIssued)),
+      currentTokenPrice: startup.currentTokenPrice !== undefined ? startup.currentTokenPrice : (startup.currentTokenPriceCents ?? 0) / 100,
+      tokenSymbol: startup.tokenSymbol || startupId.toUpperCase().slice(0, 4),
       createdAt: startup.createdAt?.toDate().toISOString() ?? null,
       updatedAt: startup.updatedAt?.toDate().toISOString() ?? null,
       publicQuestions: questions,

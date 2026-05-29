@@ -61,6 +61,10 @@ export type StartupDocument = {
  capitalRaisedCents: number;
  totalTokensIssued: number;
  currentTokenPriceCents: number;
+ availableTokens?: number;
+ tokensSold?: number;
+ currentTokenPrice?: number;
+ tokenSymbol?: string;
  founders: Founder[];
  // poderia ser enderecos URLs no Youtube ou firebase storage.
  externalMembers: ExternalMember[];
@@ -117,6 +121,10 @@ export type StartupListItem = {
  capitalRaisedCents: number;
  totalTokensIssued: number;
  currentTokenPriceCents: number;
+ availableTokens?: number;
+ tokensSold?: number;
+ currentTokenPrice?: number;
+ tokenSymbol?: string;
  coverImageUrl?: string;
  tags: string[];
 };

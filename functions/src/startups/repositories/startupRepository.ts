@@ -3,7 +3,7 @@
 // Trabalho: PI3-2026-T2-G09
 // RA: 25000684
 
-// import {FieldValue} from "firebase-admin/firestore";
+import {FieldValue} from "firebase-admin/firestore";
 
 import {
   CommentDocument,
@@ -14,7 +14,7 @@ import {
 import {db} from "../../shared/firebase";
 
 const startupsCollection = db.collection("startups");
-/*
+
 const demoStartups: Array<StartupDocument & {id: string}> = [
   {
     id: "biochip-campus",
@@ -30,6 +30,10 @@ const demoStartups: Array<StartupDocument & {id: string}> = [
     capitalRaisedCents: 1850000,
     totalTokensIssued: 100000,
     currentTokenPriceCents: 125,
+    availableTokens: 50000,
+    tokensSold: 50000,
+    currentTokenPrice: 1.25,
+    tokenSymbol: "BCHP",
     founders: [
       {
         name: "Ana Ribeiro",
@@ -71,6 +75,10 @@ const demoStartups: Array<StartupDocument & {id: string}> = [
     capitalRaisedCents: 7400000,
     totalTokensIssued: 250000,
     currentTokenPriceCents: 310,
+    availableTokens: 150000,
+    tokensSold: 100000,
+    currentTokenPrice: 3.10,
+    tokenSymbol: "ROTA",
     founders: [
       {name: "Beatriz Santos", role: "CEO", equityPercent: 42},
       {name: "Rafael Almeida", role: "COO", equityPercent: 28},
@@ -105,6 +113,10 @@ const demoStartups: Array<StartupDocument & {id: string}> = [
     capitalRaisedCents: 12350000,
     totalTokensIssued: 500000,
     currentTokenPriceCents: 525,
+    availableTokens: 300000,
+    tokensSold: 200000,
+    currentTokenPrice: 5.25,
+    tokenSymbol: "MTRA",
     founders: [
       {name: "Diego Martins", role: "CEO", equityPercent: 36},
       {name: "Juliana Vieira", role: "CPO", equityPercent: 24},
@@ -128,8 +140,10 @@ const demoStartups: Array<StartupDocument & {id: string}> = [
     tags: ["edtech", "ia", "mentoria"],
   },
 ];
-*/
+
 function toListItem(id: string, startup: StartupDocument): StartupListItem {
+  const priceCents = startup.currentTokenPriceCents ?? 0;
+  const available = startup.availableTokens !== undefined ? startup.availableTokens : startup.totalTokensIssued;
   return {
     id,
     name: startup.name,
@@ -137,7 +151,11 @@ function toListItem(id: string, startup: StartupDocument): StartupListItem {
     shortDescription: startup.shortDescription,
     capitalRaisedCents: startup.capitalRaisedCents,
     totalTokensIssued: startup.totalTokensIssued,
-    currentTokenPriceCents: startup.currentTokenPriceCents,
+    currentTokenPriceCents: priceCents,
+    availableTokens: available,
+    tokensSold: startup.tokensSold !== undefined ? startup.tokensSold : Math.max(0, startup.totalTokensIssued - available),
+    currentTokenPrice: startup.currentTokenPrice !== undefined ? startup.currentTokenPrice : priceCents / 100,
+    tokenSymbol: startup.tokenSymbol || id.toUpperCase().slice(0, 4),
     coverImageUrl: startup.coverImageUrl,
     tags: startup.tags,
   };
@@ -241,7 +259,6 @@ export async function listComments(startupId: string, userEmail: string) {
     );
 }
 
-/*
 export async function seedDemoStartups(): Promise<string[]> {
   const batch = db.batch();
   
@@ -260,4 +277,3 @@ export async function seedDemoStartups(): Promise<string[]> {
   
   return demoStartups.map((startup) => startup.id);
 }
-  */

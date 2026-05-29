@@ -1,23 +1,82 @@
 // Feito por: Tomás Toniato RA: 25004211
+// Integrado por: João Paulo Ferreira RA: 25000684
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'startup_colors.dart';
 import 'inline_video_player.dart';
+import 'package:mesclainvest_f/model/userModel.dart';
+import 'package:mesclainvest_f/counter/services/counterService.dart';
+import 'package:mesclainvest_f/startups/components/direct_purchase_sheet.dart';
+import 'package:mesclainvest_f/startups/components/sell_tokens_sheet.dart';
+import 'package:mesclainvest_f/counter/pages/balcao_orders_screen.dart';
 
-class SobreTab extends StatelessWidget {
+class SobreTab extends StatefulWidget {
   final Map<String, dynamic> data;
+  final UserModel userModel;
+  final VoidCallback? onRefresh;
 
-  const SobreTab({super.key, required this.data});
+  const SobreTab({
+    super.key,
+    required this.data,
+    required this.userModel,
+    this.onRefresh,
+  });
+
+  @override
+  State<SobreTab> createState() => _SobreTabState();
+}
+
+class _SobreTabState extends State<SobreTab> {
+  final CounterService _counterService = CounterService();
+  double _userHoldings = 0.0;
+  bool _loadingHoldings = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserHoldings();
+  }
+
+  @override
+  void didUpdateWidget(covariant SobreTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.data['id'] != widget.data['id']) {
+      _loadUserHoldings();
+    }
+  }
+
+  Future<void> _loadUserHoldings() async {
+    setState(() => _loadingHoldings = true);
+    try {
+      final holdings = await _counterService.getUserTokens(widget.data['id'] ?? '');
+      if (mounted) {
+        setState(() {
+          _userHoldings = holdings;
+          _loadingHoldings = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingHoldings = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final rawTokens = data['totalTokensIssued'] ?? data['tokens'] ?? 0;
-    final rawCapital = data['capitalRaisedCents'] ?? data['capital'] ?? 0;
-    final rawTokenPrice = data['currentTokenPriceCents'] ?? 0;
+    final startupId = (widget.data['id'] ?? '').toString();
+    final startupName = (widget.data['name'] ?? 'Startup').toString();
+    final rawTokens = widget.data['totalTokensIssued'] ?? widget.data['tokens'] ?? 0;
+    final rawCapital = widget.data['capitalRaisedCents'] ?? widget.data['capital'] ?? 0;
+    final rawTokenPrice = widget.data['currentTokenPriceCents'] ?? 0;
+    
+    final int totalTokens = int.tryParse(rawTokens.toString()) ?? 0;
+    final int tokensSold = int.tryParse((widget.data['tokensSold'] ?? 0).toString()) ?? 0;
+    final availableTokens = widget.data['availableTokens'] ?? widget.data['available'] ?? (totalTokens - tokensSold);
     final description =
-        (data['description'] ?? data['descricao'] ?? '').toString().trim();
-    final demoVideos = (data['demoVideos'] as List<dynamic>? ?? [])
+        (widget.data['description'] ?? widget.data['descricao'] ?? '').toString().trim();
+    final demoVideos = (widget.data['demoVideos'] as List<dynamic>? ?? [])
         .map((e) => e.toString().trim())
         .where((url) => url.isNotEmpty)
         .toList();
@@ -35,7 +94,12 @@ class SobreTab extends StatelessWidget {
             Expanded(child: _StatCard(value: _formatCapital(rawCapital), label: 'Captado')),
           ],
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 24),
+
+        // WIDGET DE COMPRA/VENDA DIRETA OU REDIRECIONAMENTO AO BALCÃO
+        _buildTradingWidget(startupId, startupName, rawTokenPrice, availableTokens),
+
+        const SizedBox(height: 24),
         const _SectionTitle('SUMÁRIO EXECUTIVO'),
         const SizedBox(height: 12),
         Container(
@@ -58,6 +122,339 @@ class SobreTab extends StatelessWidget {
         const SizedBox(height: 32),
       ],
     );
+  }
+
+  Widget _buildTradingWidget(
+    String startupId,
+    String startupName,
+    dynamic rawTokenPrice,
+    dynamic availableTokensVal,
+  ) {
+    final int available = int.tryParse(availableTokensVal.toString()) ?? 0;
+    final double pricePerToken = (num.tryParse(rawTokenPrice.toString()) ?? 0) / 100;
+
+    final bool hasTokensAvailable = available > 0;
+
+    if (hasTokensAvailable) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: StartupColors.cardBg,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xFF1A9B5F).withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Tokens disponíveis',
+              style: TextStyle(
+                color: Color(0xFF1A9B5F),
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Preço atual:',
+                  style: TextStyle(color: Colors.white54, fontSize: 13),
+                ),
+                Text(
+                  'R\$ ${pricePerToken.toStringAsFixed(2).replaceAll('.', ',')}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Tokens disponíveis:',
+                  style: TextStyle(color: Colors.white54, fontSize: 13),
+                ),
+                Text(
+                  NumberFormat('#,##0', 'pt_BR').format(available),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Seus tokens:',
+                  style: TextStyle(color: Colors.white54, fontSize: 13),
+                ),
+                _loadingHoldings
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: StartupColors.green,
+                        ),
+                      )
+                    : Text(
+                        NumberFormat('#,##0', 'pt_BR').format(_userHoldings.toInt()),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 46,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF107649),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: () => _openBuySheet(startupId, startupName, pricePerToken),
+                      child: const Text(
+                        'Comprar',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 46,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _userHoldings > 0
+                            ? const Color(0xFFE74C3C)
+                            : Colors.white12,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: _userHoldings > 0
+                          ? () => _openSellSheet(startupId, startupName, pricePerToken)
+                          : null,
+                      child: Text(
+                        'Vender',
+                        style: TextStyle(
+                          color: _userHoldings > 0 ? Colors.white : Colors.white38,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: StartupColors.cardBg,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Tokens esgotados pela startup',
+              style: TextStyle(
+                color: Color(0xFFE74C3C),
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Preço atual:',
+                  style: TextStyle(color: Colors.white54, fontSize: 13),
+                ),
+                Text(
+                  'R\$ ${pricePerToken.toStringAsFixed(2).replaceAll('.', ',')}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Seus tokens:',
+                  style: TextStyle(color: Colors.white54, fontSize: 13),
+                ),
+                _loadingHoldings
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: StartupColors.green,
+                        ),
+                      )
+                    : Text(
+                        NumberFormat('#,##0', 'pt_BR').format(_userHoldings.toInt()),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF107649),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BalcaoOrdersScreen(
+                        startupId: startupId,
+                        startupName: startupName,
+                        userModel: widget.userModel,
+                      ),
+                    ),
+                  ).then((_) {
+                    _loadUserHoldings();
+                    if (widget.onRefresh != null) {
+                      widget.onRefresh!();
+                    }
+                  });
+                },
+                icon: const Icon(Icons.swap_horizontal_circle_outlined, color: Colors.white),
+                label: const Text(
+                  'Ver Negociações no Balcão',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            if (!_loadingHoldings && _userHoldings > 0) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE74C3C),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: () => _openSellSheet(startupId, startupName, pricePerToken),
+                  child: const Text(
+                    'Vender meus tokens',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+  }
+
+  void _openBuySheet(String startupId, String startupName, double pricePerToken) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DirectPurchaseSheet(
+        startupId: startupId,
+        startupName: startupName,
+        pricePerToken: pricePerToken,
+        userModel: widget.userModel,
+        userHoldings: _userHoldings,
+      ),
+    ).then((success) {
+      if (success == true) {
+        _loadUserHoldings();
+        if (widget.onRefresh != null) {
+          widget.onRefresh!();
+        }
+      }
+    });
+  }
+
+  void _openSellSheet(String startupId, String startupName, double pricePerToken) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SellTokensSheet(
+        startupId: startupId,
+        startupName: startupName,
+        pricePerToken: pricePerToken,
+        userModel: widget.userModel,
+        userHoldings: _userHoldings,
+      ),
+    ).then((success) {
+      if (success == true) {
+        _loadUserHoldings();
+        if (widget.onRefresh != null) {
+          widget.onRefresh!();
+        }
+      }
+    });
   }
 
   String _formatTokens(dynamic value) {

@@ -524,6 +524,13 @@ class _StartupsListState extends State<StartupsList> {
                   final valorCents = startup['capitalRaisedCents'] ?? 0;
                   final valorReal = valorCents / 100;
 
+                  // Calcula o progresso dinâmico baseado em tokens vendidos e emitidos
+                  final totalTokensVal = (startup['totalTokensIssued'] as num?)?.toDouble() ?? 0.0;
+                  final soldTokensVal = (startup['tokensSold'] as num?)?.toDouble() ?? 0.0;
+                  final progressVal = totalTokensVal > 0 
+                      ? (soldTokensVal / totalTokensVal).clamp(0.0, 1.0) 
+                      : 0.0;
+
                   // Lógica para encontrar a imagem no Firebase Storage seguindo o padrão de nomes
                   // Ex: "AgriSense" -> "startups_images/agrisense.png"
                   final storageName = nome.toLowerCase().replaceAll(' ', '-');
@@ -560,7 +567,7 @@ class _StartupsListState extends State<StartupsList> {
                         status: status.replaceAll('_', ' ').toUpperCase(),
                         tokens: tokensInt.toString(),
                         valor: 'R\$ ${valorReal.toStringAsFixed(0)}',
-                        progress: 0.65, // Valor de progresso estático para demonstração
+                        progress: progressVal,
                         icon: Icons.rocket_launch_rounded,
                         imageUrl: null, // Deixamos nulo pois buscamos via storagePath dentro do componente
                         storagePath: storagePath,

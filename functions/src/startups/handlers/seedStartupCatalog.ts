@@ -15,8 +15,9 @@ import {onCall} from "firebase-functions/https";
  *
  * A função retorna a quantidade de startups gravadas e os ids dos documentos.
  */
+import {seedDemoStartups} from "../repositories/startupRepository";
+
 export const seedStartupCatalog = onCall({invoker: "public"}, async (request) => {
-  /*
   const startupIds = await seedDemoStartups();
   
   return {
@@ -25,6 +26,4 @@ export const seedStartupCatalog = onCall({invoker: "public"}, async (request) =>
       ids: startupIds,
     },
   };
-  */
-  return { data: { message: "Seed desativado no momento." } };
 });
