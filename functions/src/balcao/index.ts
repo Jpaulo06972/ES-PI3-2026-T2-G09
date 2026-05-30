@@ -19,6 +19,16 @@ import {
   rejectPendingOfferTransaction,
   getPendingApprovals
 } from "./repositories/balcaoRepository";
+import {
+  buyFromStartup,
+  buyFromUser,
+  sell as sellOperation,
+  acceptOperation,
+  rejectOperation,
+  getOperationsByUser,
+  getOperationsByStartup,
+  getPendingBuyOperations,
+} from "../operations/repositories/operationsRepository";
 
 const corsHandler = cors({ origin: true });
 
@@ -281,6 +291,136 @@ export const api = onRequest({ invoker: "public" }, (req, res) => {
           res.json({ success: true, history });
         } catch (err: any) {
           res.status(500).json({ error: err.message || "Erro ao buscar histórico de preços." });
+        }
+        return;
+      }
+
+      // ── /operations/* routes ──────────────────────────────────────────────
+
+      // POST /operations/buy-from-startup
+      if (method === "POST" && path === "/operations/buy-from-startup") {
+        const user = await authenticateUser(req, res);
+        if (!user) return;
+        const { startupId, quantity } = req.body as { startupId: string; quantity: number };
+        if (!startupId || !quantity || quantity <= 0) {
+          res.status(400).json({ error: "startupId e quantity (>0) são obrigatórios." });
+          return;
+        }
+        try {
+          const result = await buyFromStartup(user.uid, startupId, quantity);
+          res.json({ success: true, ...result });
+        } catch (err: any) {
+          res.status(400).json({ error: err.message || "Erro ao comprar tokens." });
+        }
+        return;
+      }
+
+      // POST /operations/buy-from-user
+      if (method === "POST" && path === "/operations/buy-from-user") {
+        const user = await authenticateUser(req, res);
+        if (!user) return;
+        const { startupId, quantity, pricePerTokenCents, validityDays } = req.body as {
+          startupId: string; quantity: number; pricePerTokenCents: number; validityDays?: number;
+        };
+        if (!startupId || !quantity || quantity <= 0 || !pricePerTokenCents || pricePerTokenCents <= 0) {
+          res.status(400).json({ error: "Parâmetros inválidos." });
+          return;
+        }
+        try {
+          const result = await buyFromUser(user.uid, startupId, quantity, pricePerTokenCents, validityDays ?? 1);
+          res.json({ success: true, ...result });
+        } catch (err: any) {
+          res.status(400).json({ error: err.message || "Erro ao criar oferta de compra." });
+        }
+        return;
+      }
+
+      // POST /operations/sell
+      if (method === "POST" && path === "/operations/sell") {
+        const user = await authenticateUser(req, res);
+        if (!user) return;
+        const { startupId, quantity, askedPricePerTokenCents } = req.body as {
+          startupId: string; quantity: number; askedPricePerTokenCents: number;
+        };
+        if (!startupId || !quantity || quantity <= 0 || !askedPricePerTokenCents || askedPricePerTokenCents <= 0) {
+          res.status(400).json({ error: "Parâmetros inválidos." });
+          return;
+        }
+        try {
+          const result = await sellOperation(user.uid, startupId, quantity, askedPricePerTokenCents);
+          res.json({ success: true, ...result });
+        } catch (err: any) {
+          res.status(400).json({ error: err.message || "Erro ao criar oferta de venda." });
+        }
+        return;
+      }
+
+      // PATCH /operations/:id/accept
+      const matchOpAccept = path.match(/^\/operations\/([^/]+)\/accept$/);
+      if (method === "PATCH" && matchOpAccept) {
+        const user = await authenticateUser(req, res);
+        if (!user) return;
+        try {
+          const result = await acceptOperation(user.uid, matchOpAccept[1]);
+          res.json({ success: true, ...result });
+        } catch (err: any) {
+          res.status(400).json({ error: err.message || "Erro ao aceitar oferta." });
+        }
+        return;
+      }
+
+      // PATCH /operations/:id/reject
+      const matchOpReject = path.match(/^\/operations\/([^/]+)\/reject$/);
+      if (method === "PATCH" && matchOpReject) {
+        const user = await authenticateUser(req, res);
+        if (!user) return;
+        try {
+          await rejectOperation(user.uid, matchOpReject[1]);
+          res.json({ success: true });
+        } catch (err: any) {
+          res.status(400).json({ error: err.message || "Erro ao cancelar oferta." });
+        }
+        return;
+      }
+
+      // GET /operations/pending/:startupId
+      const matchOpPending = path.match(/^\/operations\/pending\/([^/]+)$/);
+      if (method === "GET" && matchOpPending) {
+        const user = await authenticateUser(req, res);
+        if (!user) return;
+        try {
+          const ops = await getPendingBuyOperations(matchOpPending[1]);
+          res.json({ success: true, operations: ops });
+        } catch (err: any) {
+          res.status(500).json({ error: err.message || "Erro ao listar operações pendentes." });
+        }
+        return;
+      }
+
+      // GET /operations/user/:userId
+      const matchOpUser = path.match(/^\/operations\/user\/([^/]+)$/);
+      if (method === "GET" && matchOpUser) {
+        const user = await authenticateUser(req, res);
+        if (!user) return;
+        try {
+          const ops = await getOperationsByUser(matchOpUser[1]);
+          res.json({ success: true, operations: ops });
+        } catch (err: any) {
+          res.status(500).json({ error: err.message || "Erro ao listar operações do usuário." });
+        }
+        return;
+      }
+
+      // GET /operations/startup/:startupId
+      const matchOpStartup = path.match(/^\/operations\/startup\/([^/]+)$/);
+      if (method === "GET" && matchOpStartup) {
+        const user = await authenticateUser(req, res);
+        if (!user) return;
+        try {
+          const ops = await getOperationsByStartup(matchOpStartup[1]);
+          res.json({ success: true, operations: ops });
+        } catch (err: any) {
+          res.status(500).json({ error: err.message || "Erro ao listar operações da startup." });
         }
         return;
       }

@@ -7,8 +7,6 @@ import 'startup_colors.dart';
 import 'inline_video_player.dart';
 import 'package:mesclainvest_f/model/userModel.dart';
 import 'package:mesclainvest_f/counter/services/counterService.dart';
-import 'package:mesclainvest_f/startups/components/direct_purchase_sheet.dart';
-import 'package:mesclainvest_f/startups/components/sell_tokens_sheet.dart';
 import 'package:mesclainvest_f/counter/pages/balcao_orders_screen.dart';
 
 class SobreTab extends StatefulWidget {
@@ -232,7 +230,7 @@ class _SobreTabState extends State<SobreTab> {
                         ),
                         elevation: 0,
                       ),
-                      onPressed: () => _openBuySheet(startupId, startupName, pricePerToken),
+                      onPressed: () => _openTradeScreen(startupId, startupName, 'buy'),
                       child: const Text(
                         'Comprar',
                         style: TextStyle(
@@ -259,7 +257,7 @@ class _SobreTabState extends State<SobreTab> {
                         elevation: 0,
                       ),
                       onPressed: _userHoldings > 0
-                          ? () => _openSellSheet(startupId, startupName, pricePerToken)
+                          ? () => _openTradeScreen(startupId, startupName, 'sell')
                           : null,
                       child: Text(
                         'Vender',
@@ -395,7 +393,7 @@ class _SobreTabState extends State<SobreTab> {
                     ),
                     elevation: 0,
                   ),
-                  onPressed: () => _openSellSheet(startupId, startupName, pricePerToken),
+                  onPressed: () => _openTradeScreen(startupId, startupName, 'sell'),
                   child: const Text(
                     'Vender meus tokens',
                     style: TextStyle(
@@ -413,46 +411,21 @@ class _SobreTabState extends State<SobreTab> {
     }
   }
 
-  void _openBuySheet(String startupId, String startupName, double pricePerToken) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DirectPurchaseSheet(
-        startupId: startupId,
-        startupName: startupName,
-        pricePerToken: pricePerToken,
-        userModel: widget.userModel,
-        userHoldings: _userHoldings,
+  void _openTradeScreen(String startupId, String startupName, String mode) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BalcaoOrdersScreen(
+          startupId: startupId,
+          startupName: startupName,
+          userModel: widget.userModel,
+          initialMode: mode,
+        ),
       ),
-    ).then((success) {
-      if (success == true) {
-        _loadUserHoldings();
-        if (widget.onRefresh != null) {
-          widget.onRefresh!();
-        }
-      }
-    });
-  }
-
-  void _openSellSheet(String startupId, String startupName, double pricePerToken) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => SellTokensSheet(
-        startupId: startupId,
-        startupName: startupName,
-        pricePerToken: pricePerToken,
-        userModel: widget.userModel,
-        userHoldings: _userHoldings,
-      ),
-    ).then((success) {
-      if (success == true) {
-        _loadUserHoldings();
-        if (widget.onRefresh != null) {
-          widget.onRefresh!();
-        }
+    ).then((_) {
+      _loadUserHoldings();
+      if (widget.onRefresh != null) {
+        widget.onRefresh!();
       }
     });
   }

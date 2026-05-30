@@ -62,17 +62,24 @@ class _PlaceBuyOfferSheetState extends State<PlaceBuyOfferSheet> {
         _availableBalance = widget.userModel.saldo;
       }
 
-      // 2. Carrega quantidade de tokens da startup que o usuário possui
-      final investorDoc = await _firestore
-          .collection('startups')
-          .doc(widget.startupId)
-          .collection('investors')
-          .doc(widget.userModel.uid)
+      // 2. Carrega quantidade de tokens da startup — coleção top-level `holdings`
+      //    (com fallback para subcoleção legada `investors`).
+      final holdingDoc = await _firestore
+          .collection('holdings')
+          .doc('${widget.userModel.uid}_${widget.startupId}')
           .get();
-      if (investorDoc.exists) {
-        _availableTokens = (investorDoc.data()!['tokens'] ?? 0.0).toDouble();
+      if (holdingDoc.exists) {
+        _availableTokens = (holdingDoc.data()?['quantity'] as num?)?.toDouble() ?? 0.0;
       } else {
-        _availableTokens = 0.0;
+        final investorDoc = await _firestore
+            .collection('startups')
+            .doc(widget.startupId)
+            .collection('investors')
+            .doc(widget.userModel.uid)
+            .get();
+        _availableTokens = investorDoc.exists
+            ? ((investorDoc.data()?['tokens'] as num?)?.toDouble() ?? 0.0)
+            : 0.0;
       }
 
       if (mounted) {
@@ -445,7 +452,7 @@ class _PlaceBuyOfferSheetState extends State<PlaceBuyOfferSheet> {
         final userRef = _firestore.collection('users').doc(currentUserId);
         final userSnapshot = await transaction.get(userRef);
         if (!userSnapshot.exists) throw Exception("Sua conta de usuário não foi encontrada.");
-        
+
         final userData = userSnapshot.data()!;
         final double userBrlBalance = (userData['saldo'] ?? userData['balance'] ?? 0.0).toDouble();
 
@@ -455,9 +462,18 @@ class _PlaceBuyOfferSheetState extends State<PlaceBuyOfferSheet> {
             .collection('investors')
             .doc(currentUserId);
         final investorSnapshot = await transaction.get(investorRef);
-        double userTokenHolding = investorSnapshot.exists
-            ? (investorSnapshot.data()!['tokens'] ?? 0.0).toDouble()
+
+        // Coleção top-level `holdings` é a fonte primária para a quantidade de tokens
+        final ownHoldingRef = _firestore
+            .collection('holdings')
+            .doc('${currentUserId}_$startupId');
+        final ownHoldingSnap = await transaction.get(ownHoldingRef);
+        final double legacyTokens = investorSnapshot.exists
+            ? ((investorSnapshot.data()!['tokens'] as num?)?.toDouble() ?? 0.0)
             : 0.0;
+        double userTokenHolding = ownHoldingSnap.exists
+            ? ((ownHoldingSnap.data()?['quantity'] as num?)?.toDouble() ?? 0.0)
+            : legacyTokens;
 
         // B. Valida limites de BRL / tokens
         if (type == 'buy') {
@@ -466,7 +482,7 @@ class _PlaceBuyOfferSheetState extends State<PlaceBuyOfferSheet> {
           }
         } else {
           if (userTokenHolding < quantity) {
-            throw Exception("Tokens insuficientes para esta venda.");
+            throw Exception("Insufficient tokens");
           }
         }
 
@@ -508,15 +524,25 @@ class _PlaceBuyOfferSheetState extends State<PlaceBuyOfferSheet> {
               .doc(startupId)
               .collection('investors')
               .doc(candUserId);
+          final candHoldingRef = _firestore
+              .collection('holdings')
+              .doc('${candUserId}_$startupId');
 
           final candUserSnapshot = await transaction.get(candUserRef);
           final candInvestorSnapshot = await transaction.get(candInvestorRef);
+          final candHoldingSnap = await transaction.get(candHoldingRef);
 
           final double candBrl = candUserSnapshot.exists
               ? (candUserSnapshot.data()!['saldo'] ?? candUserSnapshot.data()!['balance'] ?? 0.0).toDouble()
               : 0.0;
-          final double candTokens = candInvestorSnapshot.exists
-              ? (candInvestorSnapshot.data()!['tokens'] ?? 0.0).toDouble()
+          final double legacyCandTokens = candInvestorSnapshot.exists
+              ? ((candInvestorSnapshot.data()!['tokens'] as num?)?.toDouble() ?? 0.0)
+              : 0.0;
+          final double candHoldingQty = candHoldingSnap.exists
+              ? ((candHoldingSnap.data()?['quantity'] as num?)?.toDouble() ?? 0.0)
+              : legacyCandTokens;
+          final double candHoldingAvgCents = candHoldingSnap.exists
+              ? ((candHoldingSnap.data()?['averagePriceCents'] as num?)?.toDouble() ?? 0.0)
               : 0.0;
 
           if (type == 'buy') {
@@ -528,21 +554,63 @@ class _PlaceBuyOfferSheetState extends State<PlaceBuyOfferSheet> {
               'balance': newCandBrl,
             });
 
+            // Vendedor candidato perde tokens na coleção top-level `holdings`
+            final double newCandHoldingQty = candHoldingQty - matchQty;
+            transaction.set(
+              candHoldingRef,
+              {
+                'userId': candUserId,
+                'startupId': startupId,
+                'quantity': newCandHoldingQty <= 0 ? 0 : newCandHoldingQty,
+                'updatedAt': FieldValue.serverTimestamp(),
+              },
+              SetOptions(merge: true),
+            );
+
+            // Vendedor candidato decrementa na subcoleção legada `investors` (se existir)
+            if (candInvestorSnapshot.exists) {
+              final double remainingLegacy = legacyCandTokens - matchQty;
+              if (remainingLegacy <= 0) {
+                transaction.delete(candInvestorRef);
+              } else {
+                transaction.update(candInvestorRef, {
+                  'tokens': remainingLegacy,
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
+              }
+            }
+
             // Nós recebemos tokens:
             userTokenHolding += matchQty;
           } else {
             // Nós somos o Vendedor (currentUserId), Candidato é o Comprador (candUserId)
-            // Nós recebemos BRL:
-            // (Nota: BRL do comprador candidato já foi debitado na criação da oferta de compra, então só creditamos o vendedor)
-            // (Na verdade, a transação credita o saldo do vendedor de forma líquida)
-            // (Adicionalmente, se o candidato é comprador, ele recebe os tokens)
-            final double newCandTokens = candTokens + matchQty;
+            // Comprador candidato ganha tokens — subcoleção investors (retrocompat)
+            final double newCandTokens = legacyCandTokens + matchQty;
             transaction.set(candInvestorRef, {
               'userId': candUserId,
               'startupId': startupId,
               'tokens': newCandTokens,
               'updatedAt': FieldValue.serverTimestamp(),
             }, SetOptions(merge: true));
+
+            // Comprador candidato — coleção top-level `holdings` (preço médio ponderado)
+            final double newCandHoldingQty = candHoldingQty + matchQty;
+            final double newCandAvgCents = newCandHoldingQty > 0
+                ? (candHoldingQty * candHoldingAvgCents +
+                        matchQty * (pricePerToken * 100)) /
+                    newCandHoldingQty
+                : 0.0;
+            transaction.set(
+              candHoldingRef,
+              {
+                'userId': candUserId,
+                'startupId': startupId,
+                'quantity': newCandHoldingQty,
+                'averagePriceCents': newCandAvgCents.round(),
+                'updatedAt': FieldValue.serverTimestamp(),
+              },
+              SetOptions(merge: true),
+            );
           }
 
           ourRemainingQty -= matchQty;
@@ -557,24 +625,64 @@ class _PlaceBuyOfferSheetState extends State<PlaceBuyOfferSheet> {
             'balance': nextUserBrl,
           });
 
-          // Atualiza as holdings de tokens do comprador (nós)
+          // Atualiza as holdings de tokens do comprador (nós) — subcoleção legada
           transaction.set(investorRef, {
             'userId': currentUserId,
             'startupId': startupId,
             'tokens': userTokenHolding,
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
-        } else {
-          // Debita os tokens do vendedor (nós)
-          final double nextUserTokens = userTokenHolding - quantity;
-          if (nextUserTokens <= 0) {
-            transaction.delete(investorRef);
-          } else {
-            transaction.update(investorRef, {
-              'tokens': nextUserTokens,
+
+          // Coleção top-level `holdings` — preço médio ponderado pelas porções casadas
+          final double prevOwnQty = ownHoldingSnap.exists
+              ? ((ownHoldingSnap.data()?['quantity'] as num?)?.toDouble() ?? 0.0)
+              : 0.0;
+          final double prevOwnAvgCents = ownHoldingSnap.exists
+              ? ((ownHoldingSnap.data()?['averagePriceCents'] as num?)?.toDouble() ?? 0.0)
+              : 0.0;
+          final double addedQty = userTokenHolding - prevOwnQty;
+          final double newOwnAvgCents = userTokenHolding > 0
+              ? (prevOwnQty * prevOwnAvgCents +
+                      (addedQty > 0 ? addedQty : 0) * (pricePerToken * 100)) /
+                  userTokenHolding
+              : 0.0;
+          transaction.set(
+            ownHoldingRef,
+            {
+              'userId': currentUserId,
+              'startupId': startupId,
+              'quantity': userTokenHolding,
+              'averagePriceCents': newOwnAvgCents.round(),
               'updatedAt': FieldValue.serverTimestamp(),
-            });
+            },
+            SetOptions(merge: true),
+          );
+        } else {
+          // Debita os tokens do vendedor (nós) — subcoleção legada
+          final double nextUserTokensLegacy = legacyTokens - quantity;
+          if (investorSnapshot.exists) {
+            if (nextUserTokensLegacy <= 0) {
+              transaction.delete(investorRef);
+            } else {
+              transaction.update(investorRef, {
+                'tokens': nextUserTokensLegacy,
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
+            }
           }
+
+          // Coleção top-level `holdings` — decrementa
+          final double nextOwnHoldingQty = userTokenHolding - quantity;
+          transaction.set(
+            ownHoldingRef,
+            {
+              'userId': currentUserId,
+              'startupId': startupId,
+              'quantity': nextOwnHoldingQty <= 0 ? 0 : nextOwnHoldingQty,
+              'updatedAt': FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true),
+          );
 
           // Credita o BRL do vendedor pelas frações casadas
           final double matchedQty = quantity - ourRemainingQty;
@@ -587,16 +695,19 @@ class _PlaceBuyOfferSheetState extends State<PlaceBuyOfferSheet> {
           }
         }
 
-        // F. Salva o documento da nossa oferta
+        // F. Salva o documento da nossa oferta (coleção `offers`)
         transaction.set(newOfferRef, {
           'userId': currentUserId,
           'startupId': startupId,
           'quantity': quantity,
           'remainingQuantity': ourRemainingQty,
           'pricePerToken': pricePerToken,
+          'pricePerTokenCents': (pricePerToken * 100).round(),
           'total': total,
+          'totalCents': (total * 100).round(),
           'type': type,
           'status': ourRemainingQty <= 0 ? 'filled' : 'open',
+          'createdAt': FieldValue.serverTimestamp(),
           'timestamp': FieldValue.serverTimestamp(),
         });
       });
@@ -605,10 +716,19 @@ class _PlaceBuyOfferSheetState extends State<PlaceBuyOfferSheet> {
         Navigator.pop(context, true);
       }
     } catch (e) {
+      final String message = e.toString().replaceFirst('Exception: ', '');
       setState(() {
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        _errorMessage = message;
         _isSubmitting = false;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFFE74C3C),
+            content: Text(message),
+          ),
+        );
+      }
     }
   }
 }

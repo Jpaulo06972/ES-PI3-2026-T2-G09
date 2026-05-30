@@ -351,16 +351,35 @@ class _SellTokensSheetState extends State<SellTokensSheet> {
           Navigator.pop(context, true);
         }
       } else {
+        final String message =
+            (result['error'] ?? 'Falha ao processar venda de tokens.').toString();
         setState(() {
-          _errorMessage = result['error'] ?? 'Falha ao processar venda de tokens.';
+          _errorMessage = message;
           _isSubmitting = false;
         });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: const Color(0xFFE74C3C),
+              content: Text(message),
+            ),
+          );
+        }
       }
     } catch (e) {
+      final String message = e.toString().replaceFirst('Exception: ', '');
       setState(() {
-        _errorMessage = 'Ocorreu um erro ao processar: $e';
+        _errorMessage = 'Ocorreu um erro ao processar: $message';
         _isSubmitting = false;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFFE74C3C),
+            content: Text(message),
+          ),
+        );
+      }
     }
   }
 }

@@ -7,6 +7,99 @@ import { db } from "../../shared/firebase";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { calculateNewPrice } from "../services/priceEngine";
 
+/**
+ * Helpers para a coleção top-level `holdings`.
+ * Document ID convencionado: `${userId}_${startupId}`.
+ * Mantemos paralelamente à subcoleção `startups/{id}/investors/{uid}` para retrocompatibilidade
+ * com queries antigas.
+ */
+function holdingDocId(userId: string, startupId: string): string {
+  return `${userId}_${startupId}`;
+}
+
+function holdingRef(userId: string, startupId: string) {
+  return db.collection("holdings").doc(holdingDocId(userId, startupId));
+}
+
+interface HoldingSnapshot {
+  quantity: number;
+  averagePriceCents: number;
+  exists: boolean;
+}
+
+async function readHolding(
+  transaction: FirebaseFirestore.Transaction,
+  userId: string,
+  startupId: string
+): Promise<HoldingSnapshot> {
+  const doc = await transaction.get(holdingRef(userId, startupId));
+  if (!doc.exists) return { quantity: 0, averagePriceCents: 0, exists: false };
+  const data = doc.data()!;
+  return {
+    quantity: Number(data.quantity ?? 0),
+    averagePriceCents: Number(data.averagePriceCents ?? 0),
+    exists: true,
+  };
+}
+
+function applyHoldingBuy(
+  transaction: FirebaseFirestore.Transaction,
+  userId: string,
+  startupId: string,
+  current: HoldingSnapshot,
+  addedQty: number,
+  pricePerTokenCents: number
+) {
+  const newQuantity = current.quantity + addedQty;
+  const newAverageCents = newQuantity > 0
+    ? Math.round(
+        (current.quantity * current.averagePriceCents + addedQty * pricePerTokenCents) /
+          newQuantity
+      )
+    : 0;
+
+  transaction.set(
+    holdingRef(userId, startupId),
+    {
+      userId,
+      startupId,
+      quantity: newQuantity,
+      averagePriceCents: newAverageCents,
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+function applyHoldingSell(
+  transaction: FirebaseFirestore.Transaction,
+  userId: string,
+  startupId: string,
+  current: HoldingSnapshot,
+  soldQty: number
+) {
+  const newQuantity = Math.max(0, current.quantity - soldQty);
+  const ref = holdingRef(userId, startupId);
+  if (newQuantity <= 0) {
+    // Mantém o documento (com quantity 0) para preservar histórico de averagePriceCents.
+    transaction.set(
+      ref,
+      {
+        userId,
+        startupId,
+        quantity: 0,
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+  } else {
+    transaction.update(ref, {
+      quantity: newQuantity,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  }
+}
+
 export interface TokenOperationDoc {
   id?: string;
   buyerId?: string;
@@ -93,6 +186,7 @@ export async function buyTokensTransaction(
     const userDoc = await transaction.get(userRef);
     const startupDoc = await transaction.get(startupRef);
     const investorDoc = await transaction.get(investorRef);
+    const holdingSnapshot = await readHolding(transaction, userId, startupId);
 
     if (!userDoc.exists) {
       throw new Error("Usuário não encontrado.");
@@ -140,7 +234,7 @@ export async function buyTokensTransaction(
       balance: updatedBalance
     });
 
-    // Atualiza as participações de tokens (investors subcollection)
+    // Atualiza as participações de tokens (investors subcollection - retrocompat)
     const currentHolding = investorDoc.exists ? Number(investorDoc.data()!.tokens ?? 0) : 0;
     transaction.set(investorRef, {
       userId: userId,
@@ -148,6 +242,9 @@ export async function buyTokensTransaction(
       tokens: currentHolding + quantity,
       updatedAt: FieldValue.serverTimestamp()
     }, { merge: true });
+
+    // Atualiza o documento na coleção top-level `holdings` (preço médio ponderado em centavos)
+    applyHoldingBuy(transaction, userId, startupId, holdingSnapshot, quantity, currentPriceCents);
 
     // Atualiza a startup no catálogo (Preço, Preço em centavos e tokens disponíveis)
     const startupUpdates: any = {
@@ -216,6 +313,7 @@ export async function sellTokensTransaction(
     const userDoc = await transaction.get(userRef);
     const startupDoc = await transaction.get(startupRef);
     const investorDoc = await transaction.get(investorRef);
+    const holdingSnapshot = await readHolding(transaction, userId, startupId);
 
     if (!userDoc.exists) {
       throw new Error("Usuário não encontrado.");
@@ -223,18 +321,20 @@ export async function sellTokensTransaction(
     if (!startupDoc.exists) {
       throw new Error("Startup não encontrada no catálogo.");
     }
-    if (!investorDoc.exists) {
-      throw new Error("Você não possui tokens desta startup para vender.");
-    }
 
     const userData = userDoc.data()!;
     const startupData = startupDoc.data()!;
-    const investorData = investorDoc.data()!;
+    const investorData = investorDoc.exists ? investorDoc.data()! : null;
 
-    // Verifica holdings de tokens do investidor
-    const currentHolding = Number(investorData.tokens ?? 0);
+    // Verifica holdings de tokens do investidor — prioriza a coleção top-level `holdings`,
+    // mas faz fallback para a subcoleção investors em registros legados.
+    const legacyHolding = Number(investorData?.tokens ?? 0);
+    const currentHolding = holdingSnapshot.exists ? holdingSnapshot.quantity : legacyHolding;
+    if (currentHolding <= 0) {
+      throw new Error("Insufficient tokens");
+    }
     if (currentHolding < quantity) {
-      throw new Error("Você não possui tokens suficientes para esta venda.");
+      throw new Error("Insufficient tokens");
     }
 
     // Saldo do usuário em BRL
@@ -260,16 +360,21 @@ export async function sellTokensTransaction(
       balance: updatedBalance
     });
 
-    // Atualiza holdings de tokens
+    // Atualiza holdings de tokens (subcoleção investors - retrocompat)
     const remainingHolding = currentHolding - quantity;
-    if (remainingHolding <= 0) {
-      transaction.delete(investorRef);
-    } else {
-      transaction.update(investorRef, {
-        tokens: remainingHolding,
-        updatedAt: FieldValue.serverTimestamp()
-      });
+    if (investorDoc.exists) {
+      if (remainingHolding <= 0) {
+        transaction.delete(investorRef);
+      } else {
+        transaction.update(investorRef, {
+          tokens: remainingHolding,
+          updatedAt: FieldValue.serverTimestamp()
+        });
+      }
     }
+
+    // Atualiza o documento na coleção top-level `holdings`
+    applyHoldingSell(transaction, userId, startupId, holdingSnapshot, quantity);
 
     // Atualiza o preço da startup e incrementa os tokens disponíveis (devolvidos ao catálogo)
     const currentAvailable = startupData.availableTokens !== undefined ? Number(startupData.availableTokens) : 0;
@@ -332,6 +437,9 @@ export async function createBalcaoOffer(
   await db.runTransaction(async (transaction) => {
     const userDoc = await transaction.get(userRef);
     const startupDoc = await transaction.get(startupRef);
+    const holdingSnapshot = type === "sell"
+      ? await readHolding(transaction, userId, startupId)
+      : null;
 
     if (!userDoc.exists) throw new Error("Usuário não encontrado.");
     if (!startupDoc.exists) throw new Error("Startup não encontrada.");
@@ -364,6 +472,12 @@ export async function createBalcaoOffer(
         reservedBalance: nextReserved,
         reserved: nextReserved
       });
+    } else {
+      // Sell — valida o saldo de tokens via coleção holdings antes de aceitar a ordem
+      const heldQuantity = holdingSnapshot ? holdingSnapshot.quantity : 0;
+      if (heldQuantity < quantity) {
+        throw new Error("Insufficient tokens");
+      }
     }
 
     transaction.set(offerRef, {
@@ -500,22 +614,27 @@ export async function buyFromOrdersTransaction(
 
       if (!sellerDoc.exists) continue;
 
-      // Transferência de tokens na subcoleção "investors"
+      // Transferência de tokens na subcoleção "investors" (retrocompat)
       const buyerInvestorRef = startupRef.collection("investors").doc(buyerId);
       const sellerInvestorRef = startupRef.collection("investors").doc(sellerId);
 
       const buyerInvestorDoc = await transaction.get(buyerInvestorRef);
       const sellerInvestorDoc = await transaction.get(sellerInvestorRef);
 
+      // Snapshot da coleção top-level `holdings` para comprador e vendedor
+      const buyerHoldingSnap = await readHolding(transaction, buyerId, startupId);
+      const sellerHoldingSnap = await readHolding(transaction, sellerId, startupId);
+
       const buyerHolding = buyerInvestorDoc.exists ? Number(buyerInvestorDoc.data()!.tokens ?? 0) : 0;
-      const sellerHolding = sellerInvestorDoc.exists ? Number(sellerInvestorDoc.data()!.tokens ?? 0) : 0;
+      const legacySellerHolding = sellerInvestorDoc.exists ? Number(sellerInvestorDoc.data()!.tokens ?? 0) : 0;
+      const sellerHolding = sellerHoldingSnap.exists ? sellerHoldingSnap.quantity : legacySellerHolding;
 
       if (sellerHolding < matchQty) {
         // Vendedor com tokens insuficientes (inconsistência no banco), pula
         continue;
       }
 
-      // Atualiza holdings do comprador
+      // Atualiza holdings do comprador (subcoleção investors)
       transaction.set(buyerInvestorRef, {
         userId: buyerId,
         startupId: startupId,
@@ -523,16 +642,29 @@ export async function buyFromOrdersTransaction(
         updatedAt: FieldValue.serverTimestamp()
       }, { merge: true });
 
-      // Atualiza holdings do vendedor
-      const remainingSellerHolding = sellerHolding - matchQty;
-      if (remainingSellerHolding <= 0) {
-        transaction.delete(sellerInvestorRef);
-      } else {
-        transaction.update(sellerInvestorRef, {
-          tokens: remainingSellerHolding,
-          updatedAt: FieldValue.serverTimestamp()
-        });
+      // Atualiza holdings do vendedor (subcoleção investors)
+      const remainingSellerHolding = legacySellerHolding - matchQty;
+      if (sellerInvestorDoc.exists) {
+        if (remainingSellerHolding <= 0) {
+          transaction.delete(sellerInvestorRef);
+        } else {
+          transaction.update(sellerInvestorRef, {
+            tokens: remainingSellerHolding,
+            updatedAt: FieldValue.serverTimestamp()
+          });
+        }
       }
+
+      // Atualiza coleção top-level `holdings` (comprador incrementa, vendedor decrementa)
+      applyHoldingBuy(
+        transaction,
+        buyerId,
+        startupId,
+        buyerHoldingSnap,
+        matchQty,
+        Math.round(matchPrice * 100)
+      );
+      applyHoldingSell(transaction, sellerId, startupId, sellerHoldingSnap, matchQty);
 
       // Credita o vendedor
       const sellerData = sellerDoc.data()!;
@@ -684,21 +816,26 @@ export async function approvePendingOfferTransaction(
     matchQty = Math.min(buyerOfferRemaining, sellerOfferRemaining);
     totalPaid = matchQty * price;
 
-    // Transfere tokens na subcoleção "investors"
+    // Transfere tokens na subcoleção "investors" (retrocompat)
     const buyerInvestorRef = startupRef.collection("investors").doc(buyerId);
     const sellerInvestorRef = startupRef.collection("investors").doc(sellerId);
 
     const buyerInvestorDoc = await transaction.get(buyerInvestorRef);
     const sellerInvestorDoc = await transaction.get(sellerInvestorRef);
 
+    // Snapshot da coleção top-level `holdings`
+    const buyerHoldingSnap = await readHolding(transaction, buyerId, startupId);
+    const sellerHoldingSnap = await readHolding(transaction, sellerId, startupId);
+
     const buyerHolding = buyerInvestorDoc.exists ? Number(buyerInvestorDoc.data()!.tokens ?? 0) : 0;
-    const sellerHolding = sellerInvestorDoc.exists ? Number(sellerInvestorDoc.data()!.tokens ?? 0) : 0;
+    const legacySellerHolding = sellerInvestorDoc.exists ? Number(sellerInvestorDoc.data()!.tokens ?? 0) : 0;
+    const sellerHolding = sellerHoldingSnap.exists ? sellerHoldingSnap.quantity : legacySellerHolding;
 
     if (sellerHolding < matchQty) {
-      throw new Error("Você não possui tokens suficientes na carteira para cobrir esta aprovação.");
+      throw new Error("Insufficient tokens");
     }
 
-    // 1. Atualiza holdings de investidores
+    // 1. Atualiza holdings de investidores (subcoleção)
     transaction.set(buyerInvestorRef, {
       userId: buyerId,
       startupId: startupId,
@@ -706,15 +843,28 @@ export async function approvePendingOfferTransaction(
       updatedAt: FieldValue.serverTimestamp()
     }, { merge: true });
 
-    const remainingSellerHolding = sellerHolding - matchQty;
-    if (remainingSellerHolding <= 0) {
-      transaction.delete(sellerInvestorRef);
-    } else {
-      transaction.update(sellerInvestorRef, {
-        tokens: remainingSellerHolding,
-        updatedAt: FieldValue.serverTimestamp()
-      });
+    const remainingSellerHolding = legacySellerHolding - matchQty;
+    if (sellerInvestorDoc.exists) {
+      if (remainingSellerHolding <= 0) {
+        transaction.delete(sellerInvestorRef);
+      } else {
+        transaction.update(sellerInvestorRef, {
+          tokens: remainingSellerHolding,
+          updatedAt: FieldValue.serverTimestamp()
+        });
+      }
     }
+
+    // 1b. Atualiza coleção top-level `holdings`
+    applyHoldingBuy(
+      transaction,
+      buyerId,
+      startupId,
+      buyerHoldingSnap,
+      matchQty,
+      Math.round(price * 100)
+    );
+    applyHoldingSell(transaction, sellerId, startupId, sellerHoldingSnap, matchQty);
 
     // 2. Transfere fundos da carteira do comprador (que estavam reservados) para o vendedor
     const buyerData = buyerDoc.data()!;
@@ -945,19 +1095,38 @@ export async function listActiveOffers(
 
 /**
  * Retorna as holdings (tokens) de um usuário com o preço atual.
+ * Lê primeiro da coleção top-level `holdings`; em fallback, usa a subcoleção legada `investors`.
  */
 export async function getUserTokenHoldings(userId: string): Promise<any[]> {
-  const snapshot = await db.collectionGroup("investors")
+  const aggregated = new Map<string, number>();
+
+  // 1) Top-level holdings
+  const holdingsSnap = await db.collection("holdings")
     .where("userId", "==", userId)
     .get();
+  holdingsSnap.docs.forEach((doc) => {
+    const data = doc.data();
+    const sid = String(data.startupId ?? "");
+    const qty = Number(data.quantity ?? 0);
+    if (sid && qty > 0) aggregated.set(sid, qty);
+  });
+
+  // 2) Fallback para a subcoleção `investors` apenas se não houver entrada em holdings
+  const investorsSnap = await db.collectionGroup("investors")
+    .where("userId", "==", userId)
+    .get();
+  investorsSnap.docs.forEach((doc) => {
+    const data = doc.data();
+    const sid = doc.ref.parent.parent ? doc.ref.parent.parent.id : "";
+    const qty = Number(data.tokens ?? 0);
+    if (sid && qty > 0 && !aggregated.has(sid)) {
+      aggregated.set(sid, qty);
+    }
+  });
 
   const holdings: any[] = [];
 
-  for (const doc of snapshot.docs) {
-    const data = doc.data();
-    const tokens = Number(data.tokens ?? 0);
-    const startupId = doc.ref.parent.parent ? doc.ref.parent.parent.id : "";
-
+  for (const [startupId, tokens] of aggregated) {
     if (!startupId || tokens <= 0) continue;
 
     // Busca o preço atual do catálogo de startups

@@ -126,15 +126,40 @@ class CounterService {
 
   // ── Token holdings do usuário ──────────────────────────────────────────
 
-  /// Quantidade de tokens que o usuário possui em determinada startup (obtido via API)
+  /// ID determinístico do documento na coleção top-level `holdings`.
+  static String _holdingDocId(String userId, String startupId) =>
+      '${userId}_$startupId';
+
+  /// Quantidade de tokens que o usuário possui em determinada startup.
+  /// Lê diretamente da coleção top-level `holdings` (Firestore SDK) para evitar
+  /// depender do round-trip pela API; faz fallback para a subcoleção legada `investors`.
   Future<double> getUserTokens(String startupId) async {
     try {
-      final holdings = await getMyTokens();
-      final match = holdings.firstWhere(
-        (h) => h['startupId'] == startupId,
-        orElse: () => <String, dynamic>{},
-      );
-      return (match['tokens'] as num?)?.toDouble() ?? 0.0;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return 0.0;
+
+      final db = FirebaseFirestore.instance;
+      final holdingDoc = await db
+          .collection('holdings')
+          .doc(_holdingDocId(user.uid, startupId))
+          .get();
+
+      if (holdingDoc.exists) {
+        final data = holdingDoc.data();
+        return (data?['quantity'] as num?)?.toDouble() ?? 0.0;
+      }
+
+      // Fallback para registros legados na subcoleção investors
+      final investorDoc = await db
+          .collection('startups')
+          .doc(startupId)
+          .collection('investors')
+          .doc(user.uid)
+          .get();
+      if (investorDoc.exists) {
+        return (investorDoc.data()?['tokens'] as num?)?.toDouble() ?? 0.0;
+      }
+      return 0.0;
     } catch (e) {
       return 0.0;
     }
@@ -251,34 +276,38 @@ class CounterService {
             final startupRef = db.collection('startups').doc(startupId);
             final userRef = db.collection('users').doc(user.uid);
             final tokenRef = startupRef.collection('investors').doc(user.uid);
-            
+            final holdingRef = db
+                .collection('holdings')
+                .doc(_holdingDocId(user.uid, startupId));
+
             // Execute all reads first
             final startupDoc = await transaction.get(startupRef);
             final userDoc = await transaction.get(userRef);
             final tokenDoc = await transaction.get(tokenRef);
-            
+            final holdingDoc = await transaction.get(holdingRef);
+
             if (!startupDoc.exists) throw 'Startup não encontrada';
             if (!userDoc.exists) throw 'Usuário não encontrado';
-            
+
             final sData = startupDoc.data() as Map<String, dynamic>;
             final priceCents = (sData['currentTokenPriceCents'] as num?)?.toInt() ?? 100;
             final price = priceCents / 100.0;
             newTokenPrice = price;
             final totalCost = quantity * price;
-            
+
             final uData = userDoc.data() as Map<String, dynamic>;
             final currentBalance = (uData['saldo'] as num?)?.toDouble() ?? 0.0;
-            
+
             if (currentBalance < totalCost) throw 'Saldo insuficiente';
-            
+
             newBalance = currentBalance - totalCost;
-            
+
             // Execute all writes after reads
             transaction.update(userRef, {'saldo': newBalance});
-            
-            final tData = tokenDoc.data() as Map<String, dynamic>?;
+
+            final tData = tokenDoc.data();
             final currentTokens = (tData?['tokens'] as num?)?.toDouble() ?? 0.0;
-            
+
             if (!tokenDoc.exists) {
               transaction.set(tokenRef, {
                 'userId': user.uid,
@@ -292,7 +321,29 @@ class CounterService {
                 'updatedAt': Timestamp.now()
               });
             }
-            
+
+            // Atualiza a coleção top-level `holdings` (preço médio ponderado em centavos)
+            final hData = holdingDoc.data();
+            final prevQty = (hData?['quantity'] as num?)?.toDouble() ?? 0.0;
+            final prevAvgCents =
+                (hData?['averagePriceCents'] as num?)?.toDouble() ?? 0.0;
+            final newQty = prevQty + quantity;
+            final newAvgCents = newQty > 0
+                ? ((prevQty * prevAvgCents) + (quantity * priceCents)) / newQty
+                : 0.0;
+
+            transaction.set(
+              holdingRef,
+              {
+                'userId': user.uid,
+                'startupId': startupId,
+                'quantity': newQty,
+                'averagePriceCents': newAvgCents.round(),
+                'updatedAt': FieldValue.serverTimestamp(),
+              },
+              SetOptions(merge: true),
+            );
+
             final tokensSold = (sData['tokensSold'] as num?)?.toDouble() ?? 0.0;
             final capitalRaisedCents = (sData['capitalRaisedCents'] as num?)?.toInt() ?? 0;
             final addedCents = (totalCost * 100).toInt();
@@ -302,7 +353,7 @@ class CounterService {
             });
           } catch (e, stack) {
             txError = 'ERRO REAL: $e\n$stack';
-            throw e;
+            rethrow;
           }
         });
       } catch (e) {
@@ -334,48 +385,90 @@ class CounterService {
       double newTokenPrice = 0.0;
       
       await db.runTransaction((transaction) async {
-        try {
-          final startupRef = db.collection('startups').doc(startupId);
-          final startupDoc = await transaction.get(startupRef);
-          if (!startupDoc.exists) throw 'Startup não encontrada';
-          
-          final sData = startupDoc.data() as Map<String, dynamic>;
-          final priceCents = (sData['currentTokenPriceCents'] as num?)?.toInt() ?? 100;
-          final price = priceCents / 100.0;
-          newTokenPrice = price;
-          final totalValue = quantity * price;
-          
-          final userRef = db.collection('users').doc(user.uid);
-          final userDoc = await transaction.get(userRef);
-          if (!userDoc.exists) throw 'Usuário não encontrado';
-          
-          final uData = userDoc.data() as Map<String, dynamic>;
-          final currentBalance = (uData['saldo'] as num?)?.toDouble() ?? 0.0;
-          
-          final tokenRef = startupRef.collection('investors').doc(user.uid);
-          final tokenDoc = await transaction.get(tokenRef);
-          if (!tokenDoc.exists) throw 'Você não possui tokens desta startup';
-          
-          final tData = tokenDoc.data() as Map<String, dynamic>;
-          final currentTokens = (tData['tokens'] as num?)?.toDouble() ?? 0.0;
-          
-          if (currentTokens < quantity) throw 'Tokens insuficientes';
-          
-          newBalance = currentBalance + totalValue;
-          transaction.update(userRef, {'saldo': newBalance});
-          
-          transaction.update(tokenRef, {'tokens': currentTokens - quantity, 'updatedAt': Timestamp.now()});
-          
-          final tokensSold = (sData['tokensSold'] as num?)?.toDouble() ?? 0.0;
-          final capitalRaisedCents = (sData['capitalRaisedCents'] as num?)?.toInt() ?? 0;
-          final deductedCents = (totalValue * 100).toInt();
-          transaction.update(startupRef, {
-            'tokensSold': tokensSold - quantity,
-            'capitalRaisedCents': capitalRaisedCents - deductedCents,
-          });
-        } catch (e, stack) {
-          throw 'TRANSACTION_ERROR: $e\n$stack';
+        final startupRef = db.collection('startups').doc(startupId);
+        final userRef = db.collection('users').doc(user.uid);
+        final tokenRef = startupRef.collection('investors').doc(user.uid);
+        final holdingRef = db
+            .collection('holdings')
+            .doc(_holdingDocId(user.uid, startupId));
+
+        // Execute all reads first
+        final startupDoc = await transaction.get(startupRef);
+        final userDoc = await transaction.get(userRef);
+        final tokenDoc = await transaction.get(tokenRef);
+        final holdingDoc = await transaction.get(holdingRef);
+
+        if (!startupDoc.exists) throw 'Startup não encontrada';
+        if (!userDoc.exists) throw 'Usuário não encontrado';
+
+        final sData = startupDoc.data() as Map<String, dynamic>;
+        final priceCents = (sData['currentTokenPriceCents'] as num?)?.toInt() ?? 100;
+        final price = priceCents / 100.0;
+        newTokenPrice = price;
+        final totalValue = quantity * price;
+
+        final uData = userDoc.data() as Map<String, dynamic>;
+        final currentBalance = (uData['saldo'] as num?)?.toDouble() ?? 0.0;
+
+        // Valida a quantidade prioritariamente pela coleção top-level `holdings`,
+        // com fallback para a subcoleção legada `investors`.
+        final hData = holdingDoc.data();
+        final legacyTokens = (tokenDoc.data()?['tokens'] as num?)?.toDouble() ?? 0.0;
+        final heldQty = holdingDoc.exists
+            ? ((hData?['quantity'] as num?)?.toDouble() ?? 0.0)
+            : legacyTokens;
+
+        if (heldQty < quantity) throw 'Insufficient tokens';
+
+        newBalance = currentBalance + totalValue;
+        transaction.update(userRef, {'saldo': newBalance});
+
+        // Decrementa subcoleção investors (retrocompat) somente se existir
+        if (tokenDoc.exists) {
+          final remainingLegacy = legacyTokens - quantity;
+          if (remainingLegacy <= 0) {
+            transaction.delete(tokenRef);
+          } else {
+            transaction.update(tokenRef, {
+              'tokens': remainingLegacy,
+              'updatedAt': Timestamp.now(),
+            });
+          }
         }
+
+        // Decrementa a coleção top-level `holdings`
+        final remainingHolding = heldQty - quantity;
+        if (remainingHolding <= 0) {
+          transaction.set(
+            holdingRef,
+            {
+              'userId': user.uid,
+              'startupId': startupId,
+              'quantity': 0,
+              'updatedAt': FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true),
+          );
+        } else {
+          transaction.set(
+            holdingRef,
+            {
+              'userId': user.uid,
+              'startupId': startupId,
+              'quantity': remainingHolding,
+              'updatedAt': FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true),
+          );
+        }
+
+        final tokensSold = (sData['tokensSold'] as num?)?.toDouble() ?? 0.0;
+        final capitalRaisedCents = (sData['capitalRaisedCents'] as num?)?.toInt() ?? 0;
+        final deductedCents = (totalValue * 100).toInt();
+        transaction.update(startupRef, {
+          'tokensSold': tokensSold - quantity,
+          'capitalRaisedCents': capitalRaisedCents - deductedCents,
+        });
       });
       
       return {
