@@ -14,6 +14,7 @@ import 'package:mesclainvest_f/model/userModel.dart';
 import 'package:mesclainvest_f/startups/components/startup_colors.dart';
 import 'package:mesclainvest_f/startups/services/getStartup.dart';
 
+
 class CounterPage extends StatefulWidget {
   final UserModel user;
   const CounterPage({super.key, required this.user});
@@ -42,9 +43,8 @@ class _CounterPageState extends State<CounterPage> {
   String? _sellStartupId;
   String? _sellStartupNome;
   double _sellQtd = 1;
-  final TextEditingController _sellPrecoCtrl = TextEditingController(
-    text: '1,00',
-  );
+  final TextEditingController _sellPrecoCtrl =
+      TextEditingController(text: '1,00');
   List<OfferModel> _sellVendaOffers = [];
   List<OfferModel> _sellCompraOffers = [];
 
@@ -77,14 +77,10 @@ class _CounterPageState extends State<CounterPage> {
       final list = await StartupService().listStartups();
       if (mounted) {
         setState(() {
-          _startupsList = list
-              .map(
-                (s) => {
-                  'id': (s['id'] ?? '').toString(),
-                  'nome': (s['name'] ?? '').toString(),
-                },
-              )
-              .toList();
+          _startupsList = list.map((s) => {
+            'id': (s['id'] ?? '').toString(),
+            'nome': (s['name'] ?? '').toString(),
+          }).toList();
         });
       }
     } catch (e) {
@@ -182,9 +178,8 @@ class _CounterPageState extends State<CounterPage> {
       setState(() {
         _sellVendaOffers = all.where((o) => o.tipo == OrderType.venda).toList()
           ..sort((a, b) => a.precoPorToken.compareTo(b.precoPorToken));
-        _sellCompraOffers =
-            all.where((o) => o.tipo == OrderType.compra).toList()
-              ..sort((a, b) => b.precoPorToken.compareTo(a.precoPorToken));
+        _sellCompraOffers = all.where((o) => o.tipo == OrderType.compra).toList()
+          ..sort((a, b) => b.precoPorToken.compareTo(a.precoPorToken));
       });
     }
   }
@@ -203,7 +198,7 @@ class _CounterPageState extends State<CounterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: StartupColors.pageBg,
+      backgroundColor: StartupColors.pageBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -225,10 +220,8 @@ class _CounterPageState extends State<CounterPage> {
           ],
         ),
       ),
-      bottomNavigationBar: CustomNavBar(
-        userModel: widget.user,
-        currentIndex: 2,
-      ),
+      bottomNavigationBar:
+          CustomNavBar(userModel: widget.user, currentIndex: 2),
     );
   }
 
@@ -254,11 +247,8 @@ class _CounterPageState extends State<CounterPage> {
               color: const Color(0xFF3A3A3A),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Icon(
-              Icons.notifications_outlined,
-              color: Colors.white,
-              size: 22,
-            ),
+            child: const Icon(Icons.notifications_outlined,
+                color: Colors.white, size: 22),
           ),
         ],
       ),
@@ -289,22 +279,18 @@ class _CounterPageState extends State<CounterPage> {
         const _FieldLabel(text: 'Selecione a startup'),
         const SizedBox(height: 8),
         _buildStartupDropdown(
-          startups: _startupsList.isEmpty
-              ? CounterService.allStartups
-              : _startupsList,
+          startups: _startupsList.isEmpty ? CounterService.allStartups : _startupsList,
           selectedId: _buyStartupId,
           onSelected: _onBuyStartupSelected,
         ),
         if (_buyStartupId == null) ...[
           const SizedBox(height: 60),
           const _EmptyPrompt(
-            message: 'Selecione uma startup para ver as ordens disponíveis',
-          ),
+              message: 'Selecione uma startup para ver as ordens disponíveis'),
         ] else ...[
           const SizedBox(height: 24),
           _SectionLabel(
-            text: 'LIVRO DE ORDENS — ${_buyStartupNome!.toUpperCase()}',
-          ),
+              text: 'LIVRO DE ORDENS — ${_buyStartupNome!.toUpperCase()}'),
           const SizedBox(height: 10),
           OrderBookTable(
             vendaOrders: _buyVendaOffers,
@@ -315,8 +301,7 @@ class _CounterPageState extends State<CounterPage> {
           const SizedBox(height: 10),
           if (_buyVendaOffers.isEmpty)
             const _EmptyPrompt(
-              message: 'Nenhuma oferta de venda para esta startup',
-            )
+                message: 'Nenhuma oferta de venda para esta startup')
           else
             ..._buyVendaOffers.map(
               (offer) => _OfferRowCompra(
@@ -344,13 +329,13 @@ class _CounterPageState extends State<CounterPage> {
 
           return Padding(
             padding: EdgeInsets.only(
-              bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            ),
+                bottom: MediaQuery.of(ctx).viewInsets.bottom),
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
               decoration: const BoxDecoration(
                 color: Color(0xFF262629),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -387,9 +372,7 @@ class _CounterPageState extends State<CounterPage> {
                           Text(
                             offer.startupNome,
                             style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 13,
-                            ),
+                                color: Colors.white54, fontSize: 13),
                           ),
                         ],
                       ),
@@ -407,9 +390,7 @@ class _CounterPageState extends State<CounterPage> {
                           const Text(
                             '/token',
                             style: TextStyle(
-                              color: Colors.white38,
-                              fontSize: 11,
-                            ),
+                                color: Colors.white38, fontSize: 11),
                           ),
                         ],
                       ),
@@ -419,7 +400,8 @@ class _CounterPageState extends State<CounterPage> {
                   const SizedBox(height: 6),
                   Text(
                     'Disponível: ${offer.quantidade.toInt()} tokens',
-                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                    style:
+                        const TextStyle(color: Colors.white54, fontSize: 12),
                   ),
 
                   const SizedBox(height: 20),
@@ -428,10 +410,9 @@ class _CounterPageState extends State<CounterPage> {
                   const Text(
                     'Quantidade',
                     style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
+                        color: Colors.white70,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 8),
                   Container(
@@ -439,8 +420,8 @@ class _CounterPageState extends State<CounterPage> {
                       color: const Color(0xFF1A1A1E),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFF107649).withValues(alpha: 0.4),
-                      ),
+                          color: const Color(0xFF107649)
+                              .withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       children: [
@@ -502,18 +483,13 @@ class _CounterPageState extends State<CounterPage> {
                     const SizedBox(height: 10),
                     const Row(
                       children: [
-                        Icon(
-                          Icons.warning_amber_rounded,
-                          color: Color(0xFFE74C3C),
-                          size: 16,
-                        ),
+                        Icon(Icons.warning_amber_rounded,
+                            color: Color(0xFFE74C3C), size: 16),
                         SizedBox(width: 6),
                         Text(
                           'Saldo insuficiente para esta compra',
                           style: TextStyle(
-                            color: Color(0xFFE74C3C),
-                            fontSize: 12,
-                          ),
+                              color: Color(0xFFE74C3C), fontSize: 12),
                         ),
                       ],
                     ),
@@ -528,43 +504,35 @@ class _CounterPageState extends State<CounterPage> {
                         backgroundColor: hasSaldo
                             ? const Color(0xFF107649)
                             : Colors.white12,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(13),
-                        ),
+                            borderRadius: BorderRadius.circular(13)),
                         elevation: 0,
                       ),
                       onPressed: hasSaldo
                           ? () async {
                               Navigator.pop(ctx);
-                              final result = await _service.buyTokens(
-                                offer.startupId,
-                                qty,
-                              );
+                              final result = await _service.buyTokens(offer.startupId, qty);
                               if (result['success'] == true) {
                                 if (mounted) {
                                   setState(() {
-                                    widget.user.saldo =
-                                        result['updatedBalance'];
+                                    widget.user.saldo = result['updatedBalance'];
                                   });
                                 }
                                 _refreshBuyBook();
                                 _showSnackBar(
-                                  'Compra de ${qty.toInt()} tokens de ${offer.startupNome} realizada!',
-                                );
+                                    'Compra de ${qty.toInt()} tokens de ${offer.startupNome} realizada!');
                               } else {
-                                _showSnackBar(
-                                  result['error'] ??
-                                      'Erro ao processar compra.',
-                                  isError: true,
-                                );
+                                _showSnackBar(result['error'] ?? 'Erro ao processar compra.', isError: true);
                               }
                             }
                           : null,
                       child: Text(
                         'Confirmar Compra',
                         style: TextStyle(
-                          color: hasSaldo ? Colors.white : Colors.white38,
+                          color:
+                              hasSaldo ? Colors.white : Colors.white38,
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),
@@ -584,6 +552,7 @@ class _CounterPageState extends State<CounterPage> {
   // Fluxo: seleciona startup (onde tem tokens) → vê tabela → define qtd + preço → publica
 
   Widget _buildVenderTab() {
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       physics: const BouncingScrollPhysics(),
@@ -601,34 +570,31 @@ class _CounterPageState extends State<CounterPage> {
         if (_sellStartupId == null) ...[
           const SizedBox(height: 60),
           const _EmptyPrompt(
-            message: 'Selecione uma startup para publicar uma oferta de venda',
-          ),
+              message:
+                  'Selecione uma startup para publicar uma oferta de venda'),
         ] else ...[
           const SizedBox(height: 12),
 
           // Badge com saldo de tokens do usuário
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: const Color(0xFF107649).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: const Color(0xFF107649).withValues(alpha: 0.3),
-              ),
+                  color: const Color(0xFF107649).withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Icons.toll_rounded,
-                  color: Color(0xFF1A9B5F),
-                  size: 16,
-                ),
+                const Icon(Icons.toll_rounded,
+                    color: Color(0xFF1A9B5F), size: 16),
                 const SizedBox(width: 6),
                 Text(
                   'Seus tokens: $_userTokensBalance $_sellStartupNome',
                   style: const TextStyle(
-                    color: Colors.white70,
+                    color: Color(0xFF1A9B5F),
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -639,8 +605,7 @@ class _CounterPageState extends State<CounterPage> {
 
           const SizedBox(height: 20),
           _SectionLabel(
-            text: 'LIVRO DE ORDENS — ${_sellStartupNome!.toUpperCase()}',
-          ),
+              text: 'LIVRO DE ORDENS — ${_sellStartupNome!.toUpperCase()}'),
           const SizedBox(height: 10),
           OrderBookTable(
             vendaOrders: _sellVendaOffers,
@@ -672,8 +637,7 @@ class _CounterPageState extends State<CounterPage> {
             color: const Color(0xFF262629),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: const Color(0xFF107649).withValues(alpha: 0.4),
-            ),
+                color: const Color(0xFF107649).withValues(alpha: 0.4)),
           ),
           child: Row(
             children: [
@@ -708,7 +672,8 @@ class _CounterPageState extends State<CounterPage> {
           const SizedBox(height: 6),
           Text(
             'Você possui apenas ${userTokens.toInt()} tokens',
-            style: const TextStyle(color: Color(0xFFE74C3C), fontSize: 12),
+            style:
+                const TextStyle(color: Color(0xFFE74C3C), fontSize: 12),
           ),
         ],
 
@@ -723,12 +688,12 @@ class _CounterPageState extends State<CounterPage> {
             color: const Color(0xFF262629),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: const Color(0xFF107649).withValues(alpha: 0.4),
-            ),
+                color: const Color(0xFF107649).withValues(alpha: 0.4)),
           ),
           child: TextField(
             controller: _sellPrecoCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -751,7 +716,8 @@ class _CounterPageState extends State<CounterPage> {
           decoration: BoxDecoration(
             color: const Color(0xFF262629),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            border:
+                Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: Column(
             children: [
@@ -771,7 +737,8 @@ class _CounterPageState extends State<CounterPage> {
               ),
               _SheetSummaryRow(
                 label: 'Total estimado',
-                value: 'R\$ ${total.toStringAsFixed(2).replaceAll('.', ',')}',
+                value:
+                    'R\$ ${total.toStringAsFixed(2).replaceAll('.', ',')}',
                 highlight: true,
               ),
             ],
@@ -786,11 +753,10 @@ class _CounterPageState extends State<CounterPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: enoughTokens && _sellPreco > 0
                   ? const Color(0xFF107649)
-                  : Colors.white,
+                  : Colors.white12,
               padding: const EdgeInsets.symmetric(vertical: 15),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(13),
-              ),
+                  borderRadius: BorderRadius.circular(13)),
               elevation: 0,
             ),
             onPressed: enoughTokens && _sellPreco > 0
@@ -830,14 +796,12 @@ class _CounterPageState extends State<CounterPage> {
     if (success) {
       _refreshSellBook();
       _sellPrecoCtrl.text = '1,00';
-      final publishedQty =
-          _sellQtd; // Guarda a quantidade publicada antes de resetar
+      final publishedQty = _sellQtd; // Guarda a quantidade publicada antes de resetar
       setState(() {
         _sellQtd = 1;
       });
       _showSnackBar(
-        'Oferta de ${publishedQty.toInt()} tokens publicada na tabela!',
-      );
+          'Oferta de ${publishedQty.toInt()} tokens publicada na tabela!');
     } else {
       _showSnackBar('Erro ao publicar oferta de venda.', isError: true);
     }
@@ -862,25 +826,16 @@ class _CounterPageState extends State<CounterPage> {
         }
 
         final docs = snap.data?.docs ?? [];
-        final ops =
-            docs
-                .map(
-                  (d) => OperationModel.fromMap(
-                    d.id,
-                    d.data() as Map<String, dynamic>,
-                  ),
-                )
-                .toList()
-              ..sort(
-                (a, b) => (b.createdAt ?? DateTime(0)).compareTo(
-                  a.createdAt ?? DateTime(0),
-                ),
-              );
+        final ops = docs
+            .map((d) => OperationModel.fromMap(
+                d.id, d.data() as Map<String, dynamic>))
+            .toList()
+          ..sort((a, b) =>
+              (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
 
         if (ops.isEmpty) {
           return const _EmptyPrompt(
-            message: 'Você ainda não tem operações registradas',
-          );
+              message: 'Você ainda não tem operações registradas');
         }
 
         return ListView.builder(
@@ -922,10 +877,8 @@ class _CounterPageState extends State<CounterPage> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: selectedNome,
-          hint: Text(
-            hint,
-            style: const TextStyle(color: Colors.white38, fontSize: 14),
-          ),
+          hint: Text(hint,
+              style: const TextStyle(color: Colors.white38, fontSize: 14)),
           isExpanded: true,
           dropdownColor: const Color(0xFF262629),
           icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white54),
@@ -935,16 +888,17 @@ class _CounterPageState extends State<CounterPage> {
             fontWeight: FontWeight.w500,
           ),
           items: startups
-              .map(
-                (s) =>
-                    DropdownMenuItem(value: s['nome'], child: Text(s['nome']!)),
-              )
+              .map((s) => DropdownMenuItem(
+                    value: s['nome'],
+                    child: Text(s['nome']!),
+                  ))
               .toList(),
           onChanged: startups.isEmpty
               ? null
               : (val) {
                   if (val == null) return;
-                  final match = startups.firstWhere((s) => s['nome'] == val);
+                  final match =
+                      startups.firstWhere((s) => s['nome'] == val);
                   onSelected(match['id']!, match['nome']!);
                 },
         ),
@@ -955,18 +909,13 @@ class _CounterPageState extends State<CounterPage> {
   void _showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: isError
-            ? const Color(0xFFE74C3C)
-            : const Color(0xFF107649),
+        content: Text(message,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: isError ? const Color(0xFFE74C3C) : const Color(0xFF107649),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
       ),
     );
@@ -1001,7 +950,7 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
-        color: Colors.white,
+        color: Colors.white38,
         fontSize: 11,
         fontWeight: FontWeight.w600,
         letterSpacing: 1.2,
@@ -1065,7 +1014,8 @@ class _OfferRowCompra extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     '${offer.quantidade.toInt()} tokens disponíveis',
-                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                    style: const TextStyle(
+                        color: Colors.white54, fontSize: 12),
                   ),
                 ],
               ),
@@ -1089,7 +1039,8 @@ class _OfferRowCompra extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: const Color(0xFF107649),
                 borderRadius: BorderRadius.circular(8),
@@ -1175,10 +1126,8 @@ class _SheetSummaryRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white54, fontSize: 13),
-        ),
+        Text(label,
+            style: const TextStyle(color: Colors.white54, fontSize: 13)),
         Text(
           value,
           style: TextStyle(
@@ -1222,7 +1171,8 @@ class _OperationCard extends StatelessWidget {
 
     final priceStr =
         'R\$ ${op.pricePerToken.toStringAsFixed(2).replaceAll('.', ',')}';
-    final totalStr = 'R\$ ${op.total.toStringAsFixed(2).replaceAll('.', ',')}';
+    final totalStr =
+        'R\$ ${op.total.toStringAsFixed(2).replaceAll('.', ',')}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -1238,9 +1188,7 @@ class _OperationCard extends StatelessWidget {
             width: 8,
             height: 8,
             decoration: const BoxDecoration(
-              color: Color(0xFF1A9B5F),
-              shape: BoxShape.circle,
-            ),
+                color: Color(0xFF1A9B5F), shape: BoxShape.circle),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1258,7 +1206,8 @@ class _OperationCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Compra · ${op.quantity} tokens @ $priceStr',
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  style:
+                      const TextStyle(color: Colors.white54, fontSize: 12),
                 ),
               ],
             ),
@@ -1276,7 +1225,8 @@ class _OperationCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
