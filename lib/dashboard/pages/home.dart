@@ -5,12 +5,15 @@
 
 // Importa o pacote básico de UI do Flutter para usar widgets como Scaffold e Column
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Importa os componentes de cabeçalho e barra de navegação personalizados para manter a identidade visual
 import 'package:mesclainvest_f/components/appBar.dart';
 import 'package:mesclainvest_f/components/navBar.dart';
 // Importa o painel do dashboard que contém o gráfico e outras métricas
 import 'package:mesclainvest_f/dashboard/components/dashboardPainel.dart';
+import 'package:mesclainvest_f/dashboard/components/my_invested_startups_card.dart';
 
 // Importa o modelo de usuário para acessar os dados do usuário logado, como nome e saldo
 import 'package:mesclainvest_f/model/userModel.dart';
@@ -85,22 +88,16 @@ class _HomePageState extends State<HomePage> {
                   // Um pequeno espaço vertical de 4 pixels entre os textos
                   const SizedBox(height: 4),
 
-                  Text(
-                    _isVisible ? CurrencyInputFormatter.formatValue(saldo) : "R\$ ••••••",
-                    style: const TextStyle(
-                      fontSize:
-                          32, // Ajustei levemente para caber melhor na linha
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                    ),
+                  TotalBalanceDisplay(
+                    userModel: userModel,
+                    isVisible: _isVisible,
                   ),
                 ],
               ),
             ),
 
             // Widget que renderiza o gráfico de desempenho da carteira
-            const DashboardChart(),
+            DashboardChart(userModel: userModel),
 
             // Espaçamento vertical generoso entre o gráfico e a próxima seção
             const SizedBox(height: 18),
@@ -118,13 +115,96 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
+
+            const SizedBox(height: 16),
+
+            // Card exibindo a lista de startups investidas
+            MyInvestedStartupsCard(userModel: userModel, isVisible: _isVisible),
+
+            const SizedBox(height: 32),
           ],
         ),
       ),
 
       // Barra de navegação inferior que permite mudar entre as telas principais
-      // currentIndex: 0 indica que o ícone de "Investimentos" ficará destacado
+
+// currentIndex: 0 indica que o ícone de "Investimentos" ficará destacado
       bottomNavigationBar: CustomNavBar(userModel: userModel, currentIndex: 0),
+    );
+  }
+}
+
+class TotalBalanceDisplay extends StatelessWidget {
+  final UserModel userModel;
+  final bool isVisible;
+
+  const TotalBalanceDisplay({
+    super.key,
+    required this.userModel,
+    required this.isVisible,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? userModel.uid;
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
+      builder: (context, userSnap) {
+        double liveSaldo = userModel.saldo;
+        if (userSnap.hasData && userSnap.data!.exists) {
+          liveSaldo = ((userSnap.data!.data() as Map<String, dynamic>)['saldo'] as num?)?.toDouble() ?? 0.0;
+        }
+
+        return StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('startups').snapshots(),
+          builder: (context, startupsSnap) {
+            return StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('holdings')
+                  .where('userId', isEqualTo: userId)
+                  .snapshots(),
+              builder: (context, holdingsSnap) {
+                double portfolioValue = 0.0;
+
+                if (startupsSnap.hasData && holdingsSnap.hasData) {
+                  final holdingsDocs = holdingsSnap.data!.docs;
+                  final startupsDocs = startupsSnap.data!.docs;
+
+                  final Map<String, double> startupPrices = {};
+                  for (var doc in startupsDocs) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final currentPrice = (data['currentPrice'] as num?)?.toDouble() ?? 
+                                         (((data['currentTokenPriceCents'] as num?)?.toInt() ?? 100) / 100.0);
+                    startupPrices[doc.id] = currentPrice;
+                  }
+
+                  for (var doc in holdingsDocs) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final qty = (data['quantity'] as num?)?.toDouble() ?? 0.0;
+                    final startupId = data['startupId'] as String? ?? '';
+                    if (qty > 0 && startupPrices.containsKey(startupId)) {
+                      portfolioValue += (qty * startupPrices[startupId]!);
+                    }
+                  }
+                }
+
+                final totalBalance = liveSaldo + portfolioValue;
+
+                return Text(
+                  isVisible ? CurrencyInputFormatter.formatValue(totalBalance) : "R\$ ••••••",
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

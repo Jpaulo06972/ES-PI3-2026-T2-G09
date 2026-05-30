@@ -29,7 +29,11 @@ export async function buyFromStartup(
 
     const startupData = startupDoc.data()!;
     const pricePerTokenCents: number = startupData.currentTokenPriceCents ?? 0;
-    const availableTokens: number = startupData.availableTokens ?? 0;
+    const totalTokensIssued: number = startupData.totalTokensIssued ?? 0;
+    const tokensSold: number = startupData.tokensSold ?? 0;
+    const availableTokens: number = startupData.availableTokens !== undefined
+      ? startupData.availableTokens
+      : Math.max(0, totalTokensIssued - tokensSold);
     const startupName: string = startupData.name ?? "";
 
     if (pricePerTokenCents <= 0) throw new Error("Preço de token inválido.");

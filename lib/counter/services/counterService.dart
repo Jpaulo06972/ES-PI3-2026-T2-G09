@@ -186,16 +186,37 @@ class CounterService {
     }
   }
 
-  /// Startups onde o usuário tem pelo menos 1 token
+  /// Startups onde o usuário tem pelo menos 1 token — lê Firestore diretamente
   Future<List<Map<String, String>>> getStartupsWithUserTokens() async {
     try {
-      final holdings = await getMyTokens();
-      return holdings.map((h) {
-        return {
-          'id': (h['startupId'] ?? '').toString(),
-          'nome': (h['startupName'] ?? 'Startup').toString(),
-        };
-      }).toList();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return [];
+
+      final db = FirebaseFirestore.instance;
+      final snap = await db
+          .collection('holdings')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+
+      final result = <Map<String, String>>[];
+      for (final doc in snap.docs) {
+        final data = doc.data();
+        final qty = (data['quantity'] as num?)?.toDouble() ?? 0;
+        if (qty <= 0) continue;
+        final startupId = (data['startupId'] as String?) ?? '';
+        if (startupId.isEmpty) continue;
+
+        String nome = startupId;
+        try {
+          final sdoc = await db.collection('startups').doc(startupId).get();
+          if (sdoc.exists) {
+            nome = (sdoc.data()?['name'] as String?) ?? startupId;
+          }
+        } catch (_) {}
+
+        result.add({'id': startupId, 'nome': nome});
+      }
+      return result;
     } catch (e) {
       return [];
     }

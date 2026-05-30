@@ -1,16 +1,18 @@
 // Grupo: G09
 // Trabalho: PI3-2026-T2-G09
 
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mesclainvest_f/components/navBar.dart';
 import 'package:mesclainvest_f/counter/components/counterToggle.dart';
 import 'package:mesclainvest_f/counter/components/orderBookTable.dart';
 import 'package:mesclainvest_f/counter/services/counterService.dart';
 import 'package:mesclainvest_f/model/offerModel.dart';
+import 'package:mesclainvest_f/model/operationModel.dart';
 import 'package:mesclainvest_f/model/userModel.dart';
 import 'package:mesclainvest_f/startups/components/startup_colors.dart';
 import 'package:mesclainvest_f/startups/services/getStartup.dart';
-
 
 class CounterPage extends StatefulWidget {
   final UserModel user;
@@ -27,9 +29,8 @@ class _CounterPageState extends State<CounterPage> {
   // ── Estado assíncrono do Balcão ─────────────────────────────────────────
   List<Map<String, String>> _startupsList = [];
   List<Map<String, String>> _sellStartups = [];
-  List<OfferModel> _myOffers = [];
   double _userTokensBalance = 0.0;
-  bool _isLoadingOffers = false;
+  Timer? _offerRefreshTimer;
 
   // ── Estado da aba Comprar ──────────────────────────────────────────────
   String? _buyStartupId;
@@ -41,8 +42,9 @@ class _CounterPageState extends State<CounterPage> {
   String? _sellStartupId;
   String? _sellStartupNome;
   double _sellQtd = 1;
-  final TextEditingController _sellPrecoCtrl =
-      TextEditingController(text: '1,00');
+  final TextEditingController _sellPrecoCtrl = TextEditingController(
+    text: '1,00',
+  );
   List<OfferModel> _sellVendaOffers = [];
   List<OfferModel> _sellCompraOffers = [];
 
@@ -50,13 +52,22 @@ class _CounterPageState extends State<CounterPage> {
   void initState() {
     super.initState();
     _loadStartups();
+    _startRefreshTimer();
   }
-
 
   @override
   void dispose() {
+    _offerRefreshTimer?.cancel();
     _sellPrecoCtrl.dispose();
     super.dispose();
+  }
+
+  void _startRefreshTimer() {
+    _offerRefreshTimer?.cancel();
+    _offerRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (_tabIndex == 0) _refreshBuyBook();
+      if (_tabIndex == 1) _refreshSellBook();
+    });
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
@@ -66,10 +77,14 @@ class _CounterPageState extends State<CounterPage> {
       final list = await StartupService().listStartups();
       if (mounted) {
         setState(() {
-          _startupsList = list.map((s) => {
-            'id': (s['id'] ?? '').toString(),
-            'nome': (s['name'] ?? '').toString(),
-          }).toList();
+          _startupsList = list
+              .map(
+                (s) => {
+                  'id': (s['id'] ?? '').toString(),
+                  'nome': (s['name'] ?? '').toString(),
+                },
+              )
+              .toList();
         });
       }
     } catch (e) {
@@ -86,17 +101,6 @@ class _CounterPageState extends State<CounterPage> {
     if (mounted) {
       setState(() {
         _sellStartups = list;
-      });
-    }
-  }
-
-  void _loadUserOffers() async {
-    setState(() => _isLoadingOffers = true);
-    final list = await _service.getUserOffers(widget.user.uid);
-    if (mounted) {
-      setState(() {
-        _myOffers = list;
-        _isLoadingOffers = false;
       });
     }
   }
@@ -126,26 +130,61 @@ class _CounterPageState extends State<CounterPage> {
     _refreshSellBook();
   }
 
+  Future<List<OfferModel>> _fetchOffersFromFirestore(String startupId) async {
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('balcaoOffers')
+          .where('startupId', isEqualTo: startupId)
+          .get();
+      return snap.docs
+          .map((doc) {
+            final data = doc.data();
+            if (data['status'] != 'open') return null;
+            return OfferModel(
+              id: doc.id,
+              startupId: data['startupId'] ?? '',
+              startupNome: data['startupNome'] ?? '',
+              vendedorId: data['userId'] ?? '',
+              vendedorNome: 'Investidor',
+              quantidade: (data['quantity'] as num?)?.toDouble() ?? 0,
+              precoPorToken: (data['pricePerToken'] as num?)?.toDouble() ?? 0,
+              tipo: data['type'] == 'buy' ? OrderType.compra : OrderType.venda,
+              status: OrderStatus.aberta,
+              criadoEm: data['createdAt'] is Timestamp
+                  ? (data['createdAt'] as Timestamp).toDate()
+                  : DateTime.now(),
+            );
+          })
+          .whereType<OfferModel>()
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
   void _refreshBuyBook() async {
     if (_buyStartupId == null) return;
-    final venda = await _service.getVendaForStartup(_buyStartupId!);
-    final compra = await _service.getCompraForStartup(_buyStartupId!);
+    final all = await _fetchOffersFromFirestore(_buyStartupId!);
     if (mounted) {
       setState(() {
-        _buyVendaOffers = venda;
-        _buyCompraOffers = compra;
+        _buyVendaOffers = all.where((o) => o.tipo == OrderType.venda).toList()
+          ..sort((a, b) => a.precoPorToken.compareTo(b.precoPorToken));
+        _buyCompraOffers = all.where((o) => o.tipo == OrderType.compra).toList()
+          ..sort((a, b) => b.precoPorToken.compareTo(a.precoPorToken));
       });
     }
   }
 
   void _refreshSellBook() async {
     if (_sellStartupId == null) return;
-    final venda = await _service.getVendaForStartup(_sellStartupId!);
-    final compra = await _service.getCompraForStartup(_sellStartupId!);
+    final all = await _fetchOffersFromFirestore(_sellStartupId!);
     if (mounted) {
       setState(() {
-        _sellVendaOffers = venda;
-        _sellCompraOffers = compra;
+        _sellVendaOffers = all.where((o) => o.tipo == OrderType.venda).toList()
+          ..sort((a, b) => a.precoPorToken.compareTo(b.precoPorToken));
+        _sellCompraOffers =
+            all.where((o) => o.tipo == OrderType.compra).toList()
+              ..sort((a, b) => b.precoPorToken.compareTo(a.precoPorToken));
       });
     }
   }
@@ -164,7 +203,7 @@ class _CounterPageState extends State<CounterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: StartupColors.pageBg,
+      // backgroundColor: StartupColors.pageBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -177,8 +216,6 @@ class _CounterPageState extends State<CounterPage> {
                   setState(() => _tabIndex = i);
                   if (i == 1) {
                     _loadSellStartups();
-                  } else if (i == 2) {
-                    _loadUserOffers();
                   }
                 },
                 tabs: const ['Comprar', 'Vender', 'Minhas Ordens'],
@@ -188,8 +225,10 @@ class _CounterPageState extends State<CounterPage> {
           ],
         ),
       ),
-      bottomNavigationBar:
-          CustomNavBar(userModel: widget.user, currentIndex: 2),
+      bottomNavigationBar: CustomNavBar(
+        userModel: widget.user,
+        currentIndex: 2,
+      ),
     );
   }
 
@@ -215,8 +254,11 @@ class _CounterPageState extends State<CounterPage> {
               color: const Color(0xFF3A3A3A),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Icon(Icons.notifications_outlined,
-                color: Colors.white, size: 22),
+            child: const Icon(
+              Icons.notifications_outlined,
+              color: Colors.white,
+              size: 22,
+            ),
           ),
         ],
       ),
@@ -247,18 +289,22 @@ class _CounterPageState extends State<CounterPage> {
         const _FieldLabel(text: 'Selecione a startup'),
         const SizedBox(height: 8),
         _buildStartupDropdown(
-          startups: _startupsList.isEmpty ? CounterService.allStartups : _startupsList,
+          startups: _startupsList.isEmpty
+              ? CounterService.allStartups
+              : _startupsList,
           selectedId: _buyStartupId,
           onSelected: _onBuyStartupSelected,
         ),
         if (_buyStartupId == null) ...[
           const SizedBox(height: 60),
           const _EmptyPrompt(
-              message: 'Selecione uma startup para ver as ordens disponíveis'),
+            message: 'Selecione uma startup para ver as ordens disponíveis',
+          ),
         ] else ...[
           const SizedBox(height: 24),
           _SectionLabel(
-              text: 'LIVRO DE ORDENS — ${_buyStartupNome!.toUpperCase()}'),
+            text: 'LIVRO DE ORDENS — ${_buyStartupNome!.toUpperCase()}',
+          ),
           const SizedBox(height: 10),
           OrderBookTable(
             vendaOrders: _buyVendaOffers,
@@ -269,7 +315,8 @@ class _CounterPageState extends State<CounterPage> {
           const SizedBox(height: 10),
           if (_buyVendaOffers.isEmpty)
             const _EmptyPrompt(
-                message: 'Nenhuma oferta de venda para esta startup')
+              message: 'Nenhuma oferta de venda para esta startup',
+            )
           else
             ..._buyVendaOffers.map(
               (offer) => _OfferRowCompra(
@@ -297,13 +344,13 @@ class _CounterPageState extends State<CounterPage> {
 
           return Padding(
             padding: EdgeInsets.only(
-                bottom: MediaQuery.of(ctx).viewInsets.bottom),
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            ),
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
               decoration: const BoxDecoration(
                 color: Color(0xFF262629),
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -340,7 +387,9 @@ class _CounterPageState extends State<CounterPage> {
                           Text(
                             offer.startupNome,
                             style: const TextStyle(
-                                color: Colors.white54, fontSize: 13),
+                              color: Colors.white54,
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
@@ -358,7 +407,9 @@ class _CounterPageState extends State<CounterPage> {
                           const Text(
                             '/token',
                             style: TextStyle(
-                                color: Colors.white38, fontSize: 11),
+                              color: Colors.white38,
+                              fontSize: 11,
+                            ),
                           ),
                         ],
                       ),
@@ -368,8 +419,7 @@ class _CounterPageState extends State<CounterPage> {
                   const SizedBox(height: 6),
                   Text(
                     'Disponível: ${offer.quantidade.toInt()} tokens',
-                    style:
-                        const TextStyle(color: Colors.white54, fontSize: 12),
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
                   ),
 
                   const SizedBox(height: 20),
@@ -378,9 +428,10 @@ class _CounterPageState extends State<CounterPage> {
                   const Text(
                     'Quantidade',
                     style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500),
+                      color: Colors.white70,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Container(
@@ -388,8 +439,8 @@ class _CounterPageState extends State<CounterPage> {
                       color: const Color(0xFF1A1A1E),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: const Color(0xFF107649)
-                              .withValues(alpha: 0.4)),
+                        color: const Color(0xFF107649).withValues(alpha: 0.4),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -451,13 +502,18 @@ class _CounterPageState extends State<CounterPage> {
                     const SizedBox(height: 10),
                     const Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded,
-                            color: Color(0xFFE74C3C), size: 16),
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: Color(0xFFE74C3C),
+                          size: 16,
+                        ),
                         SizedBox(width: 6),
                         Text(
                           'Saldo insuficiente para esta compra',
                           style: TextStyle(
-                              color: Color(0xFFE74C3C), fontSize: 12),
+                            color: Color(0xFFE74C3C),
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -472,35 +528,43 @@ class _CounterPageState extends State<CounterPage> {
                         backgroundColor: hasSaldo
                             ? const Color(0xFF107649)
                             : Colors.white12,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 15),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(13)),
+                          borderRadius: BorderRadius.circular(13),
+                        ),
                         elevation: 0,
                       ),
                       onPressed: hasSaldo
                           ? () async {
                               Navigator.pop(ctx);
-                              final result = await _service.buyTokens(offer.startupId, qty);
+                              final result = await _service.buyTokens(
+                                offer.startupId,
+                                qty,
+                              );
                               if (result['success'] == true) {
                                 if (mounted) {
                                   setState(() {
-                                    widget.user.saldo = result['updatedBalance'];
+                                    widget.user.saldo =
+                                        result['updatedBalance'];
                                   });
                                 }
                                 _refreshBuyBook();
                                 _showSnackBar(
-                                    'Compra de ${qty.toInt()} tokens de ${offer.startupNome} realizada!');
+                                  'Compra de ${qty.toInt()} tokens de ${offer.startupNome} realizada!',
+                                );
                               } else {
-                                _showSnackBar(result['error'] ?? 'Erro ao processar compra.', isError: true);
+                                _showSnackBar(
+                                  result['error'] ??
+                                      'Erro ao processar compra.',
+                                  isError: true,
+                                );
                               }
                             }
                           : null,
                       child: Text(
                         'Confirmar Compra',
                         style: TextStyle(
-                          color:
-                              hasSaldo ? Colors.white : Colors.white38,
+                          color: hasSaldo ? Colors.white : Colors.white38,
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),
@@ -520,7 +584,6 @@ class _CounterPageState extends State<CounterPage> {
   // Fluxo: seleciona startup (onde tem tokens) → vê tabela → define qtd + preço → publica
 
   Widget _buildVenderTab() {
-
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       physics: const BouncingScrollPhysics(),
@@ -538,31 +601,34 @@ class _CounterPageState extends State<CounterPage> {
         if (_sellStartupId == null) ...[
           const SizedBox(height: 60),
           const _EmptyPrompt(
-              message:
-                  'Selecione uma startup para publicar uma oferta de venda'),
+            message: 'Selecione uma startup para publicar uma oferta de venda',
+          ),
         ] else ...[
           const SizedBox(height: 12),
 
           // Badge com saldo de tokens do usuário
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: const Color(0xFF107649).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                  color: const Color(0xFF107649).withValues(alpha: 0.3)),
+                color: const Color(0xFF107649).withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.toll_rounded,
-                    color: Color(0xFF1A9B5F), size: 16),
+                const Icon(
+                  Icons.toll_rounded,
+                  color: Color(0xFF1A9B5F),
+                  size: 16,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Seus tokens: $_userTokensBalance $_sellStartupNome',
                   style: const TextStyle(
-                    color: Color(0xFF1A9B5F),
+                    color: Colors.white70,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -573,7 +639,8 @@ class _CounterPageState extends State<CounterPage> {
 
           const SizedBox(height: 20),
           _SectionLabel(
-              text: 'LIVRO DE ORDENS — ${_sellStartupNome!.toUpperCase()}'),
+            text: 'LIVRO DE ORDENS — ${_sellStartupNome!.toUpperCase()}',
+          ),
           const SizedBox(height: 10),
           OrderBookTable(
             vendaOrders: _sellVendaOffers,
@@ -605,7 +672,8 @@ class _CounterPageState extends State<CounterPage> {
             color: const Color(0xFF262629),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: const Color(0xFF107649).withValues(alpha: 0.4)),
+              color: const Color(0xFF107649).withValues(alpha: 0.4),
+            ),
           ),
           child: Row(
             children: [
@@ -640,8 +708,7 @@ class _CounterPageState extends State<CounterPage> {
           const SizedBox(height: 6),
           Text(
             'Você possui apenas ${userTokens.toInt()} tokens',
-            style:
-                const TextStyle(color: Color(0xFFE74C3C), fontSize: 12),
+            style: const TextStyle(color: Color(0xFFE74C3C), fontSize: 12),
           ),
         ],
 
@@ -656,12 +723,12 @@ class _CounterPageState extends State<CounterPage> {
             color: const Color(0xFF262629),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: const Color(0xFF107649).withValues(alpha: 0.4)),
+              color: const Color(0xFF107649).withValues(alpha: 0.4),
+            ),
           ),
           child: TextField(
             controller: _sellPrecoCtrl,
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -684,8 +751,7 @@ class _CounterPageState extends State<CounterPage> {
           decoration: BoxDecoration(
             color: const Color(0xFF262629),
             borderRadius: BorderRadius.circular(12),
-            border:
-                Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: Column(
             children: [
@@ -705,8 +771,7 @@ class _CounterPageState extends State<CounterPage> {
               ),
               _SheetSummaryRow(
                 label: 'Total estimado',
-                value:
-                    'R\$ ${total.toStringAsFixed(2).replaceAll('.', ',')}',
+                value: 'R\$ ${total.toStringAsFixed(2).replaceAll('.', ',')}',
                 highlight: true,
               ),
             ],
@@ -721,10 +786,11 @@ class _CounterPageState extends State<CounterPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: enoughTokens && _sellPreco > 0
                   ? const Color(0xFF107649)
-                  : Colors.white12,
+                  : Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 15),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13)),
+                borderRadius: BorderRadius.circular(13),
+              ),
               elevation: 0,
             ),
             onPressed: enoughTokens && _sellPreco > 0
@@ -764,12 +830,14 @@ class _CounterPageState extends State<CounterPage> {
     if (success) {
       _refreshSellBook();
       _sellPrecoCtrl.text = '1,00';
-      final publishedQty = _sellQtd; // Guarda a quantidade publicada antes de resetar
+      final publishedQty =
+          _sellQtd; // Guarda a quantidade publicada antes de resetar
       setState(() {
         _sellQtd = 1;
       });
       _showSnackBar(
-          'Oferta de ${publishedQty.toInt()} tokens publicada na tabela!');
+        'Oferta de ${publishedQty.toInt()} tokens publicada na tabela!',
+      );
     } else {
       _showSnackBar('Erro ao publicar oferta de venda.', isError: true);
     }
@@ -778,29 +846,58 @@ class _CounterPageState extends State<CounterPage> {
   // ── Aba MINHAS ORDENS ────────────────────────────────────────────────────
 
   Widget _buildMinhasOrdensTab() {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-      physics: const BouncingScrollPhysics(),
-      children: [
-        const _SectionLabel(text: 'MINHAS ORDENS'),
-        const SizedBox(height: 12),
-        if (_isLoadingOffers)
-          const Center(
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('operations')
+          .where('buyerId', isEqualTo: widget.user.uid)
+          .snapshots(),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(
             child: Padding(
               padding: EdgeInsets.all(24.0),
               child: CircularProgressIndicator(color: Color(0xFF107649)),
             ),
-          )
-        else if (_myOffers.isEmpty)
-          const _EmptyPrompt(message: 'Você ainda não tem ordens publicadas')
-        else
-          ..._myOffers.map((o) => GestureDetector(
-                onTap: o.status == OrderStatus.aberta
-                    ? () => _showCancelDialog(o)
-                    : null,
-                child: _MyOrderCard(offer: o),
-              )),
-      ],
+          );
+        }
+
+        final docs = snap.data?.docs ?? [];
+        final ops =
+            docs
+                .map(
+                  (d) => OperationModel.fromMap(
+                    d.id,
+                    d.data() as Map<String, dynamic>,
+                  ),
+                )
+                .toList()
+              ..sort(
+                (a, b) => (b.createdAt ?? DateTime(0)).compareTo(
+                  a.createdAt ?? DateTime(0),
+                ),
+              );
+
+        if (ops.isEmpty) {
+          return const _EmptyPrompt(
+            message: 'Você ainda não tem operações registradas',
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+          physics: const BouncingScrollPhysics(),
+          itemCount: ops.length + 1,
+          itemBuilder: (context, i) {
+            if (i == 0) {
+              return const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: _SectionLabel(text: 'MINHAS OPERAÇÕES'),
+              );
+            }
+            return _OperationCard(op: ops[i - 1]);
+          },
+        );
+      },
     );
   }
 
@@ -825,8 +922,10 @@ class _CounterPageState extends State<CounterPage> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: selectedNome,
-          hint: Text(hint,
-              style: const TextStyle(color: Colors.white38, fontSize: 14)),
+          hint: Text(
+            hint,
+            style: const TextStyle(color: Colors.white38, fontSize: 14),
+          ),
           isExpanded: true,
           dropdownColor: const Color(0xFF262629),
           icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white54),
@@ -836,17 +935,16 @@ class _CounterPageState extends State<CounterPage> {
             fontWeight: FontWeight.w500,
           ),
           items: startups
-              .map((s) => DropdownMenuItem(
-                    value: s['nome'],
-                    child: Text(s['nome']!),
-                  ))
+              .map(
+                (s) =>
+                    DropdownMenuItem(value: s['nome'], child: Text(s['nome']!)),
+              )
               .toList(),
           onChanged: startups.isEmpty
               ? null
               : (val) {
                   if (val == null) return;
-                  final match =
-                      startups.firstWhere((s) => s['nome'] == val);
+                  final match = startups.firstWhere((s) => s['nome'] == val);
                   onSelected(match['id']!, match['nome']!);
                 },
         ),
@@ -854,50 +952,21 @@ class _CounterPageState extends State<CounterPage> {
     );
   }
 
-  void _showCancelDialog(OfferModel offer) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF262629),
-        title: const Text('Cancelar Oferta', style: TextStyle(color: Colors.white)),
-        content: Text(
-            'Deseja realmente cancelar sua oferta de ${offer.quantidade.toInt()} tokens de ${offer.startupNome}?',
-            style: const TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Voltar', style: TextStyle(color: Colors.white38)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE74C3C)),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final success = await _service.cancelOffer(offer.id);
-              if (success) {
-                _loadUserOffers();
-                _showSnackBar('Oferta cancelada com sucesso!');
-              } else {
-                _showSnackBar('Erro ao cancelar oferta.', isError: true);
-              }
-            },
-            child: const Text('Confirmar', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: isError ? const Color(0xFFE74C3C) : const Color(0xFF107649),
+        content: Text(
+          message,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: isError
+            ? const Color(0xFFE74C3C)
+            : const Color(0xFF107649),
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
       ),
     );
@@ -932,7 +1001,7 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
-        color: Colors.white38,
+        color: Colors.white,
         fontSize: 11,
         fontWeight: FontWeight.w600,
         letterSpacing: 1.2,
@@ -996,8 +1065,7 @@ class _OfferRowCompra extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     '${offer.quantidade.toInt()} tokens disponíveis',
-                    style: const TextStyle(
-                        color: Colors.white54, fontSize: 12),
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                 ],
               ),
@@ -1021,8 +1089,7 @@ class _OfferRowCompra extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: const Color(0xFF107649),
                 borderRadius: BorderRadius.circular(8),
@@ -1108,8 +1175,10 @@ class _SheetSummaryRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label,
-            style: const TextStyle(color: Colors.white54, fontSize: 13)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white54, fontSize: 13),
+        ),
         Text(
           value,
           style: TextStyle(
@@ -1123,29 +1192,37 @@ class _SheetSummaryRow extends StatelessWidget {
   }
 }
 
-// Card de ordem própria na aba Minhas Ordens
-class _MyOrderCard extends StatelessWidget {
-  final OfferModel offer;
-  const _MyOrderCard({required this.offer});
+// Card de operação na aba Minhas Operações
+class _OperationCard extends StatelessWidget {
+  final OperationModel op;
+  const _OperationCard({required this.op});
 
   @override
   Widget build(BuildContext context) {
-    final isCompra = offer.tipo == OrderType.compra;
-    final dotColor =
-        isCompra ? const Color(0xFF1A9B5F) : const Color(0xFFE74C3C);
-
     Color statusColor;
-    switch (offer.status) {
-      case OrderStatus.aberta:
+    String statusLabel;
+    switch (op.status) {
+      case OperationStatus.accepted:
         statusColor = const Color(0xFF1A9B5F);
+        statusLabel = 'Concluída';
         break;
-      case OrderStatus.cancelada:
+      case OperationStatus.rejected:
         statusColor = const Color(0xFFE74C3C);
+        statusLabel = 'Rejeitada';
         break;
-      case OrderStatus.executada:
+      case OperationStatus.cancelled:
         statusColor = Colors.white38;
+        statusLabel = 'Cancelada';
+        break;
+      case OperationStatus.pending:
+        statusColor = const Color(0xFFF39C12);
+        statusLabel = 'Pendente';
         break;
     }
+
+    final priceStr =
+        'R\$ ${op.pricePerToken.toStringAsFixed(2).replaceAll('.', ',')}';
+    final totalStr = 'R\$ ${op.total.toStringAsFixed(2).replaceAll('.', ',')}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -1160,8 +1237,10 @@ class _MyOrderCard extends StatelessWidget {
           Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(
-                color: dotColor, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+              color: Color(0xFF1A9B5F),
+              shape: BoxShape.circle,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1169,7 +1248,7 @@ class _MyOrderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  offer.startupNome,
+                  op.startupName,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
@@ -1178,9 +1257,8 @@ class _MyOrderCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${isCompra ? 'Compra' : 'Venda'} · ${offer.quantidade.toInt()} tokens',
-                  style: const TextStyle(
-                      color: Colors.white54, fontSize: 12),
+                  'Compra · ${op.quantity} tokens @ $priceStr',
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
                 ),
               ],
             ),
@@ -1189,7 +1267,7 @@ class _MyOrderCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'R\$ ${offer.precoPorToken.toStringAsFixed(2).replaceAll('.', ',')}',
+                totalStr,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -1198,14 +1276,13 @@ class _MyOrderCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  offer.status.name,
+                  statusLabel,
                   style: TextStyle(
                     color: statusColor,
                     fontSize: 11,

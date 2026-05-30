@@ -1,7 +1,9 @@
 // Feito por: Tomás Toniato RA: 25004211
 // Integrado por: João Paulo Ferreira RA: 25000684
 
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'startup_colors.dart';
 import 'inline_video_player.dart';
@@ -30,10 +32,17 @@ class _SobreTabState extends State<SobreTab> {
   double _userHoldings = 0.0;
   bool _loadingHoldings = true;
 
+  // Campos ao vivo vindos do Firestore
+  int? _liveAvailableTokens;
+  int? _liveTokensSold;
+  int? _liveTokenPriceCents;
+  StreamSubscription<DocumentSnapshot>? _startupSub;
+
   @override
   void initState() {
     super.initState();
     _loadUserHoldings();
+    _subscribeToStartup();
   }
 
   @override
@@ -41,7 +50,33 @@ class _SobreTabState extends State<SobreTab> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.data['id'] != widget.data['id']) {
       _loadUserHoldings();
+      _subscribeToStartup();
     }
+  }
+
+  void _subscribeToStartup() {
+    _startupSub?.cancel();
+    final id = (widget.data['id'] ?? '').toString();
+    if (id.isEmpty) return;
+    _startupSub = FirebaseFirestore.instance
+        .collection('startups')
+        .doc(id)
+        .snapshots()
+        .listen((snap) {
+      if (!snap.exists || !mounted) return;
+      final d = snap.data() as Map<String, dynamic>;
+      setState(() {
+        _liveAvailableTokens = (d['availableTokens'] as num?)?.toInt();
+        _liveTokensSold      = (d['tokensSold'] as num?)?.toInt();
+        _liveTokenPriceCents = (d['currentTokenPriceCents'] as num?)?.toInt();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _startupSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUserHoldings() async {
@@ -67,11 +102,16 @@ class _SobreTabState extends State<SobreTab> {
     final startupName = (widget.data['name'] ?? 'Startup').toString();
     final rawTokens = widget.data['totalTokensIssued'] ?? widget.data['tokens'] ?? 0;
     final rawCapital = widget.data['capitalRaisedCents'] ?? widget.data['capital'] ?? 0;
-    final rawTokenPrice = widget.data['currentTokenPriceCents'] ?? 0;
-    
+    final rawTokenPrice = _liveTokenPriceCents ?? widget.data['currentTokenPriceCents'] ?? 0;
+
     final int totalTokens = int.tryParse(rawTokens.toString()) ?? 0;
-    final int tokensSold = int.tryParse((widget.data['tokensSold'] ?? 0).toString()) ?? 0;
-    final availableTokens = widget.data['availableTokens'] ?? widget.data['available'] ?? (totalTokens - tokensSold);
+    final int tokensSold = _liveTokensSold
+        ?? int.tryParse((widget.data['tokensSold'] ?? 0).toString())
+        ?? 0;
+    final availableTokens = _liveAvailableTokens
+        ?? widget.data['availableTokens']
+        ?? widget.data['available']
+        ?? (totalTokens - tokensSold);
     final description =
         (widget.data['description'] ?? widget.data['descricao'] ?? '').toString().trim();
     final demoVideos = (widget.data['demoVideos'] as List<dynamic>? ?? [])
@@ -217,60 +257,27 @@ class _SobreTabState extends State<SobreTab> {
               ],
             ),
             const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: 46,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF107649),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: () => _openTradeScreen(startupId, startupName, 'buy'),
-                      child: const Text(
-                        'Comprar',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF107649),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: () => _openTradeScreen(startupId, startupName, 'buy'),
+                child: const Text(
+                  'Negociar',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SizedBox(
-                    height: 46,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _userHoldings > 0
-                            ? const Color(0xFFE74C3C)
-                            : Colors.white12,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: _userHoldings > 0
-                          ? () => _openTradeScreen(startupId, startupName, 'sell')
-                          : null,
-                      child: Text(
-                        'Vender',
-                        style: TextStyle(
-                          color: _userHoldings > 0 ? Colors.white : Colors.white38,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),
@@ -340,71 +347,11 @@ class _SobreTabState extends State<SobreTab> {
                       ),
               ],
             ),
-            const SizedBox(height: 18),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF107649),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 0,
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BalcaoOrdersScreen(
-                        startupId: startupId,
-                        startupName: startupName,
-                        userModel: widget.userModel,
-                      ),
-                    ),
-                  ).then((_) {
-                    _loadUserHoldings();
-                    if (widget.onRefresh != null) {
-                      widget.onRefresh!();
-                    }
-                  });
-                },
-                icon: const Icon(Icons.swap_horizontal_circle_outlined, color: Colors.white),
-                label: const Text(
-                  'Ver Negociações no Balcão',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            const SizedBox(height: 14),
+            const Text(
+              'Não há tokens disponíveis para compra direta nesta startup.',
+              style: TextStyle(color: Colors.white38, fontSize: 12),
             ),
-            if (!_loadingHoldings && _userHoldings > 0) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE74C3C),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    elevation: 0,
-                  ),
-                  onPressed: () => _openTradeScreen(startupId, startupName, 'sell'),
-                  child: const Text(
-                    'Vender meus tokens',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       );
