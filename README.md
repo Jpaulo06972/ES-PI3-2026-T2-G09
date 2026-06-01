@@ -37,7 +37,7 @@ Para garantir a integridade do código, seguimos o padrão, com as seguintes div
 
 O Frontend do aplicativo atualmente está estruturado nos seguintes módulos:
 
-### 🔐 Autenticação (Fluxo de Entrada)
+### Autenticação (Fluxo de Entrada)
 - **Página de Login**: Acesso para usuários existentes.
 - **Página de Cadastro**: Fluxo para registro de novos usuários.
 - **Componentes de Entrada Seguros e Validados**:
