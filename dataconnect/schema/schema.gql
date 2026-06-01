@@ -1,0 +1,44 @@
+type User @table {
+  username: String!
+  email: String!
+  passwordHash: String!
+  createdAt: Timestamp!
+  firstName: String
+  lastName: String
+  profilePictureUrl: String
+}
+
+type Portfolio @table {
+  user: User!
+  name: String!
+  createdAt: Timestamp!
+  description: String
+}
+
+type Asset @table {
+  name: String!
+  assetType: String!
+  symbol: String!
+  description: String
+  industry: String
+}
+
+type Investment @table {
+  portfolio: Portfolio!
+  asset: Asset!
+  purchasePrice: Float!
+  quantity: Float!
+  purchaseDate: Date!
+  createdAt: Timestamp!
+  notes: String
+}
+
+type Transaction @table {
+  investment: Investment!
+  transactionType: String!
+  pricePerUnit: Float!
+  quantity: Float!
+  transactionDate: Date!
+  createdAt: Timestamp!
+  fees: Float
+}

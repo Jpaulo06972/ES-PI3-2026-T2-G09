@@ -1,0 +1,143 @@
+Total files: 142
+functions/src\balance\handlers\createOperation.ts | Author: Aluno: João Paulo Ferreira | RA: lançar erros padronizados com código HTTP + mensagem amigável.
+functions/src\balance\handlers\listMyOperations.ts | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+functions/src\balance\index.ts | Author: Aluno: João Paulo Ferreira | RA: chamar a função via Firebase SDK.
+functions/src\balance\repositories\balanceRepository.ts | Author: Aluno: João Paulo Ferreira | RA: ção e os possíveis status.
+functions/src\balance\shared\constants.ts | Author: Aluno: João Paulo Ferreira | RA: ntir
+functions/src\balance\types\index.ts | Author: Unknown | RA: no sistema.
+functions/src\balcao\config.ts | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+functions/src\balcao\index.ts | Author: Aluno: João Paulo Ferreira | RA: direta da startup
+functions/src\balcao\repositories\balcaoRepository.ts | Author: Aluno: João Paulo Ferreira | RA: retrocompatibilidade
+functions/src\balcao\services\priceEngine.ts | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+functions/src\balcao\services\testPriceEngine.ts | Author: Aluno: João Paulo Ferreira | RA: validar o comportamento do motor de precificação dinâmica.
+functions/src\index.ts | Author: Aluno: João Paulo Ferreira | RA: segredos do Secret Manager do Google Cloud —
+functions/src\operations\index.ts | Author: Unknown | RA: Unknown
+functions/src\operations\repositories\operationsRepository.ts | Author: Unknown | RA: Unknown
+functions/src\shared\auth.ts | Author: Aluno: João Paulo Ferreira | RA: lançar erros padronizados com código e mensagem legível.
+functions/src\shared\firebase.ts | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+functions/src\shared\types.ts | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+functions/src\shared\validation.ts | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+functions/src\startups\handlers\createComment.ts | Author: Aluno: João Paulo Ferreira | RA: evitar strings soltas no código
+functions/src\startups\handlers\createStartupQuestion.ts | Author: Aluno: João Paulo Ferreira | RA: facilitar manutenção
+functions/src\startups\handlers\getStartupDetails.ts | Author: Aluno: João Paulo Ferreira | RA: a função callable
+functions/src\startups\handlers\listComments.ts | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+functions/src\startups\handlers\listStartups.ts | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+functions/src\startups\handlers\seedStartupCatalog.ts | Author: Aluno: João Paulo Ferreira | RA: ndo com a
+functions/src\startups\index.ts | Author: Aluno: João Paulo Ferreira | RA: o handler correspondente:
+functions/src\startups\repositories\startupRepository.ts | Author: Aluno: João Paulo Ferreira | RA: va o
+functions/src\startups\shared\constants.ts | Author: Aluno: João Paulo Ferreira | RA: uso como filtro na listagem.
+functions/src\startups\types\index.ts | Author: Unknown | RA: facilitar armazenamento, filtros e
+lib\autentication\components\cpfField.dart | Author: Aluno: João Paulo Ferreira | RA: usar o TextInputFormatter (formatação de texto)
+lib\autentication\components\dateField.dart | Author: Aluno: João Paulo Ferreira | RA: validar a idade, não só como texto)
+lib\autentication\components\emailField.dart | Author: Aluno: João Paulo Ferreira | RA: poder ler o valor ao submeter
+lib\autentication\components\navLink.dart | Author: Aluno: João Paulo Ferreira | RA: o login"
+lib\autentication\components\passwordField.dart | Author: Aluno: João Paulo Ferreira | RA: poder ler ao submeter o formulário
+lib\autentication\components\phoneField.dart | Author: Aluno: João Paulo Ferreira | RA: usar o TextInputFormatter (formatação de texto)
+lib\autentication\components\primaryButton.dart | Author: Aluno: João Paulo Ferreira | RA: evitar envio duplicado (clique duplo acidental)
+lib\autentication\components\socialButton.dart | Author: Aluno: João Paulo Ferreira | RA: montar a interface
+lib\autentication\pages\newPasswordPage.dart | Author: Unknown | RA: identificar a conta no backend
+lib\autentication\pages\passRecovery.dart | Author: Unknown | RA: o login"
+lib\autentication\pages\passRecoveryCode.dart | Author: Unknown | RA: da do teclado
+lib\autentication\pages\signin.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\autentication\pages\signup.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\autentication\pages\twoFactsAuth.dart | Author: Unknown | RA: Unknown
+lib\autentication\services\SignInServices.dart | Author: Aluno: João Paulo Ferreira | RA: erros de login
+lib\autentication\services\passwordResetService.dart | Author: Unknown | RA: Unknown
+lib\autentication\services\signUpService.dart | Author: Aluno: João Paulo Ferreira | RA: usar debugPrint (logs no console)
+lib\autentication\services\two_factor_service.dart | Author: Unknown | RA: Unknown
+lib\components\appBar.dart | Author: Aluno: João Paulo Ferreira | RA: certa
+lib\components\currencyInputFormatter.dart | Author: Unknown | RA: "R$ 12,34"
+lib\components\iconNav.dart | Author: Aluno: João Paulo Ferreira | RA: permitir a passagem de dados entre telas
+lib\components\navBar.dart | Author: Aluno: João Paulo Ferreira | RA: navegação
+lib\components\successDialog.dart | Author: Aluno: João Paulo Ferreira | RA: o showDialog
+lib\components\textField.dart | Author: Aluno: João Paulo Ferreira | RA: isso?
+lib\counter\components\balcao_action_bar.dart | Author: Unknown | RA: em duplicidade.
+lib\counter\components\balcao_buy_form.dart | Author: Unknown | RA: .
+lib\counter\components\balcao_info_row.dart | Author: Unknown | RA: diferenciar métricas principais
+lib\counter\components\balcao_operation_card.dart | Author: Unknown | RA: exibir valores monetários em BRL.
+lib\counter\components\balcao_quantity_stepper.dart | Author: Unknown | RA: reduzir a quantidade em 1 — o pai decide o limite mínimo (ex.: 1).
+lib\counter\components\buy_bottom_sheet.dart | Author: Unknown | RA: de tokens a partir de uma oferta de usuário.
+lib\counter\components\counterToggle.dart | Author: Unknown | RA: de navegação horizontal onde cada opção é um segmento.
+lib\counter\components\empty_prompt.dart | Author: Unknown | RA: ver as ordens').
+lib\counter\components\field_label.dart | Author: Unknown | RA: identificá-los.
+lib\counter\components\multi_seller_purchase_sheet.dart | Author: Unknown | RA: multi-vendedor no Balcão.
+lib\counter\components\offerCard.dart | Author: Unknown | RA: quanto na listagem de ordens próprias.
+lib\counter\components\offer_row_compra.dart | Author: Unknown | RA: extends StatelessWidget {
+lib\counter\components\operation_card.dart | Author: Unknown | RA: rápida do histórico.
+lib\counter\components\orderBookTable.dart | Author: Unknown | RA: Unknown
+lib\counter\components\place_buy_offer_sheet.dart | Author: Unknown | RA: Unknown
+lib\counter\components\section_label.dart | Author: Unknown | RA: Unknown
+lib\counter\components\startup_dropdown.dart | Author: Unknown | RA: Unknown
+lib\counter\components\stepper_button.dart | Author: Unknown | RA: Unknown
+lib\counter\components\summary_row.dart | Author: Unknown | RA: Unknown
+lib\counter\pages\balcao_orders_screen.dart | Author: Unknown | RA: Unknown
+lib\counter\pages\counterPage.dart | Author: Unknown | RA: Unknown
+lib\counter\pages\createOfferPage.dart | Author: Unknown | RA: Unknown
+lib\counter\services\counterService.dart | Author: Unknown | RA: fallback)
+lib\counter\services\trading_logic_service.dart | Author: Unknown | RA: Unknown
+lib\counter\tabs\buy_tab.dart | Author: Unknown | RA: Unknown
+lib\counter\tabs\my_orders_tab.dart | Author: Unknown | RA: Unknown
+lib\counter\tabs\ofertas_tab.dart | Author: Unknown | RA: Unknown
+lib\counter\tabs\ordens_tab.dart | Author: Unknown | RA: Unknown
+lib\counter\tabs\posicao_tab.dart | Author: Unknown | RA: Unknown
+lib\counter\tabs\sell_tab.dart | Author: Unknown | RA: Unknown
+lib\dashboard\components\dashboardPainel.dart | Author: Unknown | RA: ções reais do usuário
+lib\dashboard\components\my_invested_startups_card.dart | Author: Unknown | RA: Unknown
+lib\dashboard\controllers\wealth_controller.dart | Author: Unknown | RA: o indicador de variação)
+lib\dashboard\pages\home.dart | Author: Aluno: João Paulo Ferreira | RA: manter a identidade visual
+lib\dashboard\pages\notification.dart | Author: Aluno: João Paulo Ferreira | RA: uma mensagem avisando que a funcionalidade será implementada em breve
+lib\enum\operationStatus.dart | Author: Aluno: João Paulo Ferreira | RA: no sistema.
+lib\enum\stageStartup.dart | Author: Aluno: João Paulo Ferreira | RA: de dados existentes.
+lib\enum\statusStartup.dart | Author: Aluno: João Paulo Ferreira | RA: receber investimentos.
+lib\enum\typeOfOperation.dart | Author: Aluno: João Paulo Ferreira | RA: .
+lib\enum\userRole.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\firebase_options.dart | Author: Unknown | RA: Unknown
+lib\main.dart | Author: Aluno: João Paulo Ferreira | RA: inicializar a conexão com o Firebase
+lib\model\offerModel.dart | Author: Unknown | RA: ser aceita
+lib\model\operationModel.dart | Author: Unknown | RA: outro usuário
+lib\model\operations.dart | Author: Aluno: João Paulo Ferreira | RA: do usuário.
+lib\model\startups.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\model\userModel.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\profile\profile.dart | Author: Unknown | RA: Unknown
+lib\startups\components\cardStartups.dart | Author: Aluno: João Paulo Ferreira | RA: s implementações ou placeholders.
+lib\startups\components\direct_purchase_sheet.dart | Author: Unknown | RA: Unknown
+lib\startups\components\eventos_tab.dart | Author: Feito por: Tomás Toniato RA: 25004211 | RA: Feito por: Tomás Toniato RA: 25004211
+lib\startups\components\inline_video_player.dart | Author: Feito por: Tomás Toniato RA: 25004211 | RA: Feito por: Tomás Toniato RA: 25004211
+lib\startups\components\inline_video_stub.dart | Author: Unknown | RA: Unknown
+lib\startups\components\inline_video_web.dart | Author: Unknown | RA: Unknown
+lib\startups\components\qa_tab.dart | Author: Feito por: Tomás Toniato RA: 25004211 | RA: Feito por: Tomás Toniato RA: 25004211
+lib\startups\components\sell_tokens_sheet.dart | Author: Unknown | RA: Unknown
+lib\startups\components\sobre_tab.dart | Author: Integrado por: João Paulo Ferreira RA: 25000684 | RA: Integrado por: João Paulo Ferreira RA: 25000684
+lib\startups\components\socios_tab.dart | Author: Feito por: Tomás Toniato RA: 25004211 | RA: Feito por: Tomás Toniato RA: 25004211
+lib\startups\components\startup_colors.dart | Author: Feito por: Tomás Toniato RA: 25004211 | RA: Feito por: Tomás Toniato RA: 25004211
+lib\startups\components\startup_header.dart | Author: Feito por: Tomás Toniato RA: 25004211 | RA: Feito por: Tomás Toniato RA: 25004211
+lib\startups\pages\startupsDetails.dart | Author: Feito por: Tomás Toniato RA: 25004211 | RA: Feito por: Tomás Toniato RA: 25004211
+lib\startups\pages\startupsList.dart | Author: Aluno: João Paulo Ferreira | RA: exibir cada startup de forma elegante
+lib\startups\services\getStartup.dart | Author: Feito por: Tomás Toniato RA: 25004211 | RA: buscar, listar e popular as startups.
+lib\startups\services\price_simulator.dart | Author: Unknown | RA: cálculo de variação diária nos cards.
+lib\startups\services\trade_service.dart | Author: Unknown | RA: Unknown
+lib\tokens\pages\createOffer.dart | Author: Unknown | RA: Unknown
+lib\tokens\pages\tradingCounter.dart | Author: Unknown | RA: Unknown
+lib\tokens\pages\wallet.dart | Author: Unknown | RA: Unknown
+lib\wallet\components\animatedCrossFade.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\wallet\components\emptyTransactions.dart | Author: Aluno: João Paulo Ferreira | RA: o usuário não achar que
+lib\wallet\components\groupedTransactionList.dart | Author: Aluno: João Paulo Ferreira | RA: to — o usuário
+lib\wallet\components\operationMapper.dart | Author: Aluno: João Paulo Ferreira | RA: nsação.
+lib\wallet\components\quickActions.dart | Author: Aluno: João Paulo Ferreira | RA: nsferir.
+lib\wallet\components\quickRecharge.dart | Author: Aluno: João Paulo Ferreira | RA: manter consistência visual
+lib\wallet\components\saldoCard.dart | Author: Aluno: João Paulo Ferreira | RA: privacidade —
+lib\wallet\components\statementFilterChips.dart | Author: Aluno: João Paulo Ferreira | RA: r a lista exibida abaixo.
+lib\wallet\components\statementHeader.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\wallet\components\statementSummaryBanner.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\wallet\components\statementTransactionTile.dart | Author: Aluno: João Paulo Ferreira | RA: ícone, título, subtítulo, valor e horário com navegação ao comprovante.
+lib\wallet\components\transactionBottomBar.dart | Author: Aluno: João Paulo Ferreira | RA: inferior fixa com exibição do valor total e botão de confirmação.
+lib\wallet\components\transactionDetailRow.dart | Author: Aluno: João Paulo Ferreira | RA: exibir informações como
+lib\wallet\components\transactionHistory.dart | Author: Aluno: João Paulo Ferreira | RA: manter consistência visual
+lib\wallet\components\transactions.dart | Author: Unknown | RA: Unknown
+lib\wallet\components\walletHeader.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\wallet\pages\operationExtract.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\wallet\pages\rechargeMoney.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\wallet\pages\statementPage.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\wallet\pages\transactionActionPage.dart | Author: Aluno: João Paulo Ferreira | RA: RA: 25000684
+lib\wallet\services\getListOperation.dart | Author: Aluno: João Paulo Ferreira | RA: salvar os dados do perfil do usuário
+lib\wallet\services\operationService.dart | Author: Aluno: João Paulo Ferreira | RA: .
