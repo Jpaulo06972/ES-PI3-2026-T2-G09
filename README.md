@@ -46,17 +46,20 @@ O Frontend do aplicativo atualmente está estruturado nos seguintes módulos:
   - `NameField`: Campo padrão para entradas de nome.
 - **Validação de Dados**: Uso robusto de formulários via `GlobalKey<FormState>`.
 
-### 📊 Dashboard Principal
+### Dashboard Principal
 - Tela inicial pós-login com visão geral do portfólio.
 
-### 👤 Perfil
+### Perfil
 - Gerenciamento de dados do usuário.
 
-### 📈 Startups
+### Startups
 - Listagem e detalhes de startups disponíveis para investimento.
 
-### 🔢 Counter / Trading
+### Counter / Trading
 - Funcionalidades de negociação de tokens.
+
+### Wallet
+- Funcionalidades de depósitos, saques e transferências.
 
 ---
 
